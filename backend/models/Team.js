@@ -22,8 +22,7 @@ const teamSchema = new mongoose.Schema({
   },
   department: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Department',
-    required: [true, 'Department is required']
+    ref: 'Department'
   },
   teamManager: {
     type: mongoose.Schema.Types.ObjectId,

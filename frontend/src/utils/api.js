@@ -117,6 +117,8 @@ export const teamAPI = {
   removeTeamMember: (teamId, userId) => api.delete(`/teams/${teamId}/members/${userId}`),
   getMyManagedTeams: () => api.get('/teams/my-teams'),
   getMyTeam: () => api.get('/teams/my-team'),
+  getUnassignedEmployees: () => api.get('/teams/unassigned-employees'),
+  cleanupTeamMembers: (teamId) => api.post(`/teams/${teamId}/cleanup`),
 };
 
 // Health check

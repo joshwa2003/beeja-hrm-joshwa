@@ -444,23 +444,19 @@ const UserManagement = () => {
         userData.employeeId = addFormData.employeeId.trim();
       }
 
+      // Include team assignment if enabled
+      if (showTeamCreation && teamFormData.selectedTeam) {
+        userData.teamId = teamFormData.selectedTeam;
+      }
+
       const response = await userAPI.createUser(userData);
       
       if (response.data.success) {
         let successMessage = 'User created successfully!';
         
-        // Assign user to team if team assignment is enabled
+        // Team assignment is now handled in the backend during user creation
         if (showTeamCreation && teamFormData.selectedTeam) {
-          try {
-            await teamAPI.addTeamMember(teamFormData.selectedTeam, {
-              userId: response.data.user._id,
-              role: 'Member'
-            });
-            successMessage = 'User created and assigned to team successfully!';
-          } catch (teamErr) {
-            console.error('Team assignment error:', teamErr);
-            successMessage = 'User created successfully, but team assignment failed.';
-          }
+          successMessage = 'User created and assigned to team successfully!';
         }
 
         setShowAddModal(false);
@@ -675,6 +671,7 @@ const UserManagement = () => {
                       <th>Employee</th>
                       <th>Role</th>
                       <th>Department</th>
+                      <th>Team</th>
                       <th>Employee ID</th>
                       <th>Contact</th>
                       <th>Joining Date</th>
@@ -704,6 +701,9 @@ const UserManagement = () => {
                         </td>
                         <td>
                           {userData.department?.name || 'Not assigned'}
+                        </td>
+                        <td>
+                          {userData.team?.name || 'Not assigned'}
                         </td>
                         <td>
                           <code>{userData.employeeId || 'Not assigned'}</code>
@@ -1015,8 +1015,8 @@ const UserManagement = () => {
                       </div>
                     </div>
 
-                    {/* Team Assignment Section */}
-                    {(user?.role === 'Admin' || user?.role === 'HR Manager') && (
+                    {/* Team Assignment Section - Only for Employee role */}
+                    {(user?.role === 'Admin' || user?.role === 'HR Manager') && addFormData.role === 'Employee' && (
                       <div className="col-md-12">
                         <hr className="my-4" />
                         <div className="d-flex justify-content-between align-items-center mb-3">
@@ -1057,11 +1057,24 @@ const UserManagement = () => {
                                 </select>
                                 <small className="form-text text-muted">
                                   Select an existing team to assign this user to. Teams are created in Team Management.
+                                  <br />
+                                  <strong>Note:</strong> Team assignment is only available for Employee role. Team Managers and Team Leaders are assigned through Team Management.
                                 </small>
                               </div>
                             </div>
                           </div>
                         )}
+                      </div>
+                    )}
+                    
+                    {/* Info message for non-Employee roles */}
+                    {(user?.role === 'Admin' || user?.role === 'HR Manager') && addFormData.role !== 'Employee' && ['Team Manager', 'Team Leader'].includes(addFormData.role) && (
+                      <div className="col-md-12">
+                        <hr className="my-4" />
+                        <div className="alert alert-info">
+                          <i className="bi bi-info-circle me-2"></i>
+                          <strong>Team Assignment:</strong> {addFormData.role} roles are assigned to teams through the Team Management interface, not during user creation.
+                        </div>
                       </div>
                     )}
                   </div>

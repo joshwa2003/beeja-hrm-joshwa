@@ -10,7 +10,9 @@ const {
   addTeamMember,
   removeTeamMember,
   getMyManagedTeams,
-  getMyTeam
+  getMyTeam,
+  getUnassignedEmployees,
+  cleanupTeamMembers
 } = require('../controllers/teamController');
 
 const router = express.Router();
@@ -40,6 +42,15 @@ router.get('/my-team',
   auth, 
   roleAccess(['Team Leader']), 
   getMyTeam
+);
+
+// @desc    Get employees not assigned to any team
+// @route   GET /api/teams/unassigned-employees
+// @access  Private (Admin, VP, HR roles, Team Managers)
+router.get('/unassigned-employees', 
+  auth, 
+  roleAccess(['Admin', 'Vice President', 'HR BP', 'HR Manager', 'HR Executive', 'Team Manager']), 
+  getUnassignedEmployees
 );
 
 // @desc    Get team by ID
@@ -79,8 +90,7 @@ router.post('/', [
     .isLength({ max: 500 })
     .withMessage('Description cannot exceed 500 characters'),
   body('department')
-    .notEmpty()
-    .withMessage('Department is required')
+    .optional()
     .isMongoId()
     .withMessage('Invalid department ID'),
   body('teamManager')
@@ -186,5 +196,16 @@ router.delete('/:id/members/:userId', [
     .isMongoId()
     .withMessage('Invalid user ID')
 ], removeTeamMember);
+
+// @desc    Clean up broken member references in a team
+// @route   POST /api/teams/:id/cleanup
+// @access  Private (Admin, VP, HR roles, assigned Team Manager)
+router.post('/:id/cleanup', [
+  auth,
+  roleAccess(['Admin', 'Vice President', 'HR BP', 'HR Manager', 'HR Executive', 'Team Manager']),
+  param('id')
+    .isMongoId()
+    .withMessage('Invalid team ID')
+], cleanupTeamMembers);
 
 module.exports = router;

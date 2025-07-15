@@ -15,11 +15,10 @@ const TeamManagement = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalTeams, setTotalTeams] = useState(0);
 
-  const [departments, setDepartments] = useState([]);
   const [users, setUsers] = useState([]);
   const [teamManagers, setTeamManagers] = useState([]);
   const [teamLeaders, setTeamLeaders] = useState([]);
-  const [employees, setEmployees] = useState([]);
+  const [unassignedEmployees, setUnassignedEmployees] = useState([]);
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -32,7 +31,6 @@ const TeamManagement = () => {
     name: '',
     code: '',
     description: '',
-    department: '',
     teamManager: '',
     teamLeader: '',
     members: [],
@@ -61,8 +59,8 @@ const TeamManagement = () => {
 
   useEffect(() => {
     fetchTeams();
-    fetchDepartments();
     fetchUsers();
+    fetchUnassignedEmployees();
   }, [currentPage, searchTerm, departmentFilter, statusFilter]);
 
   const fetchTeams = async () => {
@@ -94,16 +92,6 @@ const TeamManagement = () => {
     }
   };
 
-  const fetchDepartments = async () => {
-    try {
-      const response = await departmentAPI.getAllDepartments({ limit: 100 });
-      if (response.data.departments) {
-        setDepartments(response.data.departments);
-      }
-    } catch (err) {
-      console.error('Failed to fetch departments:', err);
-    }
-  };
 
   const fetchUsers = async () => {
     try {
@@ -112,10 +100,20 @@ const TeamManagement = () => {
         setUsers(response.data.users);
         setTeamManagers(response.data.users.filter(u => u.role === 'Team Manager'));
         setTeamLeaders(response.data.users.filter(u => u.role === 'Team Leader'));
-        setEmployees(response.data.users.filter(u => u.role === 'Employee'));
       }
     } catch (err) {
       console.error('Failed to fetch users:', err);
+    }
+  };
+
+  const fetchUnassignedEmployees = async () => {
+    try {
+      const response = await teamAPI.getUnassignedEmployees();
+      if (response.data.success) {
+        setUnassignedEmployees(response.data.employees);
+      }
+    } catch (err) {
+      console.error('Failed to fetch unassigned employees:', err);
     }
   };
 
@@ -124,7 +122,6 @@ const TeamManagement = () => {
       name: '',
       code: '',
       description: '',
-      department: '',
       teamManager: '',
       teamLeader: '',
       members: [],
@@ -150,10 +147,12 @@ const TeamManagement = () => {
   };
 
   const handleMembersChange = (e) => {
-    const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+    const { value, checked } = e.target;
     setAddFormData(prev => ({
       ...prev,
-      members: selectedOptions
+      members: checked 
+        ? [...prev.members, value]
+        : prev.members.filter(id => id !== value)
     }));
   };
 
@@ -170,20 +169,12 @@ const TeamManagement = () => {
       errors.code = 'Team code must contain only uppercase letters and numbers';
     }
     
-    if (!addFormData.department) {
-      errors.department = 'Department is required';
-    }
-    
     if (!addFormData.teamManager) {
       errors.teamManager = 'Team Manager is required';
     }
     
     if (!addFormData.teamLeader) {
       errors.teamLeader = 'Team Leader is required';
-    }
-    
-    if (addFormData.members.length === 0) {
-      errors.members = 'At least one team member is required';
     }
     
     if (addFormData.maxSize < 1 || addFormData.maxSize > 50) {
@@ -209,7 +200,6 @@ const TeamManagement = () => {
         name: addFormData.name.trim(),
         code: addFormData.code.trim().toUpperCase(),
         description: addFormData.description.trim(),
-        department: addFormData.department,
         teamManager: addFormData.teamManager,
         teamLeader: addFormData.teamLeader,
         maxSize: parseInt(addFormData.maxSize)
@@ -237,7 +227,6 @@ const TeamManagement = () => {
           name: '',
           code: '',
           description: '',
-          department: '',
           teamManager: '',
           teamLeader: '',
           members: [],
@@ -246,11 +235,254 @@ const TeamManagement = () => {
         setValidationErrors({});
         setSuccess('Team created successfully!');
         fetchTeams();
+        fetchUnassignedEmployees(); // Refresh unassigned employees list
       }
     } catch (err) {
       console.error('Create team error:', err);
       setError(getErrorMessage(err));
     }
+  };
+
+  // Edit Team Functions
+  const handleOpenEditModal = (team) => {
+    setEditingTeam(team);
+    setEditFormData({
+      name: team.name,
+      description: team.description || '',
+      teamManager: team.teamManager?._id || '',
+      teamLeader: team.teamLeader?._id || '',
+      maxSize: team.maxSize,
+      isActive: team.isActive
+    });
+    setValidationErrors({});
+    setShowEditModal(true);
+  };
+
+  const handleEditInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setEditFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+    
+    if (validationErrors[name]) {
+      setValidationErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  const validateEditForm = () => {
+    const errors = {};
+    
+    if (!editFormData.name.trim()) {
+      errors.name = 'Team name is required';
+    }
+    
+    if (!editFormData.teamManager) {
+      errors.teamManager = 'Team Manager is required';
+    }
+    
+    if (!editFormData.teamLeader) {
+      errors.teamLeader = 'Team Leader is required';
+    }
+    
+    if (editFormData.maxSize < 1 || editFormData.maxSize > 50) {
+      errors.maxSize = 'Max size must be between 1 and 50';
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleEditTeam = async (e) => {
+    e.preventDefault();
+    
+    if (!validateEditForm()) {
+      return;
+    }
+    
+    try {
+      setError('');
+      setSuccess('');
+
+      const teamData = {
+        name: editFormData.name.trim(),
+        description: editFormData.description.trim(),
+        teamManager: editFormData.teamManager,
+        teamLeader: editFormData.teamLeader,
+        maxSize: parseInt(editFormData.maxSize),
+        isActive: editFormData.isActive
+      };
+
+      const response = await teamAPI.updateTeam(editingTeam._id, teamData);
+      
+      if (response.data.success) {
+        setShowEditModal(false);
+        setEditingTeam(null);
+        setEditFormData({
+          name: '',
+          description: '',
+          teamManager: '',
+          teamLeader: '',
+          maxSize: 10,
+          isActive: true
+        });
+        setValidationErrors({});
+        setSuccess('Team updated successfully!');
+        fetchTeams();
+      }
+    } catch (err) {
+      console.error('Update team error:', err);
+      setError(getErrorMessage(err));
+    }
+  };
+
+  // Delete Team Functions
+  const handleDeleteTeam = async (teamId, teamName) => {
+    if (window.confirm(`Are you sure you want to delete the team "${teamName}"? This action cannot be undone.`)) {
+      try {
+        setError('');
+        setSuccess('');
+
+        const response = await teamAPI.deleteTeam(teamId);
+        
+        if (response.data.success) {
+          setSuccess('Team deleted successfully!');
+          fetchTeams();
+          fetchUnassignedEmployees(); // Refresh unassigned employees list
+        }
+      } catch (err) {
+        console.error('Delete team error:', err);
+        setError(getErrorMessage(err));
+      }
+    }
+  };
+
+  // Manage Members Functions
+  const handleOpenMembersModal = async (team) => {
+    try {
+      setSelectedTeam(team);
+      setShowMembersModal(true);
+      
+      // Fetch detailed team information with members
+      const response = await teamAPI.getTeamById(team._id);
+      if (response.data.success) {
+        setSelectedTeam(response.data.team);
+      }
+    } catch (err) {
+      console.error('Error fetching team details:', err);
+      setError(getErrorMessage(err));
+    }
+  };
+
+  const handleAddMember = async (e) => {
+    e.preventDefault();
+    
+    if (!memberFormData.userId) {
+      setError('Please select a user to add');
+      return;
+    }
+    
+    try {
+      setError('');
+      setSuccess('');
+
+      const response = await teamAPI.addTeamMember(selectedTeam._id, {
+        userId: memberFormData.userId,
+        role: memberFormData.role
+      });
+      
+      if (response.data.success) {
+        setMemberFormData({ userId: '', role: 'Member' });
+        setSuccess('Member added successfully!');
+        
+        // Refresh team details
+        const teamResponse = await teamAPI.getTeamById(selectedTeam._id);
+        if (teamResponse.data.success) {
+          setSelectedTeam(teamResponse.data.team);
+        }
+        
+        fetchTeams();
+        fetchUnassignedEmployees();
+      }
+    } catch (err) {
+      console.error('Add member error:', err);
+      setError(getErrorMessage(err));
+    }
+  };
+
+  const handleRemoveMember = async (userId, userName) => {
+    if (window.confirm(`Are you sure you want to remove ${userName} from this team?`)) {
+      try {
+        setError('');
+        setSuccess('');
+
+        // Handle case where userId is null (broken reference)
+        if (!userId) {
+          // For broken references, we need to manually clean up the team data
+          // This is a fallback - ideally the backend should handle this
+          setError('Cannot remove member with broken user reference. Please contact administrator.');
+          return;
+        }
+
+        const response = await teamAPI.removeTeamMember(selectedTeam._id, userId);
+        
+        if (response.data.success) {
+          setSuccess('Member removed successfully!');
+          
+          // Refresh team details
+          const teamResponse = await teamAPI.getTeamById(selectedTeam._id);
+          if (teamResponse.data.success) {
+            setSelectedTeam(teamResponse.data.team);
+          }
+          
+          fetchTeams();
+          fetchUnassignedEmployees();
+        }
+      } catch (err) {
+        console.error('Remove member error:', err);
+        setError(getErrorMessage(err));
+      }
+    }
+  };
+
+  const handleRemoveBrokenMember = async (memberIndex) => {
+    if (window.confirm('Are you sure you want to remove this broken member reference from the team?')) {
+      try {
+        setError('');
+        setSuccess('');
+
+        // Call the cleanup API to remove broken member references
+        const response = await teamAPI.cleanupTeamMembers(selectedTeam._id);
+        
+        if (response.data.success) {
+          setSelectedTeam(response.data.team);
+          setSuccess(response.data.message);
+          fetchTeams();
+          fetchUnassignedEmployees();
+        }
+      } catch (err) {
+        console.error('Remove broken member error:', err);
+        setError(getErrorMessage(err));
+      }
+    }
+  };
+
+  // Check if user can edit/delete specific team
+  const canEditTeam = (team) => {
+    return canManageAllTeams || 
+           (isTeamManager && team.teamManager && team.teamManager._id === user._id);
+  };
+
+  const canDeleteTeam = (team) => {
+    return canManageAllTeams;
+  };
+
+  const canManageMembers = (team) => {
+    return canManageAllTeams || 
+           (isTeamManager && team.teamManager && team.teamManager._id === user._id);
   };
 
   const getErrorMessage = (error) => {
@@ -363,7 +595,6 @@ const TeamManagement = () => {
                 <thead className="table-light">
                   <tr>
                     <th>Team</th>
-                    <th>Department</th>
                     <th>Team Manager</th>
                     <th>Team Leader</th>
                     <th>Members</th>
@@ -382,11 +613,6 @@ const TeamManagement = () => {
                             {team.description && ` • ${team.description}`}
                           </small>
                         </div>
-                      </td>
-                      <td>
-                        <span className="badge bg-secondary">
-                          {team.department?.name || 'Not assigned'}
-                        </span>
                       </td>
                       <td>
                         {team.teamManager ? (
@@ -425,21 +651,24 @@ const TeamManagement = () => {
                           <button
                             className="btn btn-sm btn-outline-primary"
                             title="Manage Members"
-                            disabled
+                            onClick={() => handleOpenMembersModal(team)}
+                            disabled={!canManageMembers(team)}
                           >
                             <i className="bi bi-people"></i>
                           </button>
                           <button
                             className="btn btn-sm btn-outline-secondary"
                             title="Edit Team"
-                            disabled
+                            onClick={() => handleOpenEditModal(team)}
+                            disabled={!canEditTeam(team)}
                           >
                             <i className="bi bi-pencil"></i>
                           </button>
                           <button
                             className="btn btn-sm btn-outline-danger"
                             title="Delete Team"
-                            disabled
+                            onClick={() => handleDeleteTeam(team._id, team.name)}
+                            disabled={!canDeleteTeam(team)}
                           >
                             <i className="bi bi-trash"></i>
                           </button>
@@ -519,27 +748,7 @@ const TeamManagement = () => {
                         placeholder="Brief description of the team's purpose"
                       />
                     </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Department *</label>
-                      <select
-                        className={`form-select ${validationErrors.department ? 'is-invalid' : ''}`}
-                        name="department"
-                        value={addFormData.department}
-                        onChange={handleAddInputChange}
-                        required
-                      >
-                        <option value="">Select Department</option>
-                        {departments.map(dept => (
-                          <option key={dept._id} value={dept._id}>{dept.name}</option>
-                        ))}
-                      </select>
-                      {validationErrors.department && (
-                        <div className="invalid-feedback">
-                          {validationErrors.department}
-                        </div>
-                      )}
-                    </div>
-                    <div className="col-md-6">
+                    <div className="col-md-12">
                       <label className="form-label">Max Team Size</label>
                       <input
                         type="number"
@@ -601,28 +810,35 @@ const TeamManagement = () => {
                       )}
                     </div>
                     <div className="col-md-12">
-                      <label className="form-label">Team Members *</label>
-                      <select
-                        className={`form-select ${validationErrors.members ? 'is-invalid' : ''}`}
-                        multiple
-                        size="6"
-                        value={addFormData.members}
-                        onChange={handleMembersChange}
-                        required
-                      >
-                        {employees.map(employee => (
-                          <option key={employee._id} value={employee._id}>
-                            {employee.firstName} {employee.lastName} ({employee.email})
-                          </option>
-                        ))}
-                      </select>
+                      <label className="form-label">Team Members</label>
+                      <div className="border rounded p-3" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                        {unassignedEmployees.length === 0 ? (
+                          <p className="text-muted mb-0">No unassigned employees available</p>
+                        ) : (
+                          unassignedEmployees.map(employee => (
+                            <div key={employee._id} className="form-check mb-2">
+                              <input
+                                className="form-check-input"
+                                type="checkbox"
+                                value={employee._id}
+                                id={`employee-${employee._id}`}
+                                checked={addFormData.members.includes(employee._id)}
+                                onChange={handleMembersChange}
+                              />
+                              <label className="form-check-label" htmlFor={`employee-${employee._id}`}>
+                                {employee.firstName} {employee.lastName} ({employee.email})
+                              </label>
+                            </div>
+                          ))
+                        )}
+                      </div>
                       {validationErrors.members && (
-                        <div className="invalid-feedback">
+                        <div className="invalid-feedback d-block">
                           {validationErrors.members}
                         </div>
                       )}
                       <small className="form-text text-muted">
-                        Hold Ctrl/Cmd to select multiple employees
+                        Select employees to add to this team (only unassigned employees are shown)
                       </small>
                     </div>
                   </div>
@@ -643,6 +859,402 @@ const TeamManagement = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Team Modal */}
+      {showEditModal && editingTeam && (
+        <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content">
+              <form onSubmit={handleEditTeam} noValidate>
+                <div className="modal-header">
+                  <h5 className="modal-title">Edit Team - {editingTeam.name}</h5>
+                  <button 
+                    type="button" 
+                    className="btn-close"
+                    onClick={() => {
+                      setShowEditModal(false);
+                      setEditingTeam(null);
+                      setValidationErrors({});
+                    }}
+                  ></button>
+                </div>
+                <div className="modal-body">
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <label className="form-label">Team Name *</label>
+                      <input
+                        type="text"
+                        className={`form-control ${validationErrors.name ? 'is-invalid' : ''}`}
+                        name="name"
+                        value={editFormData.name}
+                        onChange={handleEditInputChange}
+                        placeholder="e.g., Development Team Alpha"
+                        required
+                      />
+                      {validationErrors.name && (
+                        <div className="invalid-feedback">
+                          {validationErrors.name}
+                        </div>
+                      )}
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Team Code</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={editingTeam.code}
+                        disabled
+                        style={{ backgroundColor: '#f8f9fa' }}
+                      />
+                      <small className="form-text text-muted">Team code cannot be changed</small>
+                    </div>
+                    <div className="col-md-12">
+                      <label className="form-label">Team Description</label>
+                      <textarea
+                        className="form-control"
+                        name="description"
+                        value={editFormData.description}
+                        onChange={handleEditInputChange}
+                        rows="2"
+                        placeholder="Brief description of the team's purpose"
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Max Team Size</label>
+                      <input
+                        type="number"
+                        className={`form-control ${validationErrors.maxSize ? 'is-invalid' : ''}`}
+                        name="maxSize"
+                        value={editFormData.maxSize}
+                        onChange={handleEditInputChange}
+                        min="1"
+                        max="50"
+                      />
+                      {validationErrors.maxSize && (
+                        <div className="invalid-feedback">
+                          {validationErrors.maxSize}
+                        </div>
+                      )}
+                    </div>
+                    <div className="col-md-6">
+                      <div className="form-check mt-4">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          name="isActive"
+                          id="isActive"
+                          checked={editFormData.isActive}
+                          onChange={handleEditInputChange}
+                        />
+                        <label className="form-check-label" htmlFor="isActive">
+                          Team is Active
+                        </label>
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Team Manager *</label>
+                      <select
+                        className={`form-select ${validationErrors.teamManager ? 'is-invalid' : ''}`}
+                        name="teamManager"
+                        value={editFormData.teamManager}
+                        onChange={handleEditInputChange}
+                        required
+                      >
+                        <option value="">Select Team Manager</option>
+                        {teamManagers.map(manager => (
+                          <option key={manager._id} value={manager._id}>
+                            {manager.firstName} {manager.lastName} ({manager.email})
+                          </option>
+                        ))}
+                      </select>
+                      {validationErrors.teamManager && (
+                        <div className="invalid-feedback">
+                          {validationErrors.teamManager}
+                        </div>
+                      )}
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Team Leader *</label>
+                      <select
+                        className={`form-select ${validationErrors.teamLeader ? 'is-invalid' : ''}`}
+                        name="teamLeader"
+                        value={editFormData.teamLeader}
+                        onChange={handleEditInputChange}
+                        required
+                      >
+                        <option value="">Select Team Leader</option>
+                        {teamLeaders.map(leader => (
+                          <option key={leader._id} value={leader._id}>
+                            {leader.firstName} {leader.lastName} ({leader.email})
+                          </option>
+                        ))}
+                      </select>
+                      {validationErrors.teamLeader && (
+                        <div className="invalid-feedback">
+                          {validationErrors.teamLeader}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button 
+                    type="button" 
+                    className="btn btn-secondary"
+                    onClick={() => {
+                      setShowEditModal(false);
+                      setEditingTeam(null);
+                      setValidationErrors({});
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-primary">
+                    Update Team
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manage Members Modal */}
+      {showMembersModal && selectedTeam && (
+        <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-xl">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Manage Team Members - {selectedTeam.name}</h5>
+                <button 
+                  type="button" 
+                  className="btn-close"
+                  onClick={() => {
+                    setShowMembersModal(false);
+                    setSelectedTeam(null);
+                    setMemberFormData({ userId: '', role: 'Member' });
+                  }}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <div className="row">
+                  {/* Team Information */}
+                  <div className="col-md-4">
+                    <div className="card">
+                      <div className="card-header">
+                        <h6 className="mb-0">Team Information</h6>
+                      </div>
+                      <div className="card-body">
+                        <p><strong>Team Code:</strong> <code>{selectedTeam.code}</code></p>
+                        <p><strong>Description:</strong> {selectedTeam.description || 'No description'}</p>
+                        <p><strong>Max Size:</strong> {selectedTeam.maxSize}</p>
+                        <p><strong>Current Size:</strong> {selectedTeam.members?.length || 0}</p>
+                        <p><strong>Status:</strong> {getStatusBadge(selectedTeam.isActive)}</p>
+                        
+                        <hr />
+                        
+                        <div className="mb-3">
+                          <strong>Team Manager:</strong>
+                          {selectedTeam.teamManager ? (
+                            <div className="mt-1">
+                              <div className="fw-semibold">
+                                {selectedTeam.teamManager.firstName} {selectedTeam.teamManager.lastName}
+                              </div>
+                              <small className="text-muted">{selectedTeam.teamManager.email}</small>
+                            </div>
+                          ) : (
+                            <span className="text-muted"> Not assigned</span>
+                          )}
+                        </div>
+                        
+                        <div>
+                          <strong>Team Leader:</strong>
+                          {selectedTeam.teamLeader ? (
+                            <div className="mt-1">
+                              <div className="fw-semibold">
+                                {selectedTeam.teamLeader.firstName} {selectedTeam.teamLeader.lastName}
+                              </div>
+                              <small className="text-muted">{selectedTeam.teamLeader.email}</small>
+                            </div>
+                          ) : (
+                            <span className="text-muted"> Not assigned</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Current Members */}
+                  <div className="col-md-8">
+                    <div className="card">
+                      <div className="card-header d-flex justify-content-between align-items-center">
+                        <h6 className="mb-0">Current Members ({selectedTeam.members?.length || 0})</h6>
+                      </div>
+                      <div className="card-body">
+                        {selectedTeam.members && selectedTeam.members.length > 0 ? (
+                          <div className="table-responsive">
+                            <table className="table table-sm">
+                              <thead>
+                                <tr>
+                                  <th>Employee</th>
+                                  <th>Role</th>
+                                  <th>Joined Date</th>
+                                  <th>Actions</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {selectedTeam.members.map((member, index) => {
+                                  // Handle case where member.user is null (broken reference)
+                                  if (!member.user) {
+                                    return (
+                                      <tr key={`broken-member-${index}`} className="table-warning">
+                                        <td>
+                                          <div>
+                                            <div className="fw-semibold text-warning">
+                                              <i className="bi bi-exclamation-triangle me-1"></i>
+                                              Deleted User
+                                            </div>
+                                            <small className="text-muted">User data not found</small>
+                                          </div>
+                                        </td>
+                                        <td>
+                                          <span className="badge bg-secondary">{member.role}</span>
+                                        </td>
+                                        <td>
+                                          <small>{new Date(member.joinedDate).toLocaleDateString()}</small>
+                                        </td>
+                                        <td>
+                                          <button
+                                            className="btn btn-sm btn-outline-danger"
+                                            onClick={() => handleRemoveBrokenMember(index)}
+                                            title="Remove Broken Reference"
+                                          >
+                                            <i className="bi bi-trash"></i>
+                                          </button>
+                                        </td>
+                                      </tr>
+                                    );
+                                  }
+
+                                  return (
+                                    <tr key={member.user._id}>
+                                      <td>
+                                        <div>
+                                          <div className="fw-semibold">
+                                            {member.user.firstName} {member.user.lastName}
+                                          </div>
+                                          <small className="text-muted">{member.user.email}</small>
+                                        </div>
+                                      </td>
+                                      <td>
+                                        <span className="badge bg-secondary">{member.role}</span>
+                                      </td>
+                                      <td>
+                                        <small>{new Date(member.joinedDate).toLocaleDateString()}</small>
+                                      </td>
+                                      <td>
+                                        <button
+                                          className="btn btn-sm btn-outline-danger"
+                                          onClick={() => handleRemoveMember(
+                                            member.user._id, 
+                                            `${member.user.firstName} ${member.user.lastName}`
+                                          )}
+                                          title="Remove Member"
+                                        >
+                                          <i className="bi bi-trash"></i>
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        ) : (
+                          <div className="text-center py-4">
+                            <i className="bi bi-people text-muted" style={{ fontSize: '2rem' }}></i>
+                            <p className="text-muted mt-2">No members in this team yet</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Add New Member */}
+                    <div className="card mt-3">
+                      <div className="card-header">
+                        <h6 className="mb-0">Add New Member</h6>
+                      </div>
+                      <div className="card-body">
+                        <form onSubmit={handleAddMember}>
+                          <div className="row g-3">
+                            <div className="col-md-8">
+                              <label className="form-label">Select Employee</label>
+                              <select
+                                className="form-select"
+                                value={memberFormData.userId}
+                                onChange={(e) => setMemberFormData(prev => ({
+                                  ...prev,
+                                  userId: e.target.value
+                                }))}
+                                required
+                              >
+                                <option value="">Choose an employee...</option>
+                                {unassignedEmployees.map(employee => (
+                                  <option key={employee._id} value={employee._id}>
+                                    {employee.firstName} {employee.lastName} ({employee.email})
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className="col-md-4">
+                              <label className="form-label">Role</label>
+                              <select
+                                className="form-select"
+                                value={memberFormData.role}
+                                onChange={(e) => setMemberFormData(prev => ({
+                                  ...prev,
+                                  role: e.target.value
+                                }))}
+                              >
+                                <option value="Member">Member</option>
+                                <option value="Senior Member">Senior Member</option>
+                                <option value="Lead">Lead</option>
+                              </select>
+                            </div>
+                            <div className="col-12">
+                              <button 
+                                type="submit" 
+                                className="btn btn-primary"
+                                disabled={!memberFormData.userId}
+                              >
+                                <i className="bi bi-plus-circle me-1"></i>
+                                Add Member
+                              </button>
+                            </div>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button 
+                  type="button" 
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setShowMembersModal(false);
+                    setSelectedTeam(null);
+                    setMemberFormData({ userId: '', role: 'Member' });
+                  }}
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>

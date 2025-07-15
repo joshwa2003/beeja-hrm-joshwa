@@ -1,5 +1,6 @@
 const { validationResult } = require('express-validator');
 const User = require('../models/User');
+const Team = require('../models/Team');
 
 // @desc    Get all users
 // @route   GET /api/users
@@ -32,6 +33,7 @@ const getAllUsers = async (req, res) => {
     const users = await User.find(query)
       .select('-password')
       .populate('department', 'name code')
+      .populate('team', 'name code')
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit)
@@ -65,6 +67,7 @@ const getUserById = async (req, res) => {
     const user = await User.findById(req.params.id)
       .select('-password')
       .populate('department', 'name code')
+      .populate('team', 'name code')
       .populate('createdBy', 'firstName lastName email');
 
     if (!user) {
@@ -115,7 +118,8 @@ const createUser = async (req, res) => {
       phoneNumber,
       designation,
       joiningDate,
-      isActive = true
+      isActive = true,
+      teamId // New field for team assignment
     } = req.body;
 
     // Check if user already exists
@@ -138,6 +142,34 @@ const createUser = async (req, res) => {
       }
     }
 
+    // Validate team assignment if provided
+    let team = null;
+    if (teamId) {
+      team = await Team.findById(teamId);
+      if (!team) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid team selected'
+        });
+      }
+
+      // Check if team has capacity
+      if (team.members.length >= team.maxSize) {
+        return res.status(400).json({
+          success: false,
+          message: 'Selected team is at maximum capacity'
+        });
+      }
+
+      // Only allow Employee role users to be assigned as regular team members
+      if (role !== 'Employee') {
+        return res.status(400).json({
+          success: false,
+          message: 'Only Employee role users can be assigned to teams during creation. Team Managers and Team Leaders are assigned through Team Management.'
+        });
+      }
+    }
+
     // Create new user
     const user = new User({
       email: email.toLowerCase(),
@@ -151,14 +183,25 @@ const createUser = async (req, res) => {
       designation,
       joiningDate: joiningDate || new Date(),
       isActive,
+      team: teamId || null, // Set team reference
       createdBy: req.user._id
     });
 
     await user.save();
 
+    // If team is assigned, add user to team members
+    if (team) {
+      team.members.push({
+        user: user._id,
+        role: 'Member',
+        joinedDate: new Date()
+      });
+      await team.save();
+    }
+
     res.status(201).json({
       success: true,
-      message: 'User created successfully',
+      message: team ? 'User created and assigned to team successfully' : 'User created successfully',
       user: {
         id: user._id,
         email: user.email,
@@ -167,6 +210,7 @@ const createUser = async (req, res) => {
         fullName: user.fullName,
         role: user.role,
         department: user.department,
+        team: user.team,
         employeeId: user.employeeId,
         phoneNumber: user.phoneNumber,
         designation: user.designation,

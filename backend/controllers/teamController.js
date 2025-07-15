@@ -56,6 +56,21 @@ const getAllTeams = async (req, res) => {
 
     const teams = await Team.paginate(query, options);
 
+    // Clean up broken member references in all teams
+    let hasAnyChanges = false;
+    for (const team of teams.docs) {
+      if (team.members && team.members.length > 0) {
+        const originalLength = team.members.length;
+        team.members = team.members.filter(member => member.user !== null);
+        
+        if (team.members.length !== originalLength) {
+          hasAnyChanges = true;
+          console.log(`Cleaned up ${originalLength - team.members.length} broken member references from team ${team.name}`);
+          await team.save();
+        }
+      }
+    }
+
     res.status(200).json({
       success: true,
       teams: teams.docs,
@@ -110,6 +125,23 @@ const getTeamById = async (req, res) => {
       });
     }
 
+    // Clean up broken member references (members with null user)
+    let hasChanges = false;
+    if (team.members && team.members.length > 0) {
+      const originalLength = team.members.length;
+      team.members = team.members.filter(member => member.user !== null);
+      
+      if (team.members.length !== originalLength) {
+        hasChanges = true;
+        console.log(`Cleaned up ${originalLength - team.members.length} broken member references from team ${team.name}`);
+      }
+    }
+
+    // Save the team if we cleaned up broken references
+    if (hasChanges) {
+      await team.save();
+    }
+
     res.status(200).json({
       success: true,
       team
@@ -140,39 +172,47 @@ const createTeam = async (req, res) => {
 
     const { name, code, description, department, teamManager, teamLeader, maxSize } = req.body;
 
-    // Check if team name already exists in the department
-    const existingTeam = await Team.findOne({ 
-      name: { $regex: new RegExp(`^${name}$`, 'i') }, 
-      department 
-    });
+    // Check if team name already exists (globally or in department if provided)
+    const nameQuery = { name: { $regex: new RegExp(`^${name}$`, 'i') } };
+    if (department) {
+      nameQuery.department = department;
+    }
+    const existingTeam = await Team.findOne(nameQuery);
     
     if (existingTeam) {
       return res.status(400).json({
         success: false,
-        message: 'A team with this name already exists in the selected department'
+        message: department ? 
+          'A team with this name already exists in the selected department' :
+          'A team with this name already exists'
       });
     }
 
-    // Check if team code already exists in the department
-    const existingCode = await Team.findOne({ 
-      code: code.toUpperCase(), 
-      department 
-    });
+    // Check if team code already exists (globally or in department if provided)
+    const codeQuery = { code: code.toUpperCase() };
+    if (department) {
+      codeQuery.department = department;
+    }
+    const existingCode = await Team.findOne(codeQuery);
     
     if (existingCode) {
       return res.status(400).json({
         success: false,
-        message: 'A team with this code already exists in the selected department'
+        message: department ?
+          'A team with this code already exists in the selected department' :
+          'A team with this code already exists'
       });
     }
 
-    // Validate department exists
-    const departmentDoc = await Department.findById(department);
-    if (!departmentDoc) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid department selected'
-      });
+    // Validate department exists (if provided)
+    if (department) {
+      const departmentDoc = await Department.findById(department);
+      if (!departmentDoc) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid department selected'
+        });
+      }
     }
 
     // Validate team manager if provided
@@ -201,7 +241,7 @@ const createTeam = async (req, res) => {
       name: name.trim(),
       code: code.toUpperCase().trim(),
       description: description?.trim(),
-      department,
+      department: department || null,
       teamManager: teamManager || null,
       teamLeader: teamLeader || null,
       maxSize: maxSize || 10,
@@ -408,6 +448,15 @@ const deleteTeam = async (req, res) => {
 // @access  Private (Admin, VP, HR roles, assigned Team Manager)
 const addTeamMember = async (req, res) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
     const { id } = req.params;
     const { userId, role = 'Member' } = req.body;
     const user = req.user;
@@ -441,7 +490,27 @@ const addTeamMember = async (req, res) => {
       });
     }
 
-    // Check if user is already a member
+    // Check if user is already a member of any team
+    // Allow assignment if user has no team or if they're being assigned to the same team
+    if (memberUser.team && memberUser.team.toString() !== id.toString()) {
+      return res.status(400).json({
+        success: false,
+        message: 'User is already assigned to another team'
+      });
+    }
+
+    // Only allow Employee role users to be assigned as regular team members
+    // Team Managers and Team Leaders are assigned differently
+    console.log('Debug - User role:', memberUser.role, 'Assignment role:', role);
+    if (role === 'Member' && memberUser.role !== 'Employee') {
+      console.log('Debug - Role validation failed. User role:', memberUser.role, 'Expected: Employee');
+      return res.status(400).json({
+        success: false,
+        message: `Only Employee role users can be assigned as team members. User has role: ${memberUser.role}`
+      });
+    }
+
+    // Check if user is already a member of this team
     const existingMember = team.members.find(member => 
       member.user.toString() === userId.toString()
     );
@@ -461,14 +530,18 @@ const addTeamMember = async (req, res) => {
       });
     }
 
-    // Add member
+    // Add member to team
     team.members.push({
       user: userId,
       role: role,
       joinedDate: new Date()
     });
 
-    await team.save();
+    // Update user's team field
+    memberUser.team = id;
+    
+    // Save both team and user
+    await Promise.all([team.save(), memberUser.save()]);
 
     // Return updated team
     const updatedTeam = await Team.findById(id)
@@ -520,6 +593,15 @@ const removeTeamMember = async (req, res) => {
       });
     }
 
+    // Get the user to update their team field
+    const memberUser = await User.findById(userId);
+    if (!memberUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
     // Check if user is a member
     const memberIndex = team.members.findIndex(member => 
       member.user.toString() === userId.toString()
@@ -532,9 +614,14 @@ const removeTeamMember = async (req, res) => {
       });
     }
 
-    // Remove member
+    // Remove member from team
     team.members.splice(memberIndex, 1);
-    await team.save();
+    
+    // Clear user's team field
+    memberUser.team = null;
+    
+    // Save both team and user
+    await Promise.all([team.save(), memberUser.save()]);
 
     // Return updated team
     const updatedTeam = await Team.findById(id)
@@ -632,6 +719,110 @@ const getMyTeam = async (req, res) => {
   }
 };
 
+// @desc    Get employees not assigned to any team
+// @route   GET /api/teams/unassigned-employees
+// @access  Private (Admin, VP, HR roles, Team Managers)
+const getUnassignedEmployees = async (req, res) => {
+  try {
+    // Get all team member user IDs
+    const teams = await Team.find({}, 'members');
+    const assignedUserIds = new Set();
+    
+    teams.forEach(team => {
+      if (team.members && team.members.length > 0) {
+        team.members.forEach(member => {
+          assignedUserIds.add(member.user.toString());
+        });
+      }
+    });
+
+    // Get all employees not in the assigned list
+    const unassignedEmployees = await User.find({
+      role: 'Employee',
+      _id: { $nin: Array.from(assignedUserIds) },
+      isActive: true
+    }).select('firstName lastName email employeeId');
+
+    res.status(200).json({
+      success: true,
+      employees: unassignedEmployees
+    });
+  } catch (error) {
+    console.error('Get unassigned employees error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch unassigned employees',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Clean up broken member references in a team
+// @route   POST /api/teams/:id/cleanup
+// @access  Private (Admin, VP, HR roles, assigned Team Manager)
+const cleanupTeamMembers = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = req.user;
+
+    const team = await Team.findById(id);
+    if (!team) {
+      return res.status(404).json({
+        success: false,
+        message: 'Team not found'
+      });
+    }
+
+    // Check permissions
+    const canManageMembers = 
+      ['Admin', 'Vice President', 'HR BP', 'HR Manager', 'HR Executive'].includes(user.role) ||
+      (user.role === 'Team Manager' && team.teamManager && team.teamManager.toString() === user._id.toString());
+
+    if (!canManageMembers) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. You can only manage members of teams assigned to you.'
+      });
+    }
+
+    // Clean up broken member references
+    let cleanedCount = 0;
+    if (team.members && team.members.length > 0) {
+      const originalLength = team.members.length;
+      team.members = team.members.filter(member => member.user !== null);
+      cleanedCount = originalLength - team.members.length;
+      
+      if (cleanedCount > 0) {
+        await team.save();
+        console.log(`Cleaned up ${cleanedCount} broken member references from team ${team.name}`);
+      }
+    }
+
+    // Return updated team
+    const updatedTeam = await Team.findById(id)
+      .populate('department', 'name code')
+      .populate('teamManager', 'firstName lastName email employeeId')
+      .populate('teamLeader', 'firstName lastName email employeeId')
+      .populate('members.user', 'firstName lastName email employeeId');
+
+    res.status(200).json({
+      success: true,
+      message: cleanedCount > 0 ? 
+        `Cleaned up ${cleanedCount} broken member reference(s)` : 
+        'No broken references found',
+      team: updatedTeam,
+      cleanedCount
+    });
+  } catch (error) {
+    console.error('Cleanup team members error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to cleanup team members',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getAllTeams,
   getTeamById,
@@ -641,5 +832,7 @@ module.exports = {
   addTeamMember,
   removeTeamMember,
   getMyManagedTeams,
-  getMyTeam
+  getMyTeam,
+  getUnassignedEmployees,
+  cleanupTeamMembers
 };
