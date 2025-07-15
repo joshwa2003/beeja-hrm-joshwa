@@ -106,6 +106,19 @@ export const leaveAPI = {
   getLeaveTypes: () => api.get('/leaves/types'),
   getLeaveStats: (params) => api.get('/leaves/stats', { params }),
   getDepartmentStats: () => api.get('/departments/stats'),
+  
+  // Document endpoints
+  uploadLeaveDocuments: (leaveId, formData) => {
+    return api.post(`/leaves/${leaveId}/documents`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+  downloadLeaveDocument: (leaveId, fileName) => api.get(`/leaves/${leaveId}/documents/${fileName}`, {
+    responseType: 'blob'
+  }),
+  deleteLeaveDocument: (leaveId, fileName) => api.delete(`/leaves/${leaveId}/documents/${fileName}`),
 };
 
 // Team API calls

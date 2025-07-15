@@ -10,6 +10,9 @@ const LeaveRequest = () => {
   const [leaveTypes, setLeaveTypes] = useState([]);
   const [leaveBalance, setLeaveBalance] = useState({});
   const [profile, setProfile] = useState(null);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
 
   const [formData, setFormData] = useState({
     leaveType: '',
@@ -110,6 +113,52 @@ const LeaveRequest = () => {
     }
   };
 
+  // File handling functions
+  const handleFileSelect = (e) => {
+    const files = Array.from(e.target.files);
+    
+    // Validate file types
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+    const invalidFiles = files.filter(file => !allowedTypes.includes(file.type));
+    
+    if (invalidFiles.length > 0) {
+      setError('Invalid file type. Only PDF, JPG, JPEG, and PNG files are allowed.');
+      return;
+    }
+    
+    // Validate file sizes (5MB limit)
+    const oversizedFiles = files.filter(file => file.size > 5 * 1024 * 1024);
+    if (oversizedFiles.length > 0) {
+      setError('File size too large. Maximum size allowed is 5MB per file.');
+      return;
+    }
+    
+    // Limit total files to 5
+    if (selectedFiles.length + files.length > 5) {
+      setError('Maximum 5 files allowed per leave request.');
+      return;
+    }
+    
+    setSelectedFiles(prev => [...prev, ...files]);
+    setError('');
+  };
+
+  const removeFile = (index) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const shouldShowDocumentUpload = () => {
+    return ['Sick', 'Maternity', 'Paternity', 'Emergency'].includes(formData.leaveType);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -134,9 +183,29 @@ const LeaveRequest = () => {
         emergencyContact: formData.emergencyContact.name ? formData.emergencyContact : undefined
       };
 
-      await leaveAPI.submitLeaveRequest(submitData);
+      const response = await leaveAPI.submitLeaveRequest(submitData);
+      const leaveRequestId = response.data.leaveRequest._id;
       
-      setSuccess('Leave request submitted successfully! You will be notified once it is reviewed.');
+      // Upload documents if any are selected
+      if (selectedFiles.length > 0) {
+        setIsUploading(true);
+        try {
+          const formDataForUpload = new FormData();
+          selectedFiles.forEach(file => {
+            formDataForUpload.append('documents', file);
+          });
+          
+          await leaveAPI.uploadLeaveDocuments(leaveRequestId, formDataForUpload);
+          setSuccess('Leave request submitted successfully with supporting documents! You will be notified once it is reviewed.');
+        } catch (uploadError) {
+          console.error('Document upload error:', uploadError);
+          setSuccess('Leave request submitted successfully, but there was an issue uploading documents. You can try uploading them later.');
+        } finally {
+          setIsUploading(false);
+        }
+      } else {
+        setSuccess('Leave request submitted successfully! You will be notified once it is reviewed.');
+      }
       
       // Reset form
       setFormData({
@@ -153,6 +222,9 @@ const LeaveRequest = () => {
           relationship: ''
         }
       });
+      
+      // Reset file selection
+      setSelectedFiles([]);
 
       // Refresh leave balance
       fetchLeaveBalance();
@@ -386,6 +458,81 @@ const LeaveRequest = () => {
                   </div>
                 </div>
 
+                {/* Document Upload Section */}
+                {shouldShowDocumentUpload() && (
+                  <div className="row mb-4">
+                    <div className="col-12">
+                      <h6 className="text-primary mb-3">
+                        <i className="bi bi-paperclip me-2"></i>
+                        Upload Supporting Documents (Optional)
+                      </h6>
+                      <p className="text-muted small mb-3">
+                        For {formData.leaveType} leave, you may upload supporting documents such as medical certificates, 
+                        official letters, etc. Accepted formats: PDF, JPG, PNG (Max 5MB per file, up to 5 files)
+                      </p>
+                    </div>
+                    
+                    <div className="col-12">
+                      <div className="mb-3">
+                        <input
+                          type="file"
+                          className="form-control"
+                          multiple
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          onChange={handleFileSelect}
+                          disabled={loading || isUploading}
+                        />
+                        <small className="text-muted">
+                          Select PDF, JPG, or PNG files (Max 5MB each, up to 5 files total)
+                        </small>
+                      </div>
+                      
+                      {/* Selected Files Preview */}
+                      {selectedFiles.length > 0 && (
+                        <div className="border rounded p-3 bg-light">
+                          <h6 className="mb-3">Selected Files ({selectedFiles.length}/5):</h6>
+                          {selectedFiles.map((file, index) => (
+                            <div key={index} className="d-flex justify-content-between align-items-center mb-2 p-2 bg-white rounded border">
+                              <div className="d-flex align-items-center">
+                                <i className={`bi ${file.type === 'application/pdf' ? 'bi-file-earmark-pdf text-danger' : 'bi-file-earmark-image text-primary'} me-2`}></i>
+                                <div>
+                                  <div className="fw-semibold">{file.name}</div>
+                                  <small className="text-muted">{formatFileSize(file.size)}</small>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-outline-danger"
+                                onClick={() => removeFile(index)}
+                                disabled={loading || isUploading}
+                              >
+                                <i className="bi bi-trash"></i>
+                              </button>
+                            </div>
+                          ))}
+                          
+                          {/* Upload Progress */}
+                          {isUploading && (
+                            <div className="mt-3">
+                              <div className="d-flex align-items-center mb-2">
+                                <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                                <span>Uploading documents...</span>
+                              </div>
+                              <div className="progress">
+                                <div 
+                                  className="progress-bar progress-bar-striped progress-bar-animated" 
+                                  role="progressbar" 
+                                  style={{ width: `${uploadProgress}%` }}
+                                ></div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Emergency Contact */}
                 <div className="row mb-4">
                   <div className="col-12">
@@ -434,12 +581,12 @@ const LeaveRequest = () => {
                   <button
                     type="submit"
                     className="btn btn-primary"
-                    disabled={loading}
+                    disabled={loading || isUploading}
                   >
-                    {loading ? (
+                    {loading || isUploading ? (
                       <>
                         <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                        Submitting...
+                        {isUploading ? 'Uploading Documents...' : 'Submitting...'}
                       </>
                     ) : (
                       <>
@@ -506,6 +653,10 @@ const LeaveRequest = () => {
                 <li className="mb-2">
                   <i className="bi bi-check-circle text-success me-2"></i>
                   Check your leave balance before applying
+                </li>
+                <li className="mb-2">
+                  <i className="bi bi-check-circle text-success me-2"></i>
+                  Upload supporting documents for medical/emergency leaves
                 </li>
                 <li className="mb-0">
                   <i className="bi bi-check-circle text-success me-2"></i>

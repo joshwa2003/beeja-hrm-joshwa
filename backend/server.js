@@ -2,6 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const path = require('path');
+const { scheduleCleanup } = require('./utils/fileCleanup');
 
 // Load environment variables
 dotenv.config();
@@ -26,6 +28,9 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve static files for uploaded documents
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Database connection
 mongoose.connect(process.env.MONGODB_URI, {
@@ -52,6 +57,10 @@ mongoose.connect(process.env.MONGODB_URI, {
     await createDummyUsers();
     
     console.log('System initialization completed successfully');
+    
+    // Initialize document cleanup scheduler
+    scheduleCleanup();
+    
   } catch (error) {
     console.error('Error during initialization:', error);
   }

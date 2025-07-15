@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { leaveAPI } from '../../utils/api';
 import LeaveStatusBadge from '../shared/LeaveStatusBadge';
 import LeaveTimeline from '../shared/LeaveTimeline';
+import DocumentPreviewModal from '../shared/DocumentPreviewModal';
 
 const LeaveApproval = () => {
   const { user, hasAnyRole } = useAuth();
@@ -14,6 +15,7 @@ const LeaveApproval = () => {
   const [showModal, setShowModal] = useState(false);
   const [actionModal, setActionModal] = useState({ show: false, action: '', leaveId: '' });
   const [comments, setComments] = useState('');
+  const [documentPreview, setDocumentPreview] = useState({ show: false, leaveId: '', attachment: null });
   const [filters, setFilters] = useState({
     status: 'all',
     leaveType: 'all',
@@ -140,6 +142,26 @@ const LeaveApproval = () => {
       month: 'short',
       day: 'numeric'
     });
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const handleViewDocument = (leaveId, attachment) => {
+    setDocumentPreview({
+      show: true,
+      leaveId: leaveId,
+      attachment: attachment
+    });
+  };
+
+  const handleCloseDocumentPreview = () => {
+    setDocumentPreview({ show: false, leaveId: '', attachment: null });
   };
 
   const canApprove = (leave) => {
@@ -570,6 +592,65 @@ const LeaveApproval = () => {
                     </div>
                   </div>
                 )}
+
+                {/* Supporting Documents Section */}
+                {selectedLeave.attachments && selectedLeave.attachments.length > 0 && (
+                  <div className="row mt-3">
+                    <div className="col-12">
+                      <h6 className="text-primary mb-3">
+                        <i className="bi bi-paperclip me-2"></i>
+                        Supporting Documents ({selectedLeave.attachments.length})
+                      </h6>
+                      <div className="row">
+                        {selectedLeave.attachments.map((attachment, index) => (
+                          <div key={index} className="col-md-6 mb-3">
+                            <div className="card border">
+                              <div className="card-body p-3">
+                                <div className="d-flex align-items-center">
+                                  <i className={`bi ${attachment.mimeType === 'application/pdf' ? 'bi-file-earmark-pdf text-danger' : 'bi-file-earmark-image text-primary'} me-3`} style={{ fontSize: '2rem' }}></i>
+                                  <div className="flex-grow-1">
+                                    <h6 className="mb-1">{attachment.originalName || attachment.fileName}</h6>
+                                    <small className="text-muted">
+                                      {formatFileSize(attachment.fileSize)} • 
+                                      Uploaded: {formatDate(attachment.uploadDate)}
+                                    </small>
+                                    {attachment.expiryDate && new Date() > new Date(attachment.expiryDate) && (
+                                      <div>
+                                        <small className="text-danger">
+                                          <i className="bi bi-exclamation-triangle me-1"></i>
+                                          Document expired
+                                        </small>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="ms-2">
+                                    {attachment.expiryDate && new Date() <= new Date(attachment.expiryDate) ? (
+                                      <button
+                                        className="btn btn-sm btn-outline-primary"
+                                        onClick={() => handleViewDocument(selectedLeave._id, attachment)}
+                                        title="View Document"
+                                      >
+                                        <i className="bi bi-eye"></i>
+                                      </button>
+                                    ) : (
+                                      <button
+                                        className="btn btn-sm btn-outline-secondary"
+                                        disabled
+                                        title="Document expired"
+                                      >
+                                        <i className="bi bi-eye-slash"></i>
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="modal-footer">
                 {canApprove(selectedLeave) && (
@@ -657,6 +738,14 @@ const LeaveApproval = () => {
           </div>
         </div>
       )}
+
+      {/* Document Preview Modal */}
+      <DocumentPreviewModal
+        show={documentPreview.show}
+        onHide={handleCloseDocumentPreview}
+        leaveId={documentPreview.leaveId}
+        attachment={documentPreview.attachment}
+      />
     </div>
   );
 };

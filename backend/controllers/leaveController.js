@@ -1,6 +1,9 @@
 const Leave = require('../models/Leave');
 const User = require('../models/User');
 const mongoose = require('mongoose');
+const path = require('path');
+const fs = require('fs');
+const { upload, handleUploadError, deleteFile } = require('../middleware/upload');
 
 // Employee endpoints
 const submitLeaveRequest = async (req, res) => {
@@ -766,6 +769,213 @@ const getLeaveStats = async (req, res) => {
   }
 };
 
+// Document upload endpoint
+const uploadLeaveDocuments = async (req, res) => {
+  try {
+    const { leaveId } = req.params;
+    
+    // Find the leave request
+    const leaveRequest = await Leave.findOne({
+      _id: leaveId,
+      employee: req.user.id
+    });
+
+    if (!leaveRequest) {
+      return res.status(404).json({
+        message: 'Leave request not found or you are not authorized to upload documents for this request'
+      });
+    }
+
+    // Check if leave request is still pending (can only upload documents for pending requests)
+    if (leaveRequest.status !== 'Pending') {
+      return res.status(400).json({
+        message: 'Documents can only be uploaded for pending leave requests'
+      });
+    }
+
+    // Check if files were uploaded
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({
+        message: 'No files uploaded'
+      });
+    }
+
+    // Process uploaded files
+    const attachments = req.files.map(file => ({
+      fileName: file.filename,
+      originalName: file.originalname,
+      fileUrl: `/uploads/leave-documents/${file.filename}`,
+      fileSize: file.size,
+      mimeType: file.mimetype,
+      uploadDate: new Date(),
+      expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
+    }));
+
+    // Add attachments to leave request
+    leaveRequest.attachments.push(...attachments);
+    leaveRequest.updatedBy = req.user.id;
+    await leaveRequest.save();
+
+    res.json({
+      message: 'Documents uploaded successfully',
+      attachments: attachments,
+      totalAttachments: leaveRequest.attachments.length
+    });
+
+  } catch (error) {
+    console.error('Upload leave documents error:', error);
+    
+    // Clean up uploaded files if there was an error
+    if (req.files) {
+      req.files.forEach(file => {
+        deleteFile(file.path);
+      });
+    }
+    
+    res.status(500).json({
+      message: 'Failed to upload documents',
+      error: error.message
+    });
+  }
+};
+
+// Download/view document endpoint
+const downloadLeaveDocument = async (req, res) => {
+  try {
+    const { leaveId, fileName } = req.params;
+    
+    // Find the leave request
+    const leaveRequest = await Leave.findById(leaveId)
+      .populate('employee', 'firstName lastName email reportingManager');
+
+    if (!leaveRequest) {
+      return res.status(404).json({
+        message: 'Leave request not found'
+      });
+    }
+
+    // Check access permissions
+    let hasAccess = false;
+    
+    if (['Admin', 'Vice President', 'HR BP', 'HR Manager', 'HR Executive'].includes(req.user.role)) {
+      hasAccess = true;
+    } else if (req.user.role === 'Team Leader') {
+      if (leaveRequest.employee.reportingManager && 
+          leaveRequest.employee.reportingManager.toString() === req.user._id.toString()) {
+        hasAccess = true;
+      }
+    } else if (req.user.role === 'Employee') {
+      if (leaveRequest.employee._id.toString() === req.user._id.toString()) {
+        hasAccess = true;
+      }
+    }
+
+    if (!hasAccess) {
+      return res.status(403).json({
+        message: 'Access denied. You are not authorized to view this document.'
+      });
+    }
+
+    // Find the attachment
+    const attachment = leaveRequest.attachments.find(att => att.fileName === fileName);
+    if (!attachment) {
+      return res.status(404).json({
+        message: 'Document not found'
+      });
+    }
+
+    // Check if document has expired
+    if (new Date() > attachment.expiryDate) {
+      return res.status(410).json({
+        message: 'Document has expired and is no longer available'
+      });
+    }
+
+    const filePath = path.join(__dirname, '../uploads/leave-documents', fileName);
+    
+    // Check if file exists
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({
+        message: 'File not found on server'
+      });
+    }
+
+    // Set appropriate headers
+    res.setHeader('Content-Type', attachment.mimeType);
+    res.setHeader('Content-Disposition', `inline; filename="${attachment.originalName}"`);
+    
+    // Send file
+    res.sendFile(filePath);
+
+  } catch (error) {
+    console.error('Download leave document error:', error);
+    res.status(500).json({
+      message: 'Failed to download document',
+      error: error.message
+    });
+  }
+};
+
+// Delete document endpoint
+const deleteLeaveDocument = async (req, res) => {
+  try {
+    const { leaveId, fileName } = req.params;
+    
+    // Find the leave request
+    const leaveRequest = await Leave.findOne({
+      _id: leaveId,
+      employee: req.user.id
+    });
+
+    if (!leaveRequest) {
+      return res.status(404).json({
+        message: 'Leave request not found or you are not authorized to delete documents for this request'
+      });
+    }
+
+    // Check if leave request is still pending
+    if (leaveRequest.status !== 'Pending') {
+      return res.status(400).json({
+        message: 'Documents can only be deleted for pending leave requests'
+      });
+    }
+
+    // Find and remove the attachment
+    const attachmentIndex = leaveRequest.attachments.findIndex(att => att.fileName === fileName);
+    if (attachmentIndex === -1) {
+      return res.status(404).json({
+        message: 'Document not found'
+      });
+    }
+
+    const attachment = leaveRequest.attachments[attachmentIndex];
+    
+    // Remove from database
+    leaveRequest.attachments.splice(attachmentIndex, 1);
+    leaveRequest.updatedBy = req.user.id;
+    await leaveRequest.save();
+
+    // Delete file from filesystem
+    const filePath = path.join(__dirname, '../uploads/leave-documents', fileName);
+    deleteFile(filePath);
+
+    res.json({
+      message: 'Document deleted successfully',
+      deletedDocument: {
+        fileName: attachment.fileName,
+        originalName: attachment.originalName
+      }
+    });
+
+  } catch (error) {
+    console.error('Delete leave document error:', error);
+    res.status(500).json({
+      message: 'Failed to delete document',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   // Employee endpoints
   submitLeaveRequest,
@@ -784,5 +994,10 @@ module.exports = {
   // Common endpoints
   getLeaveRequestById,
   getLeaveTypes,
-  getLeaveStats
+  getLeaveStats,
+  
+  // Document endpoints
+  uploadLeaveDocuments,
+  downloadLeaveDocument,
+  deleteLeaveDocument
 };

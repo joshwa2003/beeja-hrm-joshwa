@@ -76,10 +76,21 @@ const leaveSchema = new mongoose.Schema({
   },
   attachments: [{
     fileName: String,
+    originalName: String,
     fileUrl: String,
+    fileSize: Number,
+    mimeType: String,
     uploadDate: {
       type: Date,
       default: Date.now
+    },
+    expiryDate: {
+      type: Date,
+      default: function() {
+        const expiryDate = new Date();
+        expiryDate.setDate(expiryDate.getDate() + 30);
+        return expiryDate;
+      }
     }
   }],
   isHalfDay: {
