@@ -13,5 +13,6 @@ router.get('/team-requests', auth, leaveController.getTeamLeaveRequests);
 router.patch('/team-approve/:id', auth, leaveController.approveRejectLeaveByTL);
 router.get('/hr-requests', auth, leaveController.getHRLeaveRequests);
 router.patch('/hr-approve/:id', auth, leaveController.finalApproveRejectLeave);
+router.get('/:id', auth, leaveController.getLeaveRequestById);
 
 module.exports = router;

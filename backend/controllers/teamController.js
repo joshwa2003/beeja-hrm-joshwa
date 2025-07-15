@@ -361,17 +361,24 @@ const updateTeam = async (req, res) => {
 
     // Update fields based on role permissions
     const updateData = { updatedBy: user._id };
+    let teamLeaderChanged = false;
     
     if (user.role !== 'Team Manager') {
       // Admin/HR can update all fields
       if (name) updateData.name = name.trim();
       if (teamManager !== undefined) updateData.teamManager = teamManager || null;
-      if (teamLeader !== undefined) updateData.teamLeader = teamLeader || null;
+      if (teamLeader !== undefined) {
+        updateData.teamLeader = teamLeader || null;
+        teamLeaderChanged = teamLeader !== team.teamLeader?.toString();
+      }
       if (maxSize !== undefined) updateData.maxSize = maxSize;
       if (isActive !== undefined) updateData.isActive = isActive;
     } else {
       // Team Managers can update description, maxSize, and teamLeader
-      if (teamLeader !== undefined) updateData.teamLeader = teamLeader || null;
+      if (teamLeader !== undefined) {
+        updateData.teamLeader = teamLeader || null;
+        teamLeaderChanged = teamLeader !== team.teamLeader?.toString();
+      }
       if (maxSize !== undefined) updateData.maxSize = maxSize;
     }
     
@@ -388,6 +395,16 @@ const updateTeam = async (req, res) => {
       .populate('teamLeader', 'firstName lastName email employeeId')
       .populate('members.user', 'firstName lastName email employeeId')
       .populate('updatedBy', 'firstName lastName');
+
+    // If team leader changed, update reporting manager for all team members
+    if (teamLeaderChanged && updatedTeam.members.length > 0) {
+      const memberUserIds = updatedTeam.members.map(member => member.user._id);
+      await User.updateMany(
+        { _id: { $in: memberUserIds } },
+        { reportingManager: updatedTeam.teamLeader || null }
+      );
+      console.log(`Updated reporting manager for ${memberUserIds.length} team members`);
+    }
 
     res.status(200).json({
       success: true,
@@ -537,8 +554,11 @@ const addTeamMember = async (req, res) => {
       joinedDate: new Date()
     });
 
-    // Update user's team field
+    // Update user's team field and set reporting manager to team leader
     memberUser.team = id;
+    if (team.teamLeader) {
+      memberUser.reportingManager = team.teamLeader;
+    }
     
     // Save both team and user
     await Promise.all([team.save(), memberUser.save()]);
@@ -617,8 +637,9 @@ const removeTeamMember = async (req, res) => {
     // Remove member from team
     team.members.splice(memberIndex, 1);
     
-    // Clear user's team field
+    // Clear user's team field and reporting manager
     memberUser.team = null;
+    memberUser.reportingManager = null;
     
     // Save both team and user
     await Promise.all([team.save(), memberUser.save()]);

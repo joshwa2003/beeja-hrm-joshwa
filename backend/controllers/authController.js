@@ -28,8 +28,9 @@ const login = async (req, res) => {
 
     const { email, password } = req.body;
 
-    // Check if user exists
-    const user = await User.findOne({ email: email.toLowerCase() });
+    // Check if user exists and populate department
+    const user = await User.findOne({ email: email.toLowerCase() })
+      .populate('department', 'name code');
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -73,7 +74,7 @@ const login = async (req, res) => {
         lastName: user.lastName,
         fullName: user.fullName,
         role: user.role,
-        department: user.department,
+        department: user.department?.name || 'N/A',
         employeeId: user.employeeId,
         designation: user.designation,
         isActive: user.isActive,
@@ -154,6 +155,9 @@ const register = async (req, res) => {
 
     await user.save();
 
+    // Populate department for response
+    await user.populate('department', 'name code');
+
     // Generate token
     const token = generateToken(user._id);
 
@@ -168,7 +172,7 @@ const register = async (req, res) => {
         lastName: user.lastName,
         fullName: user.fullName,
         role: user.role,
-        department: user.department,
+        department: user.department?.name || 'N/A',
         employeeId: user.employeeId,
         designation: user.designation,
         isActive: user.isActive,
@@ -199,7 +203,9 @@ const register = async (req, res) => {
 // @access  Private
 const getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-password');
+    const user = await User.findById(req.user.id)
+      .select('-password')
+      .populate('department', 'name code');
     
     if (!user) {
       return res.status(404).json({
@@ -217,7 +223,7 @@ const getProfile = async (req, res) => {
         lastName: user.lastName,
         fullName: user.fullName,
         role: user.role,
-        department: user.department,
+        department: user.department?.name || 'N/A',
         employeeId: user.employeeId,
         phoneNumber: user.phoneNumber,
         designation: user.designation,
@@ -242,19 +248,31 @@ const getProfile = async (req, res) => {
 // @access  Private
 const verifyToken = async (req, res) => {
   try {
+    // Get user with populated department for consistent response
+    const user = await User.findById(req.user._id)
+      .select('-password')
+      .populate('department', 'name code');
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
     // If we reach here, the auth middleware has already verified the token
     res.json({
       success: true,
       message: 'Token is valid',
       user: {
-        id: req.user._id,
-        email: req.user.email,
-        firstName: req.user.firstName,
-        lastName: req.user.lastName,
-        fullName: req.user.fullName,
-        role: req.user.role,
-        department: req.user.department,
-        isActive: req.user.isActive
+        id: user._id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        fullName: user.fullName,
+        role: user.role,
+        department: user.department?.name || 'N/A',
+        isActive: user.isActive
       }
     });
   } catch (error) {

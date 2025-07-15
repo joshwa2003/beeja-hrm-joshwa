@@ -53,9 +53,16 @@ const submitLeaveRequest = async (req, res) => {
     }
 
     // Get user details for leave balance check
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user.id).populate('reportingManager', 'firstName lastName email');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if user has a reporting manager (team leader) assigned
+    if (!user.reportingManager) {
+      return res.status(400).json({
+        message: 'You are not assigned to a team or do not have a reporting manager. Please contact HR to assign you to a team before submitting leave requests.'
+      });
     }
 
     // Calculate leave days
@@ -573,6 +580,63 @@ const finalApproveRejectLeave = async (req, res) => {
 };
 
 // Common endpoints
+const getLeaveRequestById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = req.user;
+
+    const leaveRequest = await Leave.findById(id)
+      .populate('employee', 'firstName lastName email employeeId department designation reportingManager')
+      .populate('tlApprovedBy', 'firstName lastName email')
+      .populate('approvedBy', 'firstName lastName email')
+      .populate('createdBy', 'firstName lastName email')
+      .populate('updatedBy', 'firstName lastName email');
+
+    if (!leaveRequest) {
+      return res.status(404).json({
+        message: 'Leave request not found'
+      });
+    }
+
+    // Check access permissions based on user role
+    let hasAccess = false;
+
+    if (['Admin', 'Vice President', 'HR BP', 'HR Manager', 'HR Executive'].includes(user.role)) {
+      // Admin and HR roles can view all leave requests
+      hasAccess = true;
+    } else if (user.role === 'Team Leader') {
+      // Team leaders can view requests from their team members
+      if (leaveRequest.employee.reportingManager && 
+          leaveRequest.employee.reportingManager.toString() === user._id.toString()) {
+        hasAccess = true;
+      }
+    } else if (user.role === 'Employee') {
+      // Employees can only view their own requests
+      if (leaveRequest.employee._id.toString() === user._id.toString()) {
+        hasAccess = true;
+      }
+    }
+
+    if (!hasAccess) {
+      return res.status(403).json({
+        message: 'Access denied. You are not authorized to view this leave request.'
+      });
+    }
+
+    res.json({
+      message: 'Leave request retrieved successfully',
+      leaveRequest
+    });
+
+  } catch (error) {
+    console.error('Get leave request by ID error:', error);
+    res.status(500).json({
+      message: 'Failed to fetch leave request',
+      error: error.message
+    });
+  }
+};
+
 const getLeaveTypes = async (req, res) => {
   try {
     const leaveTypes = [
@@ -671,6 +735,7 @@ module.exports = {
   finalApproveRejectLeave,
   
   // Common endpoints
+  getLeaveRequestById,
   getLeaveTypes,
   getLeaveStats
 };
