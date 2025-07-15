@@ -67,8 +67,11 @@ const submitLeaveRequest = async (req, res) => {
 
     // Calculate leave days
     const timeDiff = end.getTime() - start.getTime();
-    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
-    const totalDays = isHalfDay && daysDiff === 1 ? 0.5 : daysDiff;
+    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+    
+    // If start date and end date are the same, it's a 1-day leave
+    const totalDaysCalculated = daysDiff === 0 ? 1 : daysDiff + 1;
+    const totalDays = isHalfDay && totalDaysCalculated === 1 ? 0.5 : totalDaysCalculated;
 
     // Check leave balance
     const currentYear = new Date().getFullYear();
@@ -111,7 +114,14 @@ const submitLeaveRequest = async (req, res) => {
     await leaveRequest.save();
 
     // Populate employee details for response
-    await leaveRequest.populate('employee', 'firstName lastName email employeeId department designation');
+    await leaveRequest.populate({
+      path: 'employee',
+      select: 'firstName lastName email employeeId department designation',
+      populate: {
+        path: 'department',
+        select: 'name code'
+      }
+    });
 
     res.status(201).json({
       message: 'Leave request submitted successfully',
@@ -152,7 +162,14 @@ const getMyLeaveRequests = async (req, res) => {
     
     const [leaveRequests, totalCount] = await Promise.all([
       Leave.find(query)
-        .populate('employee', 'firstName lastName email employeeId')
+        .populate({
+          path: 'employee',
+          select: 'firstName lastName email employeeId department designation',
+          populate: {
+            path: 'department',
+            select: 'name code'
+          }
+        })
         .populate('approvedBy', 'firstName lastName email')
         .sort({ appliedDate: -1 })
         .skip(skip)
@@ -311,7 +328,14 @@ const getTeamLeaveRequests = async (req, res) => {
     
     const [leaveRequests, totalCount] = await Promise.all([
       Leave.find(query)
-        .populate('employee', 'firstName lastName email employeeId department designation')
+        .populate({
+          path: 'employee',
+          select: 'firstName lastName email employeeId department designation',
+          populate: {
+            path: 'department',
+            select: 'name code'
+          }
+        })
         .populate('approvedBy', 'firstName lastName email')
         .populate('tlApprovedBy', 'firstName lastName email')
         .sort({ appliedDate: -1 })
@@ -443,7 +467,23 @@ const getHRLeaveRequests = async (req, res) => {
           from: 'departments',
           localField: 'employee.department',
           foreignField: '_id',
-          as: 'employee.department'
+          as: 'employee.departmentInfo'
+        }
+      },
+      {
+        $addFields: {
+          'employee.department': {
+            $cond: {
+              if: { $gt: [{ $size: '$employee.departmentInfo' }, 0] },
+              then: { $arrayElemAt: ['$employee.departmentInfo', 0] },
+              else: null
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          'employee.departmentInfo': 0
         }
       },
       {
@@ -586,7 +626,14 @@ const getLeaveRequestById = async (req, res) => {
     const user = req.user;
 
     const leaveRequest = await Leave.findById(id)
-      .populate('employee', 'firstName lastName email employeeId department designation reportingManager')
+      .populate({
+        path: 'employee',
+        select: 'firstName lastName email employeeId department designation reportingManager',
+        populate: {
+          path: 'department',
+          select: 'name code'
+        }
+      })
       .populate('tlApprovedBy', 'firstName lastName email')
       .populate('approvedBy', 'firstName lastName email')
       .populate('createdBy', 'firstName lastName email')

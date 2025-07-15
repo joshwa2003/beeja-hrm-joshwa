@@ -96,11 +96,17 @@ export const AuthProvider = ({ children }) => {
           const response = await authAPI.verifyToken();
           
           if (response.data.success) {
+            // Use fresh user data from server instead of localStorage
+            const freshUser = response.data.user;
+            
+            // Update localStorage with fresh user data
+            localStorage.setItem('user', JSON.stringify(freshUser));
+            
             dispatch({
               type: AUTH_ACTIONS.LOGIN_SUCCESS,
               payload: {
                 token,
-                user: JSON.parse(user),
+                user: freshUser,
               },
             });
           } else {

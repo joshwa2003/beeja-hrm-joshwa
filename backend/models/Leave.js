@@ -122,10 +122,10 @@ leaveSchema.index({ status: 1 });
 leaveSchema.index({ leaveType: 1 });
 leaveSchema.index({ appliedDate: -1 });
 
-// Validation: End date should be after start date
+// Validation: End date should be after or equal to start date
 leaveSchema.pre('validate', function(next) {
-  if (this.endDate <= this.startDate) {
-    next(new Error('End date must be after start date'));
+  if (this.endDate < this.startDate) {
+    next(new Error('End date cannot be before start date'));
   } else {
     next();
   }
@@ -135,12 +135,15 @@ leaveSchema.pre('validate', function(next) {
 leaveSchema.pre('save', function(next) {
   if (this.isModified('startDate') || this.isModified('endDate') || this.isModified('isHalfDay')) {
     const timeDiff = this.endDate.getTime() - this.startDate.getTime();
-    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
+    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
     
-    if (this.isHalfDay && daysDiff === 1) {
+    // If start date and end date are the same, it's a 1-day leave
+    const totalDaysCalculated = daysDiff === 0 ? 1 : daysDiff + 1;
+    
+    if (this.isHalfDay && totalDaysCalculated === 1) {
       this.totalDays = 0.5;
     } else {
-      this.totalDays = daysDiff;
+      this.totalDays = totalDaysCalculated;
     }
   }
   next();

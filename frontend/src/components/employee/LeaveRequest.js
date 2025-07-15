@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { leaveAPI } from '../../utils/api';
+import { leaveAPI, authAPI } from '../../utils/api';
 
 const LeaveRequest = () => {
   const { user } = useAuth();
@@ -9,6 +9,7 @@ const LeaveRequest = () => {
   const [success, setSuccess] = useState('');
   const [leaveTypes, setLeaveTypes] = useState([]);
   const [leaveBalance, setLeaveBalance] = useState({});
+  const [profile, setProfile] = useState(null);
 
   const [formData, setFormData] = useState({
     leaveType: '',
@@ -28,7 +29,17 @@ const LeaveRequest = () => {
   useEffect(() => {
     fetchLeaveTypes();
     fetchLeaveBalance();
+    fetchUserProfile();
   }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      const response = await authAPI.getProfile();
+      setProfile(response.data.user);
+    } catch (err) {
+      console.error('Failed to fetch user profile:', err);
+    }
+  };
 
   const fetchLeaveTypes = async () => {
     try {
@@ -205,7 +216,7 @@ const LeaveRequest = () => {
                     <input
                       type="text"
                       className="form-control"
-                      value={user?.employeeId || 'N/A'}
+                  value={profile?.employeeId || user?.employeeId || 'N/A'}
                       disabled
                     />
                   </div>
@@ -214,7 +225,7 @@ const LeaveRequest = () => {
                     <input
                       type="text"
                       className="form-control"
-                      value={`${user?.firstName} ${user?.lastName}`}
+                  value={`${profile?.firstName || user?.firstName} ${profile?.lastName || user?.lastName}`}
                       disabled
                     />
                   </div>
@@ -223,7 +234,7 @@ const LeaveRequest = () => {
                     <input
                       type="text"
                       className="form-control"
-                      value={user?.department || 'N/A'}
+                      value={profile?.department?.name || user?.department?.name || user?.department || 'N/A'}
                       disabled
                     />
                   </div>
@@ -232,7 +243,7 @@ const LeaveRequest = () => {
                     <input
                       type="text"
                       className="form-control"
-                      value={user?.designation || 'N/A'}
+                      value={profile?.designation || user?.designation || 'N/A'}
                       disabled
                     />
                   </div>

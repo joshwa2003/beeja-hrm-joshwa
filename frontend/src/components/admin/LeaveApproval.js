@@ -497,7 +497,7 @@ const LeaveApproval = () => {
                         </tr>
                         <tr>
                           <td><strong>Department:</strong></td>
-                          <td>{selectedLeave.employee?.department || 'N/A'}</td>
+                          <td>{selectedLeave.employee?.department?.name || selectedLeave.employee?.department || 'N/A'}</td>
                         </tr>
                         <tr>
                           <td><strong>Designation:</strong></td>

@@ -14,6 +14,7 @@ import UserManagement from './components/admin/UserManagement';
 import AddUser from './components/admin/AddUser';
 import UserRoles from './components/admin/UserRoles';
 import TeamManagement from './components/admin/TeamManagement';
+import OrganizationChart from './components/admin/OrganizationChart';
 import MyTeamDashboard from './components/MyTeamDashboard';
 import MyManagedTeamsDashboard from './components/MyManagedTeamsDashboard';
 
@@ -142,6 +143,18 @@ function App() {
                 <ProtectedRoute requiredRoles={['Admin', 'Vice President', 'HR BP', 'HR Manager', 'HR Executive', 'Team Manager', 'Team Leader']}>
                   <Layout>
                     <TeamManagement />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Organization Chart Route */}
+            <Route
+              path="/admin/org-chart"
+              element={
+                <ProtectedRoute requiredRoles={['Admin', 'Vice President', 'HR BP', 'HR Manager', 'HR Executive']}>
+                  <Layout>
+                    <OrganizationChart />
                   </Layout>
                 </ProtectedRoute>
               }
