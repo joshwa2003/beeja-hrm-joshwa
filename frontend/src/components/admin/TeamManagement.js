@@ -51,6 +51,8 @@ const TeamManagement = () => {
     role: 'Member'
   });
 
+  const [toggleLoading, setToggleLoading] = useState({});
+
   // Check if user can create/edit teams
   const canCreateTeams = hasAnyRole(['Admin', 'Vice President', 'HR BP', 'HR Manager', 'HR Executive']);
   const canManageAllTeams = hasAnyRole(['Admin', 'Vice President', 'HR BP', 'HR Manager', 'HR Executive']);
@@ -470,6 +472,27 @@ const TeamManagement = () => {
     }
   };
 
+  // Toggle Team Status Function
+  const handleToggleStatus = async (teamId, currentStatus) => {
+    try {
+      setToggleLoading(prev => ({ ...prev, [teamId]: true }));
+      setError('');
+      setSuccess('');
+
+      const response = await teamAPI.toggleTeamStatus(teamId);
+      
+      if (response.data.success) {
+        setSuccess(response.data.message);
+        fetchTeams(); // Refresh the teams list
+      }
+    } catch (err) {
+      console.error('Toggle status error:', err);
+      setError(getErrorMessage(err));
+    } finally {
+      setToggleLoading(prev => ({ ...prev, [teamId]: false }));
+    }
+  };
+
   // Check if user can edit/delete specific team
   const canEditTeam = (team) => {
     return canManageAllTeams || 
@@ -483,6 +506,10 @@ const TeamManagement = () => {
   const canManageMembers = (team) => {
     return canManageAllTeams || 
            (isTeamManager && team.teamManager && team.teamManager._id === user._id);
+  };
+
+  const canToggleStatus = (team) => {
+    return canManageAllTeams;
   };
 
   const getErrorMessage = (error) => {
@@ -647,31 +674,55 @@ const TeamManagement = () => {
                         {getStatusBadge(team.isActive)}
                       </td>
                       <td>
-                        <div className="btn-group" role="group">
-                          <button
-                            className="btn btn-sm btn-outline-primary"
-                            title="Manage Members"
-                            onClick={() => handleOpenMembersModal(team)}
-                            disabled={!canManageMembers(team)}
-                          >
-                            <i className="bi bi-people"></i>
-                          </button>
-                          <button
-                            className="btn btn-sm btn-outline-secondary"
-                            title="Edit Team"
-                            onClick={() => handleOpenEditModal(team)}
-                            disabled={!canEditTeam(team)}
-                          >
-                            <i className="bi bi-pencil"></i>
-                          </button>
-                          <button
-                            className="btn btn-sm btn-outline-danger"
-                            title="Delete Team"
-                            onClick={() => handleDeleteTeam(team._id, team.name)}
-                            disabled={!canDeleteTeam(team)}
-                          >
-                            <i className="bi bi-trash"></i>
-                          </button>
+                        <div className="d-flex align-items-center gap-2">
+                          {/* Status Toggle */}
+                          {canToggleStatus(team) && (
+                            <div className="form-check form-switch">
+                              <input
+                                className="form-check-input"
+                                type="checkbox"
+                                role="switch"
+                                id={`statusToggle-${team._id}`}
+                                checked={team.isActive}
+                                onChange={() => handleToggleStatus(team._id, team.isActive)}
+                                disabled={toggleLoading[team._id]}
+                                title={team.isActive ? 'Click to deactivate' : 'Click to activate'}
+                              />
+                              {toggleLoading[team._id] && (
+                                <div className="spinner-border spinner-border-sm ms-1" role="status">
+                                  <span className="visually-hidden">Loading...</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          
+                          {/* Action Buttons */}
+                          <div className="btn-group" role="group">
+                            <button
+                              className="btn btn-sm btn-outline-primary"
+                              title="Manage Members"
+                              onClick={() => handleOpenMembersModal(team)}
+                              disabled={!canManageMembers(team)}
+                            >
+                              <i className="bi bi-people"></i>
+                            </button>
+                            <button
+                              className="btn btn-sm btn-outline-secondary"
+                              title="Edit Team"
+                              onClick={() => handleOpenEditModal(team)}
+                              disabled={!canEditTeam(team)}
+                            >
+                              <i className="bi bi-pencil"></i>
+                            </button>
+                            <button
+                              className="btn btn-sm btn-outline-danger"
+                              title="Delete Team"
+                              onClick={() => handleDeleteTeam(team._id, team.name)}
+                              disabled={!canDeleteTeam(team)}
+                            >
+                              <i className="bi bi-trash"></i>
+                            </button>
+                          </div>
                         </div>
                       </td>
                     </tr>

@@ -8,7 +8,9 @@ const {
   updateUser,
   deleteUser,
   getRoles,
-  getNextEmployeeId
+  getNextEmployeeId,
+  getRoleStats,
+  getUsersByRole
 } = require('../controllers/userController');
 
 const router = express.Router();
@@ -17,6 +19,16 @@ const router = express.Router();
 // @desc    Get all available roles
 // @access  Private
 router.get('/roles', auth, getRoles);
+
+// @route   GET /api/users/roles/stats
+// @desc    Get role statistics
+// @access  Private (Admin, VP, HR roles, Team Leaders, Team Managers)
+router.get('/roles/stats', auth, roleAccess(['Admin', 'Vice President', 'HR BP', 'HR Manager', 'HR Executive', 'Team Manager', 'Team Leader']), getRoleStats);
+
+// @route   GET /api/users/roles/:role/users
+// @desc    Get users by role
+// @access  Private (Admin, VP, HR roles, Team Leaders, Team Managers)
+router.get('/roles/:role/users', auth, roleAccess(['Admin', 'Vice President', 'HR BP', 'HR Manager', 'HR Executive', 'Team Manager', 'Team Leader']), getUsersByRole);
 
 // @route   GET /api/users/next-employee-id/:role
 // @desc    Get next employee ID for a role

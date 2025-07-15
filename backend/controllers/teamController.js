@@ -757,6 +757,64 @@ const getUnassignedEmployees = async (req, res) => {
   }
 };
 
+// @desc    Toggle team status (active/inactive)
+// @route   PATCH /api/teams/:id/toggle-status
+// @access  Private (Admin, VP, HR roles only)
+const toggleTeamStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = req.user;
+
+    const team = await Team.findById(id);
+    if (!team) {
+      return res.status(404).json({
+        success: false,
+        message: 'Team not found'
+      });
+    }
+
+    // Check permissions - only Admin/HR roles can toggle status
+    const canToggleStatus = ['Admin', 'Vice President', 'HR BP', 'HR Manager', 'HR Executive'].includes(user.role);
+
+    if (!canToggleStatus) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Only Admin and HR roles can toggle team status.'
+      });
+    }
+
+    // Toggle the status
+    const newStatus = !team.isActive;
+    
+    const updatedTeam = await Team.findByIdAndUpdate(
+      id,
+      { 
+        isActive: newStatus,
+        updatedBy: user._id 
+      },
+      { new: true, runValidators: true }
+    )
+      .populate('department', 'name code')
+      .populate('teamManager', 'firstName lastName email employeeId')
+      .populate('teamLeader', 'firstName lastName email employeeId')
+      .populate('members.user', 'firstName lastName email employeeId')
+      .populate('updatedBy', 'firstName lastName');
+
+    res.status(200).json({
+      success: true,
+      message: `Team ${newStatus ? 'activated' : 'deactivated'} successfully`,
+      team: updatedTeam
+    });
+  } catch (error) {
+    console.error('Toggle team status error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to toggle team status',
+      error: error.message
+    });
+  }
+};
+
 // @desc    Clean up broken member references in a team
 // @route   POST /api/teams/:id/cleanup
 // @access  Private (Admin, VP, HR roles, assigned Team Manager)
@@ -834,5 +892,6 @@ module.exports = {
   getMyManagedTeams,
   getMyTeam,
   getUnassignedEmployees,
+  toggleTeamStatus,
   cleanupTeamMembers
 };

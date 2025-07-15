@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { userAPI, departmentAPI, teamAPI } from '../../utils/api';
 
 const UserManagement = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -559,9 +561,17 @@ const UserManagement = () => {
         <div className="d-flex gap-2">
           <span className="badge bg-primary fs-6">{totalUsers} Total Users</span>
           {(user?.role === 'Admin' || user?.role === 'Vice President' || user?.role === 'HR Manager') && (
-            <button className="btn btn-primary" onClick={handleOpenAddModal}>
-              <i className="bi bi-plus-circle me-1"></i> Add User
-            </button>
+            <>
+              <button 
+                className="btn btn-outline-primary" 
+                onClick={() => navigate('/admin/users/add')}
+              >
+                <i className="bi bi-plus-circle me-1"></i> Add User
+              </button>
+              <button className="btn btn-primary" onClick={handleOpenAddModal}>
+                <i className="bi bi-plus-circle me-1"></i> Quick Add
+              </button>
+            </>
           )}
         </div>
       </div>

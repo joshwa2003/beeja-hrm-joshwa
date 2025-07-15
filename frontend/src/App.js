@@ -11,6 +11,8 @@ import LeaveApproval from './components/admin/LeaveApproval';
 import LeaveRequest from './components/employee/LeaveRequest';
 import LeaveHistory from './components/employee/LeaveHistory';
 import UserManagement from './components/admin/UserManagement';
+import AddUser from './components/admin/AddUser';
+import UserRoles from './components/admin/UserRoles';
 import TeamManagement from './components/admin/TeamManagement';
 import MyTeamDashboard from './components/MyTeamDashboard';
 import MyManagedTeamsDashboard from './components/MyManagedTeamsDashboard';
@@ -71,6 +73,26 @@ function App() {
                 <ProtectedRoute requiredRoles={['Admin', 'Vice President', 'HR BP', 'HR Manager', 'HR Executive']}>
                   <Layout>
                     <UserManagement />
+                  </Layout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/users/add" 
+              element={
+                <ProtectedRoute requiredRoles={['Admin', 'Vice President', 'HR Manager']}>
+                  <Layout>
+                    <AddUser />
+                  </Layout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/users/roles" 
+              element={
+                <ProtectedRoute requiredRoles={['Admin', 'Vice President', 'HR BP', 'HR Manager', 'HR Executive', 'Team Manager', 'Team Leader']}>
+                  <Layout>
+                    <UserRoles />
                   </Layout>
                 </ProtectedRoute>
               } 

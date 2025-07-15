@@ -12,6 +12,7 @@ const {
   getMyManagedTeams,
   getMyTeam,
   getUnassignedEmployees,
+  toggleTeamStatus,
   cleanupTeamMembers
 } = require('../controllers/teamController');
 
@@ -196,6 +197,17 @@ router.delete('/:id/members/:userId', [
     .isMongoId()
     .withMessage('Invalid user ID')
 ], removeTeamMember);
+
+// @desc    Toggle team status (active/inactive)
+// @route   PATCH /api/teams/:id/toggle-status
+// @access  Private (Admin, VP, HR roles only)
+router.patch('/:id/toggle-status', [
+  auth,
+  roleAccess(['Admin', 'Vice President', 'HR BP', 'HR Manager', 'HR Executive']),
+  param('id')
+    .isMongoId()
+    .withMessage('Invalid team ID')
+], toggleTeamStatus);
 
 // @desc    Clean up broken member references in a team
 // @route   POST /api/teams/:id/cleanup

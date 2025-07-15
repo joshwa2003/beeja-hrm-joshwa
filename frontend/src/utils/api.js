@@ -66,6 +66,8 @@ export const userAPI = {
   deleteUser: (id) => api.delete(`/users/${id}`),
   getRoles: () => api.get('/users/roles'),
   getNextEmployeeId: (role) => api.get(`/users/next-employee-id/${role}`),
+  getRoleStats: () => api.get('/users/roles/stats'),
+  getUsersByRole: (role, params) => api.get(`/users/roles/${role}/users`, { params }),
 };
 
 // Department API calls
@@ -118,6 +120,7 @@ export const teamAPI = {
   getMyManagedTeams: () => api.get('/teams/my-teams'),
   getMyTeam: () => api.get('/teams/my-team'),
   getUnassignedEmployees: () => api.get('/teams/unassigned-employees'),
+  toggleTeamStatus: (teamId) => api.patch(`/teams/${teamId}/toggle-status`),
   cleanupTeamMembers: (teamId) => api.post(`/teams/${teamId}/cleanup`),
 };
 

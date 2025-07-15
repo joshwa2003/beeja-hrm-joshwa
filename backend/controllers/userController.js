@@ -415,6 +415,106 @@ const getNextEmployeeId = async (req, res) => {
   }
 };
 
+// @desc    Get role statistics
+// @route   GET /api/users/roles/stats
+// @access  Private
+const getRoleStats = async (req, res) => {
+  try {
+    const roles = User.getRoles();
+    const roleStats = [];
+    
+    // Get count for each role
+    for (const role of roles) {
+      const count = await User.countDocuments({ role, isActive: true });
+      const totalCount = await User.countDocuments({ role });
+      
+      roleStats.push({
+        role,
+        activeCount: count,
+        totalCount,
+        inactiveCount: totalCount - count
+      });
+    }
+    
+    // Get total user count
+    const totalUsers = await User.countDocuments();
+    const activeUsers = await User.countDocuments({ isActive: true });
+    
+    res.json({
+      success: true,
+      roleStats,
+      summary: {
+        totalUsers,
+        activeUsers,
+        inactiveUsers: totalUsers - activeUsers
+      }
+    });
+  } catch (error) {
+    console.error('Get role stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching role statistics',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+};
+
+// @desc    Get users by role
+// @route   GET /api/users/roles/:role/users
+// @access  Private
+const getUsersByRole = async (req, res) => {
+  try {
+    const { role } = req.params;
+    const { page = 1, limit = 10, status = 'all' } = req.query;
+    
+    // Validate role
+    const validRoles = User.getRoles();
+    if (!validRoles.includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid role specified'
+      });
+    }
+    
+    // Build query
+    let query = { role };
+    
+    if (status === 'active') {
+      query.isActive = true;
+    } else if (status === 'inactive') {
+      query.isActive = false;
+    }
+    
+    // Execute query with pagination
+    const users = await User.find(query)
+      .select('-password')
+      .populate('department', 'name code')
+      .populate('team', 'name code')
+      .populate('createdBy', 'firstName lastName email')
+      .sort({ createdAt: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit);
+    
+    const total = await User.countDocuments(query);
+    
+    res.json({
+      success: true,
+      users,
+      role,
+      totalPages: Math.ceil(total / limit),
+      currentPage: parseInt(page),
+      total
+    });
+  } catch (error) {
+    console.error('Get users by role error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching users by role',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+};
+
 module.exports = {
   getAllUsers,
   getUserById,
@@ -422,5 +522,7 @@ module.exports = {
   updateUser,
   deleteUser,
   getRoles,
-  getNextEmployeeId
+  getNextEmployeeId,
+  getRoleStats,
+  getUsersByRole
 };
