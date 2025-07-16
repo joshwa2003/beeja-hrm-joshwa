@@ -137,6 +137,21 @@ export const teamAPI = {
   cleanupTeamMembers: (teamId) => api.post(`/teams/${teamId}/cleanup`),
 };
 
+// Holiday API calls
+export const holidayAPI = {
+  // Get holidays with filtering
+  getHolidays: (params) => api.get('/holidays', { params }),
+  getHolidayById: (id) => api.get(`/holidays/${id}`),
+  getUpcomingHolidays: (params) => api.get('/holidays/upcoming', { params }),
+  getHolidayStats: (params) => api.get('/holidays/stats', { params }),
+  
+  // Admin/HR only endpoints
+  createHoliday: (holidayData) => api.post('/holidays', holidayData),
+  updateHoliday: (id, holidayData) => api.put(`/holidays/${id}`, holidayData),
+  deleteHoliday: (id) => api.delete(`/holidays/${id}`),
+  bulkCreateHolidays: (holidaysData) => api.post('/holidays/bulk', holidaysData),
+};
+
 // Health check
 export const healthAPI = {
   check: () => api.get('/health'),

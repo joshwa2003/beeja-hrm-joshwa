@@ -15,6 +15,7 @@ import AddUser from './components/admin/AddUser';
 import UserRoles from './components/admin/UserRoles';
 import TeamManagement from './components/admin/TeamManagement';
 import OrganizationChart from './components/admin/OrganizationChart';
+import HolidayCalendar from './components/admin/HolidayCalendar';
 import MyTeamDashboard from './components/MyTeamDashboard';
 import MyManagedTeamsDashboard from './components/MyManagedTeamsDashboard';
 
@@ -106,6 +107,18 @@ function App() {
                 <ProtectedRoute requiredRoles={['Admin', 'Vice President', 'HR BP', 'HR Manager', 'HR Executive', 'Team Manager', 'Team Leader']}>
                   <Layout>
                     <LeaveApproval />
+                  </Layout>
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Holiday Calendar Route */}
+            <Route 
+              path="/admin/leave/holidays" 
+              element={
+                <ProtectedRoute requiredRoles={['Admin', 'Vice President', 'HR BP', 'HR Manager', 'HR Executive', 'Team Manager', 'Team Leader']}>
+                  <Layout>
+                    <HolidayCalendar />
                   </Layout>
                 </ProtectedRoute>
               } 

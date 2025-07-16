@@ -14,6 +14,7 @@ const userRoutes = require('./routes/users');
 const departmentRoutes = require('./routes/departments');
 const leaveRoutes = require('./routes/leaves');
 const teamRoutes = require('./routes/teams');
+const holidayRoutes = require('./routes/holidays');
 const debugRoutes = require('./routes/debug');
 
 const app = express();
@@ -73,6 +74,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/departments', departmentRoutes);
 app.use('/api/leaves', leaveRoutes);
 app.use('/api/teams', teamRoutes);
+app.use('/api/holidays', holidayRoutes);
 app.use('/api/debug', debugRoutes);
 
 // Health check route
