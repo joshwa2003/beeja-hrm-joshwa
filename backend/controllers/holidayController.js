@@ -1,4 +1,8 @@
 const Holiday = require('../models/Holiday');
+const XLSX = require('xlsx');
+const ExcelJS = require('exceljs');
+const path = require('path');
+const fs = require('fs');
 
 // @desc    Get all holidays with filtering
 // @route   GET /api/holidays
@@ -426,6 +430,261 @@ const getHolidayStats = async (req, res) => {
   }
 };
 
+// @desc    Upload holidays from Excel file
+// @route   POST /api/holidays/upload-excel
+// @access  Private (Admin, HR roles only)
+const uploadHolidaysFromExcel = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No Excel file uploaded'
+      });
+    }
+
+    const filePath = req.file.path;
+    const workbook = XLSX.readFile(filePath);
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+    if (jsonData.length === 0) {
+      // Clean up uploaded file
+      fs.unlinkSync(filePath);
+      return res.status(400).json({
+        success: false,
+        message: 'Excel file is empty or has no valid data'
+      });
+    }
+
+    const createdHolidays = [];
+    const errors = [];
+    const alreadyExists = [];
+
+    for (let i = 0; i < jsonData.length; i++) {
+      try {
+        const row = jsonData[i];
+        
+        // Map Excel columns to our schema (simplified - removed applicability fields)
+        const holidayName = row['Holiday Name'] || row['holidayName'] || row['name'];
+        const date = row['Date'] || row['date'];
+        const holidayType = row['Holiday Type'] || row['holidayType'] || row['type'] || 'Public';
+        const description = row['Description'] || row['description'] || '';
+
+        // Validate required fields
+        if (!holidayName || !date) {
+          errors.push({
+            row: i + 1,
+            error: 'Holiday name and date are required'
+          });
+          continue;
+        }
+
+        // Parse date
+        let parsedDate;
+        if (typeof date === 'number') {
+          // Excel date serial number
+          parsedDate = new Date((date - 25569) * 86400 * 1000);
+        } else {
+          parsedDate = new Date(date);
+        }
+
+        if (isNaN(parsedDate.getTime())) {
+          errors.push({
+            row: i + 1,
+            error: 'Invalid date format'
+          });
+          continue;
+        }
+
+        // Check if holiday already exists
+        const existingHoliday = await Holiday.findOne({
+          holidayName: holidayName.trim(),
+          date: parsedDate,
+          isActive: true
+        });
+
+        if (existingHoliday) {
+          alreadyExists.push({
+            row: i + 1,
+            holidayName: holidayName.trim(),
+            date: parsedDate.toDateString(),
+            message: `Holiday "${holidayName}" already exists on ${parsedDate.toDateString()}`
+          });
+          continue;
+        }
+
+        // Create holiday (simplified - removed applicability fields)
+        const holiday = new Holiday({
+          holidayName: holidayName.trim(),
+          date: parsedDate,
+          holidayType: holidayType || 'Public',
+          description: description?.trim() || '',
+          uploadedFrom: 'excel',
+          createdBy: req.user._id
+        });
+
+        await holiday.save();
+        createdHolidays.push(holiday);
+
+      } catch (error) {
+        errors.push({
+          row: i + 1,
+          error: error.message
+        });
+      }
+    }
+
+    // Clean up uploaded file
+    fs.unlinkSync(filePath);
+
+    res.status(201).json({
+      success: true,
+      message: `Successfully processed ${jsonData.length} rows. Created ${createdHolidays.length} holidays.`,
+      totalRows: jsonData.length,
+      createdCount: createdHolidays.length,
+      errorCount: errors.length,
+      alreadyExistsCount: alreadyExists.length,
+      createdHolidays,
+      errors,
+      alreadyExists
+    });
+
+  } catch (error) {
+    console.error('Upload holidays from Excel error:', error);
+    
+    // Clean up uploaded file if it exists
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Failed to process Excel file',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Download sample Excel file for holidays
+// @route   GET /api/holidays/sample-excel
+// @access  Private (Admin, HR roles only)
+const downloadSampleExcel = async (req, res) => {
+  try {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Holiday Template');
+
+    // Define columns (simplified - removed applicability fields)
+    worksheet.columns = [
+      { header: 'Holiday Name', key: 'holidayName', width: 25 },
+      { header: 'Date', key: 'date', width: 15 },
+      { header: 'Holiday Type', key: 'holidayType', width: 20 },
+      { header: 'Description', key: 'description', width: 40 }
+    ];
+
+    // Style the header row
+    worksheet.getRow(1).font = { bold: true };
+    worksheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFE6E6FA' }
+    };
+
+    // Add sample data (simplified - removed applicability fields)
+    const sampleData = [
+      {
+        holidayName: 'Independence Day',
+        date: '2024-08-15',
+        holidayType: 'Public',
+        description: 'National Holiday - Independence Day of India'
+      },
+      {
+        holidayName: 'Diwali',
+        date: '2024-11-01',
+        holidayType: 'Public',
+        description: 'Festival of Lights'
+      },
+      {
+        holidayName: 'Christmas',
+        date: '2024-12-25',
+        holidayType: 'Public',
+        description: 'Christmas Day'
+      },
+      {
+        holidayName: 'New Year',
+        date: '2025-01-01',
+        holidayType: 'Public',
+        description: 'New Year Day'
+      }
+    ];
+
+    // Add sample rows
+    sampleData.forEach(data => {
+      worksheet.addRow(data);
+    });
+
+    // Add instructions worksheet
+    const instructionsSheet = workbook.addWorksheet('Instructions');
+    instructionsSheet.columns = [
+      { header: 'Field', key: 'field', width: 25 },
+      { header: 'Description', key: 'description', width: 60 },
+      { header: 'Example', key: 'example', width: 30 }
+    ];
+
+    // Style instructions header
+    instructionsSheet.getRow(1).font = { bold: true };
+    instructionsSheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFE6E6FA' }
+    };
+
+    // Updated instructions (removed applicability fields)
+    const instructions = [
+      {
+        field: 'Holiday Name',
+        description: 'Name of the holiday (Required)',
+        example: 'Independence Day'
+      },
+      {
+        field: 'Date',
+        description: 'Date of the holiday in YYYY-MM-DD format (Required)',
+        example: '2024-08-15'
+      },
+      {
+        field: 'Holiday Type',
+        description: 'Type: Public, Optional/Floating, Company-Specific',
+        example: 'Public'
+      },
+      {
+        field: 'Description',
+        description: 'Brief description of the holiday (Optional)',
+        example: 'National Holiday'
+      }
+    ];
+
+    instructions.forEach(instruction => {
+      instructionsSheet.addRow(instruction);
+    });
+
+    // Set response headers
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=holiday_template.xlsx');
+
+    // Write to response
+    await workbook.xlsx.write(res);
+    res.end();
+
+  } catch (error) {
+    console.error('Download sample Excel error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to generate sample Excel file',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getHolidays,
   getUpcomingHolidays,
@@ -434,5 +693,7 @@ module.exports = {
   updateHoliday,
   deleteHoliday,
   bulkCreateHolidays,
-  getHolidayStats
+  getHolidayStats,
+  uploadHolidaysFromExcel,
+  downloadSampleExcel
 };

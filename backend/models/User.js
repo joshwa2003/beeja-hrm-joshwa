@@ -52,6 +52,20 @@ const userSchema = new mongoose.Schema({
   profilePhoto: {
     type: String // URL to profile photo
   },
+  
+  // Holiday-related profile fields
+  religion: {
+    type: String,
+    trim: true
+  },
+  region: {
+    type: String,
+    trim: true
+  },
+  stateOfOrigin: {
+    type: String,
+    trim: true
+  },
 
   // Work Information
   employeeId: {

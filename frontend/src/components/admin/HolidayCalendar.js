@@ -13,6 +13,9 @@ const HolidayCalendar = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingHoliday, setEditingHoliday] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showExcelUploadModal, setShowExcelUploadModal] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadResults, setUploadResults] = useState(null);
 
   const [formData, setFormData] = useState({
     holidayName: '',
@@ -159,6 +162,90 @@ const HolidayCalendar = () => {
       holidayType: 'Public',
       description: ''
     });
+  };
+
+  // Excel upload functionality
+  const handleExcelUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = [
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel',
+      'text/csv'
+    ];
+    
+    if (!allowedTypes.includes(file.type)) {
+      setError('Please select a valid Excel file (.xlsx, .xls) or CSV file');
+      return;
+    }
+
+    // Validate file size (10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+      setError('File size must be less than 10MB');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('excelFile', file);
+
+    try {
+      setLoading(true);
+      setError('');
+      setUploadProgress(0);
+
+      const response = await holidayAPI.uploadHolidaysExcel(formData);
+      
+      setUploadResults(response.data);
+      
+      // Show success message including already exists count
+      let successMessage = `Successfully uploaded ${response.data.createdCount} holidays from Excel file.`;
+      if (response.data.alreadyExistsCount > 0) {
+        successMessage += ` ${response.data.alreadyExistsCount} holidays already existed and were skipped.`;
+      }
+      setSuccess(successMessage);
+      
+      // Refresh holidays list
+      fetchHolidays();
+      
+      // Reset file input
+      event.target.value = '';
+      
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to upload Excel file');
+      setUploadResults(null);
+    } finally {
+      setLoading(false);
+      setUploadProgress(0);
+    }
+  };
+
+  // Download sample Excel file
+  const handleDownloadSample = async () => {
+    try {
+      setLoading(true);
+      const response = await holidayAPI.downloadSampleExcel();
+      
+      // Create blob and download
+      const blob = new Blob([response.data], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      });
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'holiday_template.xlsx';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to download sample Excel file');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const openAddModal = (date = null) => {
@@ -310,27 +397,56 @@ const HolidayCalendar = () => {
           </div>
           
           {canManageHolidays && (
-            <button
-              style={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white',
-                border: 'none',
-                padding: '1rem 2rem',
-                borderRadius: '50px',
-                fontSize: '1rem',
-                fontWeight: '600',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                transition: 'all 0.3s ease',
-                boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)'
-              }}
-              onClick={() => openAddModal()}
-            >
-              <i className="bi bi-plus-circle"></i>
-              Add Holiday
-            </button>
+            <div style={{
+              display: 'flex',
+              gap: '1rem',
+              alignItems: 'center',
+              flexWrap: 'wrap'
+            }}>
+              <button
+                style={{
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  color: 'white',
+                  border: 'none',
+                  padding: '1rem 2rem',
+                  borderRadius: '50px',
+                  fontSize: '1rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)'
+                }}
+                onClick={() => openAddModal()}
+              >
+                <i className="bi bi-plus-circle"></i>
+                Add Holiday
+              </button>
+              
+              <button
+                style={{
+                  background: 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)',
+                  color: 'white',
+                  border: 'none',
+                  padding: '1rem 2rem',
+                  borderRadius: '50px',
+                  fontSize: '1rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 15px rgba(72, 187, 120, 0.4)'
+                }}
+                onClick={() => setShowExcelUploadModal(true)}
+              >
+                <i className="bi bi-file-earmark-excel"></i>
+                Upload Excel
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -1072,6 +1188,303 @@ const HolidayCalendar = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Excel Upload Modal */}
+      {showExcelUploadModal && (
+        <div style={{
+          position: 'fixed',
+          top: '0',
+          left: '0',
+          right: '0',
+          bottom: '0',
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: '1000',
+          padding: '1rem'
+        }} onClick={() => setShowExcelUploadModal(false)}>
+          <div style={{
+            background: 'white',
+            borderRadius: '20px',
+            maxWidth: '600px',
+            width: '100%',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{
+              padding: '2rem 2rem 1rem',
+              borderBottom: '1px solid #e2e8f0',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <h3 style={{
+                margin: '0',
+                fontSize: '1.5rem',
+                fontWeight: '700',
+                color: '#2d3748'
+              }}>Upload Holidays from Excel</h3>
+              <button style={{
+                background: 'none',
+                border: 'none',
+                fontSize: '1.5rem',
+                cursor: 'pointer',
+                color: '#718096',
+                padding: '0.5rem',
+                borderRadius: '50%'
+              }} onClick={() => setShowExcelUploadModal(false)}>
+                <i className="bi bi-x"></i>
+              </button>
+            </div>
+            
+            <div style={{ padding: '2rem' }}>
+              {/* Download Sample Section */}
+              <div style={{
+                background: '#f7fafc',
+                padding: '1.5rem',
+                borderRadius: '12px',
+                marginBottom: '2rem',
+                border: '1px solid #e2e8f0'
+              }}>
+                <h4 style={{
+                  margin: '0 0 1rem 0',
+                  color: '#2d3748',
+                  fontSize: '1.1rem',
+                  fontWeight: '600'
+                }}>
+                  <i className="bi bi-info-circle" style={{ marginRight: '0.5rem', color: '#3182ce' }}></i>
+                  Step 1: Download Sample Template
+                </h4>
+                <p style={{
+                  margin: '0 0 1rem 0',
+                  color: '#718096',
+                  fontSize: '0.9rem'
+                }}>
+                  Download our Excel template to see the required format and sample data.
+                </p>
+                <button
+                  style={{
+                    background: 'linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%)',
+                    color: 'white',
+                    border: 'none',
+                    padding: '0.75rem 1.5rem',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}
+                  onClick={handleDownloadSample}
+                  disabled={loading}
+                >
+                  <i className="bi bi-download"></i>
+                  Download Sample Excel
+                </button>
+              </div>
+
+              {/* Upload Section */}
+              <div style={{
+                background: '#f7fafc',
+                padding: '1.5rem',
+                borderRadius: '12px',
+                marginBottom: '1rem',
+                border: '1px solid #e2e8f0'
+              }}>
+                <h4 style={{
+                  margin: '0 0 1rem 0',
+                  color: '#2d3748',
+                  fontSize: '1.1rem',
+                  fontWeight: '600'
+                }}>
+                  <i className="bi bi-upload" style={{ marginRight: '0.5rem', color: '#48bb78' }}></i>
+                  Step 2: Upload Your Excel File
+                </h4>
+                <p style={{
+                  margin: '0 0 1rem 0',
+                  color: '#718096',
+                  fontSize: '0.9rem'
+                }}>
+                  Select your Excel file (.xlsx, .xls) or CSV file with holiday data.
+                </p>
+                
+                <div style={{
+                  border: '2px dashed #cbd5e0',
+                  borderRadius: '8px',
+                  padding: '2rem',
+                  textAlign: 'center',
+                  background: 'white',
+                  transition: 'all 0.3s ease'
+                }}>
+                  <i className="bi bi-file-earmark-excel" style={{
+                    fontSize: '3rem',
+                    color: '#48bb78',
+                    marginBottom: '1rem'
+                  }}></i>
+                  <p style={{
+                    margin: '0 0 1rem 0',
+                    color: '#4a5568',
+                    fontWeight: '600'
+                  }}>
+                    Choose Excel file to upload
+                  </p>
+                  <p style={{
+                    margin: '0 0 1rem 0',
+                    color: '#718096',
+                    fontSize: '0.8rem'
+                  }}>
+                    Supported formats: .xlsx, .xls, .csv (Max 10MB)
+                  </p>
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls,.csv"
+                    onChange={handleExcelUpload}
+                    style={{
+                      display: 'none'
+                    }}
+                    id="excel-upload"
+                  />
+                  <label
+                    htmlFor="excel-upload"
+                    style={{
+                      background: 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)',
+                      color: 'white',
+                      padding: '0.75rem 1.5rem',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontWeight: '600',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      border: 'none'
+                    }}
+                  >
+                    <i className="bi bi-folder2-open"></i>
+                    Select File
+                  </label>
+                </div>
+              </div>
+
+              {/* Upload Results */}
+              {uploadResults && (
+                <div style={{
+                  background: uploadResults.errorCount > 0 ? '#fed7d7' : '#c6f6d5',
+                  padding: '1.5rem',
+                  borderRadius: '12px',
+                  marginBottom: '1rem',
+                  border: `1px solid ${uploadResults.errorCount > 0 ? '#feb2b2' : '#9ae6b4'}`
+                }}>
+                  <h4 style={{
+                    margin: '0 0 1rem 0',
+                    color: uploadResults.errorCount > 0 ? '#c53030' : '#2f855a',
+                    fontSize: '1.1rem',
+                    fontWeight: '600'
+                  }}>
+                    <i className={`bi ${uploadResults.errorCount > 0 ? 'bi-exclamation-triangle' : 'bi-check-circle'}`} 
+                       style={{ marginRight: '0.5rem' }}></i>
+                    Upload Results
+                  </h4>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+                    gap: '1rem',
+                    marginBottom: '1rem'
+                  }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#2d3748' }}>
+                        {uploadResults.totalRows}
+                      </div>
+                      <div style={{ fontSize: '0.8rem', color: '#718096' }}>Total Rows</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#2f855a' }}>
+                        {uploadResults.createdCount}
+                      </div>
+                      <div style={{ fontSize: '0.8rem', color: '#718096' }}>Created</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#f6ad55' }}>
+                        {uploadResults.alreadyExistsCount || 0}
+                      </div>
+                      <div style={{ fontSize: '0.8rem', color: '#718096' }}>Already Exist</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#c53030' }}>
+                        {uploadResults.errorCount}
+                      </div>
+                      <div style={{ fontSize: '0.8rem', color: '#718096' }}>Errors</div>
+                    </div>
+                  </div>
+                  
+                  {uploadResults.alreadyExists && uploadResults.alreadyExists.length > 0 && (
+                    <div style={{ marginBottom: '1rem' }}>
+                      <h5 style={{ margin: '0 0 0.5rem 0', color: '#f6ad55' }}>Already Exists:</h5>
+                      <div style={{
+                        maxHeight: '150px',
+                        overflowY: 'auto',
+                        background: 'white',
+                        padding: '1rem',
+                        borderRadius: '8px',
+                        fontSize: '0.8rem'
+                      }}>
+                        {uploadResults.alreadyExists.map((item, index) => (
+                          <div key={index} style={{ marginBottom: '0.5rem' }}>
+                            <strong>Row {item.row}:</strong> {item.message}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {uploadResults.errors && uploadResults.errors.length > 0 && (
+                    <div>
+                      <h5 style={{ margin: '0 0 0.5rem 0', color: '#c53030' }}>Errors:</h5>
+                      <div style={{
+                        maxHeight: '150px',
+                        overflowY: 'auto',
+                        background: 'white',
+                        padding: '1rem',
+                        borderRadius: '8px',
+                        fontSize: '0.8rem'
+                      }}>
+                        {uploadResults.errors.map((error, index) => (
+                          <div key={index} style={{ marginBottom: '0.5rem' }}>
+                            <strong>Row {error.row}:</strong> {error.error}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Instructions */}
+              <div style={{
+                background: '#edf2f7',
+                padding: '1rem',
+                borderRadius: '8px',
+                fontSize: '0.8rem',
+                color: '#4a5568'
+              }}>
+                <h5 style={{ margin: '0 0 0.5rem 0', color: '#2d3748' }}>
+                  <i className="bi bi-lightbulb" style={{ marginRight: '0.5rem' }}></i>
+                  Tips:
+                </h5>
+                <ul style={{ margin: '0', paddingLeft: '1.5rem' }}>
+                  <li>Use the sample template for correct format</li>
+                  <li>Date format should be YYYY-MM-DD (e.g., 2024-12-25)</li>
+                  <li>Required fields: Holiday Name, Date</li>
+                  <li>Optional fields: Holiday Type, Description</li>
+                  <li>Duplicate holidays will be skipped (not treated as errors)</li>
+                  <li>Maximum file size: 10MB</li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
       )}

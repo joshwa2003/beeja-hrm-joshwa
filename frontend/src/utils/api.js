@@ -150,6 +150,20 @@ export const holidayAPI = {
   updateHoliday: (id, holidayData) => api.put(`/holidays/${id}`, holidayData),
   deleteHoliday: (id) => api.delete(`/holidays/${id}`),
   bulkCreateHolidays: (holidaysData) => api.post('/holidays/bulk', holidaysData),
+  
+  // Excel upload/download endpoints
+  uploadHolidaysExcel: (formData) => {
+    return api.post('/holidays/upload-excel', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+  downloadSampleExcel: () => {
+    return api.get('/holidays/sample-excel', {
+      responseType: 'blob'
+    });
+  },
 };
 
 // Health check

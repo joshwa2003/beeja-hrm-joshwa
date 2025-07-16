@@ -2,10 +2,16 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Ensure upload directory exists
+// Ensure upload directories exist
 const uploadDir = path.join(__dirname, '../uploads/leave-documents');
+const holidayExcelDir = path.join(__dirname, '../uploads/holiday-excel');
+
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+if (!fs.existsSync(holidayExcelDir)) {
+  fs.mkdirSync(holidayExcelDir, { recursive: true });
 }
 
 // Configure multer storage
@@ -110,10 +116,55 @@ const getFileInfo = (filename) => {
   }
 };
 
+// Configure multer storage for Excel files
+const excelStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, holidayExcelDir);
+  },
+  filename: (req, file, cb) => {
+    // Generate unique filename: timestamp_userId_originalname
+    const uniqueSuffix = Date.now() + '_' + req.user.id;
+    const fileExtension = path.extname(file.originalname);
+    const fileName = `holidays_${uniqueSuffix}${fileExtension}`;
+    cb(null, fileName);
+  }
+});
+
+// File filter for Excel files
+const excelFileFilter = (req, file, cb) => {
+  // Check file type for Excel files
+  const allowedTypes = [
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+    'application/vnd.ms-excel', // .xls
+    'text/csv' // .csv
+  ];
+  const allowedExtensions = ['.xlsx', '.xls', '.csv'];
+  
+  const fileExtension = path.extname(file.originalname).toLowerCase();
+  
+  if (allowedTypes.includes(file.mimetype) && allowedExtensions.includes(fileExtension)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Invalid file type. Only Excel files (.xlsx, .xls) and CSV files are allowed.'), false);
+  }
+};
+
+// Configure multer for Excel uploads
+const uploadExcel = multer({
+  storage: excelStorage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit for Excel files
+    files: 1 // Only 1 file per request
+  },
+  fileFilter: excelFileFilter
+});
+
 module.exports = {
   upload,
+  uploadExcel,
   handleUploadError,
   deleteFile,
   getFileInfo,
-  uploadDir
+  uploadDir,
+  holidayExcelDir
 };

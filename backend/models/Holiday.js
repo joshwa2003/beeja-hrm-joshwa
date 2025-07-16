@@ -21,14 +21,45 @@ const holidaySchema = new mongoose.Schema({
     type: String,
     required: [true, 'Holiday type is required'],
     enum: {
-      values: ['Public', 'Optional/Floating', 'Company-Specific'],
-      message: 'Holiday type must be Public, Optional/Floating, or Company-Specific'
+      values: ['Public', 'Optional/Floating', 'Company-Specific', 'Regional', 'Religious'],
+      message: 'Holiday type must be Public, Optional/Floating, Company-Specific, Regional, or Religious'
     }
   },
   description: {
     type: String,
     trim: true,
     maxlength: [500, 'Description cannot exceed 500 characters']
+  },
+  // Region/Culture-based fields
+  applicabilityType: {
+    type: String,
+    enum: ['all', 'state', 'religion', 'department', 'custom'],
+    default: 'all'
+  },
+  applicableStates: [{
+    type: String,
+    trim: true
+  }],
+  applicableReligions: [{
+    type: String,
+    trim: true
+  }],
+  applicableDepartments: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Department'
+  }],
+  customEmployees: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  tags: [{
+    type: String,
+    trim: true
+  }],
+  uploadedFrom: {
+    type: String,
+    enum: ['manual', 'excel'],
+    default: 'manual'
   },
   isActive: {
     type: Boolean,
