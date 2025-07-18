@@ -47,7 +47,7 @@ const getHRRoleCategories = (role) => {
 // Create a new ticket
 const createTicket = async (req, res) => {
   try {
-    const { subject, description, category, subcategory, priority, attachments, assignedTo } = req.body;
+    const { subject, description, category, subcategory, priority, assignedTo } = req.body;
     
     // Validate required fields
     if (!subject || !description || !category) {
@@ -76,6 +76,20 @@ const createTicket = async (req, res) => {
       // This enables employees to assign tickets to any HR personnel they choose
     }
     
+    // Process uploaded files
+    let processedAttachments = [];
+    if (req.files && req.files.length > 0) {
+      processedAttachments = req.files.map(file => ({
+        filename: file.filename,
+        originalName: file.originalname,
+        path: `ticket-attachments/${file.filename}`,
+        mimetype: file.mimetype,
+        size: file.size,
+        uploadedBy: req.user._id,
+        uploadedAt: new Date()
+      }));
+    }
+    
     // Create ticket
     const ticket = new Ticket({
       subject: subject.trim(),
@@ -84,7 +98,7 @@ const createTicket = async (req, res) => {
       subcategory: subcategory?.trim(),
       priority: priority || 'Medium',
       createdBy: req.user._id,
-      attachments: attachments || [],
+      attachments: processedAttachments,
       assignedTo: assignedTo || undefined, // Set manually assigned HR or let auto-assignment handle it
       isManuallyAssigned: !!assignedTo // Set flag to true if manually assigned
     });
@@ -345,7 +359,7 @@ const getTicketById = async (req, res) => {
 const addMessage = async (req, res) => {
   try {
     const { id } = req.params;
-    const { message, messageType = 'user_message', isInternal = false, attachments } = req.body;
+    const { message, messageType = 'user_message', isInternal = false } = req.body;
     
     if (!message || !message.trim()) {
       return res.status(400).json({ message: 'Message content is required' });
@@ -371,6 +385,20 @@ const addMessage = async (req, res) => {
       finalMessageType = 'hr_response';
     }
     
+    // Process uploaded files for message attachments
+    let processedAttachments = [];
+    if (req.files && req.files.length > 0) {
+      processedAttachments = req.files.map(file => ({
+        filename: file.filename,
+        originalName: file.originalname,
+        path: `ticket-attachments/${file.filename}`,
+        mimetype: file.mimetype,
+        size: file.size,
+        uploadedBy: req.user._id,
+        uploadedAt: new Date()
+      }));
+    }
+    
     // Create message
     const ticketMessage = new TicketMessage({
       ticket: ticket._id,
@@ -378,7 +406,7 @@ const addMessage = async (req, res) => {
       messageType: finalMessageType,
       author: req.user._id,
       isInternal: isInternal && hrRoles.includes(req.user.role), // Only HR can create internal messages
-      attachments: attachments || []
+      attachments: processedAttachments
     });
     
     await ticketMessage.save();

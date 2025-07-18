@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
 import { getRoutingInfo } from '../../utils/hrRouting';
+import TicketAttachmentPreviewModal from './TicketAttachmentPreviewModal';
 
 const TicketDetails = () => {
   const { id } = useParams();
@@ -22,6 +23,8 @@ const TicketDetails = () => {
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedback, setFeedback] = useState({ rating: 5, comment: '' });
   const [closeLoading, setCloseLoading] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [selectedAttachment, setSelectedAttachment] = useState(null);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -249,6 +252,16 @@ const TicketDetails = () => {
 
   const removeAttachment = (index) => {
     setAttachments(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handlePreviewAttachment = (attachment) => {
+    setSelectedAttachment(attachment);
+    setShowPreviewModal(true);
+  };
+
+  const handleClosePreview = () => {
+    setShowPreviewModal(false);
+    setSelectedAttachment(null);
   };
 
   const getStatusBadgeClass = (status) => {
@@ -617,6 +630,49 @@ const TicketDetails = () => {
                 <p className="text-muted">{ticket.description}</p>
               </div>
               
+              {/* Ticket Attachments */}
+              {ticket.attachments && ticket.attachments.length > 0 && (
+                <div className="mt-3">
+                  <h6>Attachments:</h6>
+                  <div className="row">
+                    {ticket.attachments.map((attachment, index) => (
+                      <div key={index} className="col-md-6 mb-2">
+                        <div className="d-flex align-items-center p-2 border rounded bg-light">
+                          <div className="me-2">
+                            {attachment.mimetype?.startsWith('image/') ? (
+                              <i className="bi bi-file-earmark-image text-primary fs-5"></i>
+                            ) : attachment.mimetype === 'application/pdf' ? (
+                              <i className="bi bi-file-earmark-pdf text-danger fs-5"></i>
+                            ) : attachment.mimetype?.includes('word') ? (
+                              <i className="bi bi-file-earmark-word text-primary fs-5"></i>
+                            ) : (
+                              <i className="bi bi-file-earmark text-secondary fs-5"></i>
+                            )}
+                          </div>
+                          <div className="flex-grow-1 me-2">
+                            <div className="fw-semibold text-truncate" style={{ fontSize: '14px' }}>
+                              {attachment.originalName}
+                            </div>
+                            <small className="text-muted">
+                              {formatFileSize(attachment.size)} • {formatDate(attachment.uploadedAt)}
+                            </small>
+                          </div>
+                          <div className="d-flex gap-1">
+                            <button
+                              className="btn btn-sm btn-outline-primary"
+                              onClick={() => handlePreviewAttachment(attachment)}
+                              title="Preview file"
+                            >
+                              <i className="bi bi-eye"></i>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
               {/* Feedback Display */}
               {ticket.feedback?.rating && (
                 <div className="mt-3 p-3 bg-light rounded">
@@ -683,14 +739,13 @@ const TicketDetails = () => {
                               {message.attachments.map((attachment, index) => (
                                 <div key={index} className="d-flex align-items-center mt-1">
                                   <i className="bi bi-paperclip me-1"></i>
-                                  <a 
-                                    href={`/uploads/${attachment.path}`} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className={message.author._id === user._id ? 'text-white' : 'text-primary'}
+                                  <button
+                                    className={`btn btn-link p-0 text-decoration-none ${message.author._id === user._id ? 'text-white' : 'text-primary'}`}
+                                    onClick={() => handlePreviewAttachment(attachment)}
+                                    style={{ fontSize: 'inherit' }}
                                   >
                                     {attachment.originalName}
-                                  </a>
+                                  </button>
                                 </div>
                               ))}
                             </div>
@@ -887,13 +942,6 @@ const TicketDetails = () => {
                   <i className="bi bi-arrow-left me-1"></i>
                   Back to Dashboard
                 </button>
-                <button 
-                  className="btn btn-outline-secondary btn-sm"
-                  onClick={() => window.print()}
-                >
-                  <i className="bi bi-printer me-1"></i>
-                  Print Ticket
-                </button>
               </div>
             </div>
           </div>
@@ -1008,6 +1056,13 @@ const TicketDetails = () => {
           </div>
         </div>
       )}
+
+      {/* Ticket Attachment Preview Modal */}
+      <TicketAttachmentPreviewModal
+        show={showPreviewModal}
+        onHide={handleClosePreview}
+        attachment={selectedAttachment}
+      />
     </div>
   );
 };
