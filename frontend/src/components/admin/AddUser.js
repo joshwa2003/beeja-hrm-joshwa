@@ -223,15 +223,27 @@ const AddUser = () => {
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
         role: formData.role,
-        department: formData.department.trim(),
-        phoneNumber: formData.phoneNumber.trim(),
-        designation: formData.designation.trim(),
         joiningDate: formData.joiningDate || new Date().toISOString().split('T')[0],
         isActive: formData.isActive
       };
 
+      // Only include department if it's selected (not empty)
+      if (formData.department && formData.department.trim()) {
+        userData.department = formData.department.trim();
+      }
+
+      // Only include phoneNumber if it's provided (not empty)
+      if (formData.phoneNumber && formData.phoneNumber.trim()) {
+        userData.phoneNumber = formData.phoneNumber.trim();
+      }
+
+      // Only include designation if it's provided (not empty)
+      if (formData.designation && formData.designation.trim()) {
+        userData.designation = formData.designation.trim();
+      }
+
       // Only include employeeId if user is Admin and has provided one
-      if (user?.role === 'Admin' && formData.employeeId.trim()) {
+      if (user?.role === 'Admin' && formData.employeeId && formData.employeeId.trim()) {
         userData.employeeId = formData.employeeId.trim();
       }
 

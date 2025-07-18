@@ -19,6 +19,12 @@ import HolidayCalendar from './components/admin/HolidayCalendar';
 import MyTeamDashboard from './components/MyTeamDashboard';
 import MyManagedTeamsDashboard from './components/MyManagedTeamsDashboard';
 
+// Helpdesk Components
+import TicketDashboard from './components/helpdesk/TicketDashboard';
+import CreateTicket from './components/helpdesk/CreateTicket';
+import TicketDetails from './components/helpdesk/TicketDetails';
+import FAQManagement from './components/helpdesk/FAQManagement';
+
 
 function App() {
   return (
@@ -192,6 +198,115 @@ function App() {
                 <ProtectedRoute requiredRoles={['Team Manager']}>
                   <Layout>
                     <MyManagedTeamsDashboard />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Helpdesk Routes */}
+            <Route
+              path="/helpdesk"
+              element={
+                <ProtectedRoute requiredRoles={['Employee', 'Team Leader', 'Team Manager', 'HR Executive', 'HR Manager', 'HR BP', 'Vice President', 'Admin']}>
+                  <Layout>
+                    <TicketDashboard />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/helpdesk/create"
+              element={
+                <ProtectedRoute requiredRoles={['Employee', 'Team Leader', 'Team Manager', 'HR Executive', 'HR Manager', 'HR BP', 'Vice President', 'Admin']}>
+                  <Layout>
+                    <CreateTicket />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/helpdesk/tickets/:id"
+              element={
+                <ProtectedRoute requiredRoles={['Employee', 'Team Leader', 'Team Manager', 'HR Executive', 'HR Manager', 'HR BP', 'Vice President', 'Admin']}>
+                  <Layout>
+                    <TicketDetails />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/helpdesk/my-tickets"
+              element={
+                <ProtectedRoute requiredRoles={['Employee', 'Team Leader', 'Team Manager', 'HR Executive', 'HR Manager', 'HR BP', 'Vice President', 'Admin']}>
+                  <Layout>
+                    <TicketDashboard />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/helpdesk/all-tickets"
+              element={
+                <ProtectedRoute requiredRoles={['HR Executive', 'HR Manager', 'HR BP', 'Vice President', 'Admin']}>
+                  <Layout>
+                    <TicketDashboard />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/helpdesk/manage-faq"
+              element={
+                <ProtectedRoute requiredRoles={['HR Executive', 'HR Manager', 'HR BP', 'Vice President', 'Admin']}>
+                  <Layout>
+                    <FAQManagement />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/helpdesk/faq"
+              element={
+                <ProtectedRoute requiredRoles={['Employee', 'Team Leader', 'Team Manager', 'HR Executive', 'HR Manager', 'HR BP', 'Vice President', 'Admin']}>
+                  <Layout>
+                    <div className="container-fluid">
+                      <div className="alert alert-info">
+                        <h4><i className="bi bi-question-circle me-2"></i>FAQ & Knowledge Base</h4>
+                        <p>This section will include:</p>
+                        <ul>
+                          <li>Searchable FAQ database</li>
+                          <li>Category-wise FAQ browsing</li>
+                          <li>Popular and recent FAQs</li>
+                          <li>FAQ feedback and ratings</li>
+                          <li>Related FAQ suggestions</li>
+                        </ul>
+                        <p className="mb-0"><strong>Status:</strong> <span className="badge bg-warning">In Development</span></p>
+                      </div>
+                    </div>
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/helpdesk/reports"
+              element={
+                <ProtectedRoute requiredRoles={['HR Executive', 'HR Manager', 'HR BP', 'Vice President', 'Admin']}>
+                  <Layout>
+                    <div className="container-fluid">
+                      <div className="alert alert-success">
+                        <h4><i className="bi bi-graph-up me-2"></i>Helpdesk Reports & Analytics</h4>
+                        <p>This section will include:</p>
+                        <ul>
+                          <li>Ticket volume and trends</li>
+                          <li>Response and resolution time metrics</li>
+                          <li>Category-wise ticket analysis</li>
+                          <li>Agent performance reports</li>
+                          <li>Customer satisfaction scores</li>
+                          <li>SLA compliance reports</li>
+                        </ul>
+                        <p className="mb-0"><strong>Status:</strong> <span className="badge bg-warning">In Development</span></p>
+                      </div>
+                    </div>
                   </Layout>
                 </ProtectedRoute>
               }

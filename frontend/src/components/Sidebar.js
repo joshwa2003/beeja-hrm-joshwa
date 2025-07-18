@@ -239,6 +239,32 @@ const Sidebar = ({ isOpen, onToggle }) => {
       });
     }
 
+    // Helpdesk - Available to all
+    if (hasAnyRole(['Employee', 'Team Leader', 'Team Manager', 'HR Executive', 'HR Manager', 'HR BP', 'Vice President', 'Admin'])) {
+      const helpdeskSubmenu = [
+        { title: 'Dashboard', path: '/helpdesk', icon: 'bi-speedometer2' },
+        { title: 'Create Ticket', path: '/helpdesk/create', icon: 'bi-plus-circle' },
+        { title: 'My Tickets', path: '/helpdesk/my-tickets', icon: 'bi-ticket-perforated' },
+        { title: 'FAQ', path: '/helpdesk/faq', icon: 'bi-question-circle' }
+      ];
+
+      // Add HR-specific helpdesk items
+      if (hasAnyRole(['HR Executive', 'HR Manager', 'HR BP', 'Vice President', 'Admin'])) {
+        helpdeskSubmenu.push(
+          { title: 'All Tickets', path: '/helpdesk/all-tickets', icon: 'bi-list-ul' },
+          { title: 'Manage FAQs', path: '/helpdesk/manage-faq', icon: 'bi-gear' },
+          { title: 'Reports', path: '/helpdesk/reports', icon: 'bi-graph-up' }
+        );
+      }
+
+      menuItems.push({
+        key: 'helpdesk',
+        title: 'Helpdesk',
+        icon: 'bi-headset',
+        submenu: helpdeskSubmenu
+      });
+    }
+
     // My Profile - Available to all
     menuItems.push({
       key: 'profile',

@@ -5,6 +5,7 @@ const fs = require('fs');
 // Ensure upload directories exist
 const uploadDir = path.join(__dirname, '../uploads/leave-documents');
 const holidayExcelDir = path.join(__dirname, '../uploads/holiday-excel');
+const ticketAttachmentsDir = path.join(__dirname, '../uploads/ticket-attachments');
 
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
@@ -14,7 +15,11 @@ if (!fs.existsSync(holidayExcelDir)) {
   fs.mkdirSync(holidayExcelDir, { recursive: true });
 }
 
-// Configure multer storage
+if (!fs.existsSync(ticketAttachmentsDir)) {
+  fs.mkdirSync(ticketAttachmentsDir, { recursive: true });
+}
+
+// Configure multer storage for leave documents
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadDir);
@@ -28,7 +33,21 @@ const storage = multer.diskStorage({
   }
 });
 
-// File filter function
+// Configure multer storage for ticket attachments
+const ticketStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, ticketAttachmentsDir);
+  },
+  filename: (req, file, cb) => {
+    // Generate unique filename: timestamp_userId_originalname
+    const uniqueSuffix = Date.now() + '_' + req.user.id;
+    const fileExtension = path.extname(file.originalname);
+    const fileName = `ticket_${uniqueSuffix}${fileExtension}`;
+    cb(null, fileName);
+  }
+});
+
+// File filter function for leave documents
 const fileFilter = (req, file, cb) => {
   // Check file type
   const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
@@ -43,7 +62,30 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Configure multer
+// File filter function for ticket attachments (more file types allowed)
+const ticketFileFilter = (req, file, cb) => {
+  // Check file type - more permissive for helpdesk tickets
+  const allowedTypes = [
+    'application/pdf', 
+    'image/jpeg', 
+    'image/jpg', 
+    'image/png',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'text/plain'
+  ];
+  const allowedExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx', '.txt'];
+  
+  const fileExtension = path.extname(file.originalname).toLowerCase();
+  
+  if (allowedTypes.includes(file.mimetype) && allowedExtensions.includes(fileExtension)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Invalid file type. Only PDF, JPG, PNG, DOC, DOCX, and TXT files are allowed.'), false);
+  }
+};
+
+// Configure multer for leave documents
 const upload = multer({
   storage: storage,
   limits: {
@@ -51,6 +93,16 @@ const upload = multer({
     files: 5 // Maximum 5 files per request
   },
   fileFilter: fileFilter
+});
+
+// Configure multer for ticket attachments
+const uploadTicketAttachments = multer({
+  storage: ticketStorage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+    files: 5 // Maximum 5 files per request
+  },
+  fileFilter: ticketFileFilter
 });
 
 // Error handling middleware for multer
@@ -161,10 +213,12 @@ const uploadExcel = multer({
 
 module.exports = {
   upload,
+  uploadTicketAttachments,
   uploadExcel,
   handleUploadError,
   deleteFile,
   getFileInfo,
   uploadDir,
-  holidayExcelDir
+  holidayExcelDir,
+  ticketAttachmentsDir
 };
