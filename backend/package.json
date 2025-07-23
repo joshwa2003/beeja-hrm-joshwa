@@ -30,6 +30,7 @@
     "mongoose-paginate-v2": "^1.9.1",
     "multer": "^2.0.1",
     "node-cron": "^4.2.1",
+    "socket.io": "^4.7.5",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

@@ -6,6 +6,7 @@ const fs = require('fs');
 const uploadDir = path.join(__dirname, '../uploads/leave-documents');
 const holidayExcelDir = path.join(__dirname, '../uploads/holiday-excel');
 const ticketAttachmentsDir = path.join(__dirname, '../uploads/ticket-attachments');
+const chatAttachmentsDir = path.join(__dirname, '../uploads/chat-attachments');
 
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
@@ -17,6 +18,10 @@ if (!fs.existsSync(holidayExcelDir)) {
 
 if (!fs.existsSync(ticketAttachmentsDir)) {
   fs.mkdirSync(ticketAttachmentsDir, { recursive: true });
+}
+
+if (!fs.existsSync(chatAttachmentsDir)) {
+  fs.mkdirSync(chatAttachmentsDir, { recursive: true });
 }
 
 // Configure multer storage for leave documents
@@ -201,6 +206,60 @@ const excelFileFilter = (req, file, cb) => {
   }
 };
 
+// Configure multer storage for chat attachments
+const chatStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, chatAttachmentsDir);
+  },
+  filename: (req, file, cb) => {
+    // Generate unique filename: timestamp_userId_originalname
+    const uniqueSuffix = Date.now() + '_' + req.user.id;
+    const fileExtension = path.extname(file.originalname);
+    const fileName = `chat_${uniqueSuffix}${fileExtension}`;
+    cb(null, fileName);
+  }
+});
+
+// File filter function for chat attachments
+const chatFileFilter = (req, file, cb) => {
+  // Check file type - allow images, documents, archives, and common file types
+  const allowedTypes = [
+    'application/pdf', 
+    'image/jpeg', 
+    'image/jpg', 
+    'image/png',
+    'image/gif',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'text/plain',
+    'application/zip',
+    'application/x-zip-compressed',
+    'application/x-rar-compressed',
+    'application/x-7z-compressed'
+  ];
+  const allowedExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.gif', '.doc', '.docx', '.xls', '.xlsx', '.txt', '.zip', '.rar', '.7z'];
+  
+  const fileExtension = path.extname(file.originalname).toLowerCase();
+  
+  if (allowedTypes.includes(file.mimetype) && allowedExtensions.includes(fileExtension)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Invalid file type. Only images, documents, archives (ZIP, RAR, 7Z), and common file types are allowed.'), false);
+  }
+};
+
+// Configure multer for chat attachments
+const uploadChatAttachments = multer({
+  storage: chatStorage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+    files: 5 // Maximum 5 files per message
+  },
+  fileFilter: chatFileFilter
+});
+
 // Configure multer for Excel uploads
 const uploadExcel = multer({
   storage: excelStorage,
@@ -214,11 +273,13 @@ const uploadExcel = multer({
 module.exports = {
   upload,
   uploadTicketAttachments,
+  uploadChatAttachments,
   uploadExcel,
   handleUploadError,
   deleteFile,
   getFileInfo,
   uploadDir,
   holidayExcelDir,
-  ticketAttachmentsDir
+  ticketAttachmentsDir,
+  chatAttachmentsDir
 };

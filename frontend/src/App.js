@@ -19,6 +19,9 @@ import HolidayCalendar from './components/admin/HolidayCalendar';
 import MyTeamDashboard from './components/MyTeamDashboard';
 import MyManagedTeamsDashboard from './components/MyManagedTeamsDashboard';
 
+// Chat Components
+import ChatInterface from './components/chat/ChatInterface';
+
 // Helpdesk Components
 import TicketDashboard from './components/helpdesk/TicketDashboard';
 import CreateTicket from './components/helpdesk/CreateTicket';
@@ -198,6 +201,18 @@ function App() {
                 <ProtectedRoute requiredRoles={['Team Manager']}>
                   <Layout>
                     <MyManagedTeamsDashboard />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Chat Route */}
+            <Route
+              path="/chat"
+              element={
+                <ProtectedRoute requiredRoles={['Employee', 'Team Leader', 'Team Manager', 'HR Executive', 'HR Manager', 'HR BP', 'Vice President', 'Admin']}>
+                  <Layout>
+                    <ChatInterface />
                   </Layout>
                 </ProtectedRoute>
               }

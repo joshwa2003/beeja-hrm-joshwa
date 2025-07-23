@@ -239,6 +239,16 @@ const Sidebar = ({ isOpen, onToggle }) => {
       });
     }
 
+    // Chat System - Available to all
+    if (hasAnyRole(['Employee', 'Team Leader', 'Team Manager', 'HR Executive', 'HR Manager', 'HR BP', 'Vice President', 'Admin'])) {
+      menuItems.push({
+        key: 'chat',
+        title: 'Messages',
+        icon: 'bi-chat-dots',
+        path: '/chat'
+      });
+    }
+
     // Helpdesk - Available to all
     if (hasAnyRole(['Employee', 'Team Leader', 'Team Manager', 'HR Executive', 'HR Manager', 'HR BP', 'Vice President', 'Admin'])) {
       const helpdeskSubmenu = [

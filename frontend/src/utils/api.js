@@ -166,6 +166,42 @@ export const holidayAPI = {
   },
 };
 
+// Chat API calls
+export const chatAPI = {
+  // Get all chats for the user
+  getUserChats: () => api.get('/chat/chats'),
+  
+  // Get or create chat with another user
+  getOrCreateChat: (otherUserId) => api.get(`/chat/${otherUserId}`),
+  
+  // Get messages for a chat
+  getChatMessages: (chatId, params) => api.get(`/chat/${chatId}/messages`, { params }),
+  
+  // Send a message
+  sendMessage: (chatId, formData) => {
+    return api.post(`/chat/${chatId}/messages`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+  
+  // Get available users to chat with
+  getAvailableUsers: (params) => api.get('/chat/users', { params }),
+  
+  // Connection request management
+  sendConnectionRequest: (recipientId, data) => api.post(`/chat/connection-request/${recipientId}`, data),
+  getConnectionRequests: (params) => api.get('/chat/connection-requests', { params }),
+  respondToConnectionRequest: (requestId, data) => api.put(`/chat/connection-request/${requestId}`, data),
+  
+  // Download chat attachment
+  downloadAttachment: (messageId, fileName) => {
+    return api.get(`/chat/attachment/${messageId}/${fileName}`, {
+      responseType: 'blob'
+    });
+  }
+};
+
 // Health check
 export const healthAPI = {
   check: () => api.get('/health'),
