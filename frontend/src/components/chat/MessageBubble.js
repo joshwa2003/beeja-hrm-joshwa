@@ -6,16 +6,26 @@ const MessageBubble = ({ message, currentUser, isLastMessage, showAvatar }) => {
   const [downloading, setDownloading] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [selectedAttachment, setSelectedAttachment] = useState(null);
-  const isOwnMessage = message.sender._id === currentUser._id;
+  
+  // Enhanced debugging and comparison logic
+  const senderId = message.sender?._id || message.sender?.id;
+  const currentUserId = currentUser?._id || currentUser?.id;
+  const isOwnMessage = senderId === currentUserId;
 
-  // Debug logging
-  console.log('MessageBubble - Message data:', {
-    id: message._id,
-    content: message.content,
-    attachments: message.attachments,
-    messageType: message.messageType,
-    hasAttachments: message.attachments && message.attachments.length > 0,
-    attachmentCount: message.attachments ? message.attachments.length : 0
+  // Comprehensive debug logging
+  console.log('🔍 MessageBubble - Alignment Debug:', {
+    messageId: message._id,
+    content: message.content?.substring(0, 50) + '...',
+    senderId: senderId,
+    currentUserId: currentUserId,
+    senderName: message.sender ? `${message.sender.firstName} ${message.sender.lastName}` : 'Unknown',
+    currentUserName: currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : 'Unknown',
+    isOwnMessage: isOwnMessage,
+    shouldBeOnRight: isOwnMessage ? '✅ YES - RIGHT SIDE' : '❌ NO - LEFT SIDE',
+    messageObject: {
+      sender: message.sender,
+      currentUser: currentUser
+    }
   });
 
   // Additional debug for attachments
@@ -247,7 +257,13 @@ const MessageBubble = ({ message, currentUser, isLastMessage, showAvatar }) => {
   };
 
   return (
-    <div className={`d-flex mb-3 ${isOwnMessage ? 'justify-content-end' : 'justify-content-start'}`}>
+    <div 
+      className={`d-flex mb-3 ${isOwnMessage ? 'justify-content-end' : 'justify-content-start'}`}
+      style={{
+        // Force alignment with inline styles as backup
+        justifyContent: isOwnMessage ? 'flex-end' : 'flex-start'
+      }}
+    >
       {/* Avatar for other users */}
       {!isOwnMessage && (
         <div className="me-2" style={{ width: '32px' }}>
@@ -268,12 +284,14 @@ const MessageBubble = ({ message, currentUser, isLastMessage, showAvatar }) => {
       <div 
         className={`rounded-3 px-3 py-2 position-relative ${
           isOwnMessage 
-            ? 'bg-primary text-white' 
-            : 'bg-light text-dark border'
+            ? 'text-white' 
+            : 'text-dark'
         }`}
         style={{ 
           maxWidth: '70%',
-          wordWrap: 'break-word'
+          wordWrap: 'break-word',
+          backgroundColor: isOwnMessage ? '#007bff' : '#f1f3f4',
+          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
         }}
       >
         {/* Sender name for group chats or when showing avatar */}
@@ -343,10 +361,10 @@ const MessageBubble = ({ message, currentUser, isLastMessage, showAvatar }) => {
             borderStyle: 'solid',
             ...(isOwnMessage ? {
               borderWidth: '8px 0 8px 8px',
-              borderColor: `transparent transparent transparent var(--bs-primary)`
+              borderColor: `transparent transparent transparent #007bff`
             } : {
               borderWidth: '8px 8px 8px 0',
-              borderColor: `transparent var(--bs-light) transparent transparent`
+              borderColor: `transparent #f1f3f4 transparent transparent`
             })
           }}
         ></div>

@@ -222,6 +222,31 @@ const ChatSidebar = ({
 
   return (
     <div className="h-100 d-flex flex-column bg-white">
+      {/* Custom CSS for better scrollbar */}
+      <style jsx>{`
+        .chat-sidebar-content::-webkit-scrollbar {
+          width: 6px;
+        }
+        
+        .chat-sidebar-content::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 3px;
+        }
+        
+        .chat-sidebar-content::-webkit-scrollbar-thumb {
+          background: #c1c1c1;
+          border-radius: 3px;
+        }
+        
+        .chat-sidebar-content::-webkit-scrollbar-thumb:hover {
+          background: #a8a8a8;
+        }
+        
+        .chat-sidebar-content {
+          scrollbar-width: thin;
+          scrollbar-color: #c1c1c1 #f1f1f1;
+        }
+      `}</style>
       {/* Header */}
       <div className="p-3 border-bottom bg-light">
         <h5 className="mb-3 fw-bold">
@@ -279,7 +304,7 @@ const ChatSidebar = ({
       </div>
 
       {/* Content */}
-      <div className="flex-grow-1 overflow-auto">
+      <div className="flex-grow-1 overflow-auto chat-sidebar-content" style={{ maxHeight: 'calc(100vh - 200px)' }}>
         {activeTab === 'chats' && (
           <div>
             {chats.length === 0 ? (

@@ -307,10 +307,10 @@ const ChatInterface = () => {
   }
 
   return (
-    <div className="container-fluid h-auto" style={{ padding: 0, margin: 0 }}>
+    <div className="container-fluid" style={{ padding: 0, margin: 0, height: 'calc(100vh - 56px)' }}>
       <div className="row h-100" style={{ margin: 0 }}>
         {/* Chat Sidebar */}
-        <div className="col-md-4 col-lg-3 p-0 border-end">
+        <div className="col-md-4 col-lg-3 p-0 border-end" style={{ height: '100%' }}>
           <ChatSidebar
             chats={chats}
             availableUsers={availableUsers}

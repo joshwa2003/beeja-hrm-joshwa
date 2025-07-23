@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import TopNavBar from './TopNavBar';
 import Sidebar from './Sidebar';
 import ProfileSidebar from './ProfileSidebar';
+import ChatShortcut from './chat/ChatShortcut';
 
 const Layout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -58,6 +59,9 @@ const Layout = ({ children }) => {
           {children}
         </div>
       </main>
+      
+      {/* Chat Shortcut - Available on all pages */}
+      <ChatShortcut />
     </div>
   );
 };
