@@ -1,6 +1,43 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
+import {
+  Box,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Collapse,
+  Typography,
+  Divider,
+  Avatar,
+  Chip,
+  useTheme,
+} from '@mui/material';
+import {
+  Dashboard as DashboardIcon,
+  People,
+  PersonAdd,
+  Badge,
+  Business,
+  Groups,
+  AccountTree,
+  CalendarMonth,
+  RequestPage,
+  History,
+  AttachMoney,
+  Work,
+  TrendingUp,
+  School,
+  Assessment,
+  Settings,
+  Chat,
+  Help,
+  Person,
+  ExpandLess,
+  ExpandMore,
+} from '@mui/icons-material';
 
 const Sidebar = ({ isOpen, onToggle }) => {
   const { user, hasRole, hasAnyRole, getRoleLevel } = useAuth();
@@ -286,120 +323,344 @@ const Sidebar = ({ isOpen, onToggle }) => {
     return menuItems;
   };
 
+  const getIconComponent = (iconName) => {
+    const iconMap = {
+      'bi-speedometer2': DashboardIcon,
+      'bi-people': People,
+      'bi-person-plus': PersonAdd,
+      'bi-person-badge': Badge,
+      'bi-building': Business,
+      'bi-diagram-3': Groups,
+      'bi-diagram-2': AccountTree,
+      'bi-calendar3': CalendarMonth,
+      'bi-calendar-plus': RequestPage,
+      'bi-calendar-check': History,
+      'bi-currency-dollar': AttachMoney,
+      'bi-briefcase': Work,
+      'bi-graph-up-arrow': TrendingUp,
+      'bi-book': School,
+      'bi-bar-chart': Assessment,
+      'bi-gear': Settings,
+      'bi-chat-dots': Chat,
+      'bi-headset': Help,
+      'bi-person-circle': Person,
+    };
+    return iconMap[iconName] || DashboardIcon;
+  };
+
+  const theme = useTheme();
+
   const renderMenuItem = (item) => {
     if (item.submenu) {
       const isExpanded = expandedMenus[item.key];
       const hasActiveSubmenu = item.submenu.some(subItem => isActiveRoute(subItem.path));
+      const IconComponent = getIconComponent(item.icon);
 
       return (
-        <li key={item.key} className="nav-item">
-          <button
-            className={`nav-link d-flex align-items-center w-100 border-0 bg-transparent ${
-              hasActiveSubmenu ? 'active' : ''
-            }`}
-            onClick={() => toggleSubmenu(item.key)}
-            style={{ textAlign: 'left' }}
-          >
-            <i className={`${item.icon} me-2`}></i>
-            <span className="flex-grow-1">{item.title}</span>
-            <i className={`bi bi-chevron-${isExpanded ? 'down' : 'right'} ms-auto`}></i>
-          </button>
-          <div className={`collapse ${isExpanded ? 'show' : ''}`}>
-            <ul className="nav flex-column ms-3">
-              {item.submenu.map((subItem) => (
-                <li key={subItem.path} className="nav-item">
-                  <button
-                    className={`nav-link d-flex align-items-center w-100 border-0 bg-transparent ${
-                      isActiveRoute(subItem.path) ? 'active' : ''
-                    }`}
-                    onClick={() => navigate(subItem.path)}
-                    style={{ textAlign: 'left' }}
-                  >
-                    <i className={`${subItem.icon} me-2`}></i>
-                    {subItem.title}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </li>
+        <React.Fragment key={item.key}>
+          <ListItem disablePadding>
+            <ListItemButton
+              onClick={() => toggleSubmenu(item.key)}
+              selected={hasActiveSubmenu}
+              sx={{
+                borderRadius: 2,
+                mx: 1,
+                mb: 0.5,
+                py: 1.5,
+                transition: 'all 0.2s ease-in-out',
+                '&.Mui-selected': {
+                  backgroundColor: 'rgba(255,255,255,0.2)',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                  transform: 'translateX(4px)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255,255,255,0.25)',
+                  },
+                },
+                '&:hover': {
+                  backgroundColor: 'rgba(255,255,255,0.1)',
+                  transform: 'translateX(2px)',
+                },
+              }}
+            >
+              <ListItemIcon 
+                sx={{ 
+                  color: 'inherit', 
+                  minWidth: 40,
+                  '& .MuiSvgIcon-root': {
+                    fontSize: '1.3rem',
+                    filter: hasActiveSubmenu ? 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))' : 'none',
+                  }
+                }}
+              >
+                <IconComponent />
+              </ListItemIcon>
+              <ListItemText 
+                primary={item.title}
+                primaryTypographyProps={{
+                  fontSize: '0.9rem',
+                  fontWeight: hasActiveSubmenu ? 600 : 500,
+                  color: 'white',
+                  textShadow: hasActiveSubmenu ? '0 1px 2px rgba(0,0,0,0.2)' : 'none',
+                }}
+              />
+              <Box 
+                sx={{ 
+                  transition: 'transform 0.2s ease-in-out',
+                  transform: isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)',
+                }}
+              >
+                <ExpandLess sx={{ fontSize: '1.2rem' }} />
+              </Box>
+            </ListItemButton>
+          </ListItem>
+          <Collapse in={isExpanded} timeout={300} unmountOnExit>
+            <List component="div" disablePadding sx={{ pl: 1 }}>
+              {item.submenu.map((subItem) => {
+                const SubIconComponent = getIconComponent(subItem.icon);
+                const isSubActive = isActiveRoute(subItem.path);
+                return (
+                  <ListItem key={subItem.path} disablePadding>
+                    <ListItemButton
+                      onClick={() => navigate(subItem.path)}
+                      selected={isSubActive}
+                      sx={{
+                        pl: 3,
+                        py: 1,
+                        borderRadius: 2,
+                        mx: 1,
+                        mb: 0.3,
+                        transition: 'all 0.2s ease-in-out',
+                        '&.Mui-selected': {
+                          backgroundColor: 'rgba(255,255,255,0.25)',
+                          boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
+                          transform: 'translateX(6px)',
+                          '&:hover': {
+                            backgroundColor: 'rgba(255,255,255,0.3)',
+                          },
+                        },
+                        '&:hover': {
+                          backgroundColor: 'rgba(255,255,255,0.15)',
+                          transform: 'translateX(3px)',
+                        },
+                      }}
+                    >
+                      <ListItemIcon 
+                        sx={{ 
+                          color: 'inherit', 
+                          minWidth: 36,
+                          '& .MuiSvgIcon-root': {
+                            fontSize: '1.1rem',
+                            filter: isSubActive ? 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))' : 'none',
+                          }
+                        }}
+                      >
+                        <SubIconComponent />
+                      </ListItemIcon>
+                      <ListItemText 
+                        primary={subItem.title}
+                        primaryTypographyProps={{
+                          fontSize: '0.85rem',
+                          fontWeight: isSubActive ? 600 : 400,
+                          color: 'white',
+                          textShadow: isSubActive ? '0 1px 2px rgba(0,0,0,0.2)' : 'none',
+                        }}
+                      />
+                    </ListItemButton>
+                  </ListItem>
+                );
+              })}
+            </List>
+          </Collapse>
+        </React.Fragment>
       );
     } else {
+      const IconComponent = getIconComponent(item.icon);
+      const isActive = isActiveRoute(item.path);
       return (
-        <li key={item.key} className="nav-item">
-          <button
-            className={`nav-link d-flex align-items-center w-100 border-0 bg-transparent ${
-              isActiveRoute(item.path) ? 'active' : ''
-            }`}
+        <ListItem key={item.key} disablePadding>
+          <ListItemButton
             onClick={() => navigate(item.path)}
-            style={{ textAlign: 'left' }}
+            selected={isActive}
+            sx={{
+              borderRadius: 2,
+              mx: 1,
+              mb: 0.5,
+              py: 1.5,
+              transition: 'all 0.2s ease-in-out',
+              '&.Mui-selected': {
+                backgroundColor: 'rgba(255,255,255,0.2)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                transform: 'translateX(4px)',
+                '&:hover': {
+                  backgroundColor: 'rgba(255,255,255,0.25)',
+                },
+              },
+              '&:hover': {
+                backgroundColor: 'rgba(255,255,255,0.1)',
+                transform: 'translateX(2px)',
+              },
+            }}
           >
-            <i className={`${item.icon} me-2`}></i>
-            {item.title}
-          </button>
-        </li>
+            <ListItemIcon 
+              sx={{ 
+                color: 'inherit', 
+                minWidth: 40,
+                '& .MuiSvgIcon-root': {
+                  fontSize: '1.3rem',
+                  filter: isActive ? 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))' : 'none',
+                }
+              }}
+            >
+              <IconComponent />
+            </ListItemIcon>
+            <ListItemText 
+              primary={item.title}
+              primaryTypographyProps={{
+                fontSize: '0.9rem',
+                fontWeight: isActive ? 600 : 500,
+                color: 'white',
+                textShadow: isActive ? '0 1px 2px rgba(0,0,0,0.2)' : 'none',
+              }}
+            />
+          </ListItemButton>
+        </ListItem>
       );
     }
   };
 
-  return (
-    <>
-      {/* Overlay for mobile */}
-      {isOpen && (
-        <div 
-          className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-lg-none"
-          style={{ zIndex: 1040 }}
-          onClick={onToggle}
-        ></div>
-      )}
+  const getInitials = (firstName, lastName) => {
+    if (!firstName && !lastName) return 'U';
+    const first = firstName ? firstName.charAt(0).toUpperCase() : '';
+    const last = lastName ? lastName.charAt(0).toUpperCase() : '';
+    return first + last;
+  };
 
-      {/* Sidebar */}
-      <div 
-        className={`bg-dark text-white position-fixed start-0 overflow-auto`}
-        style={{ 
-          width: '280px', 
-          top: '56px', // Start below the navbar
-          height: 'calc(100vh - 56px)', // Full height minus navbar
-          zIndex: 1050,
-          transition: 'transform 0.3s ease-in-out',
-          transform: isOpen ? 'translateX(0)' : 'translateX(-100%)'
+  const getRoleColor = (role) => {
+    const roleColors = {
+      'Admin': 'error',
+      'Vice President': 'primary',
+      'HR BP': 'info',
+      'HR Manager': 'success',
+      'HR Executive': 'warning',
+      'Team Manager': 'secondary',
+      'Team Leader': 'default',
+      'Employee': 'default',
+    };
+    return roleColors[role] || 'default';
+  };
+
+  return (
+    <Box 
+      sx={{ 
+        height: '100%', 
+        display: 'flex', 
+        flexDirection: 'column',
+        background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+      }}
+    >
+      {/* User Info Section */}
+      <Box 
+        sx={{ 
+          p: 3, 
+          borderBottom: '1px solid rgba(255,255,255,0.1)',
+          background: 'rgba(255,255,255,0.05)',
+          backdropFilter: 'blur(10px)',
         }}
       >
-        {/* Sidebar Header */}
-        <div className="p-3 border-bottom border-secondary">
-          <div className="d-flex align-items-center justify-content-between">
-
-            <button 
-              className="btn btn-sm btn-outline-light d-lg-none"
-              onClick={onToggle}
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <Avatar
+            sx={{
+              width: 48,
+              height: 48,
+              bgcolor: 'rgba(255,255,255,0.15)',
+              color: 'white',
+              mr: 2,
+              fontWeight: 700,
+              fontSize: '1.2rem',
+              border: '2px solid rgba(255,255,255,0.2)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            }}
+          >
+            {getInitials(user?.firstName, user?.lastName)}
+          </Avatar>
+          <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+            <Typography 
+              variant="subtitle1" 
+              sx={{ 
+                fontWeight: 700, 
+                color: 'white',
+                fontSize: '0.95rem',
+                lineHeight: 1.2,
+                textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
             >
-              <i className="bi bi-x"></i>
-            </button>
-          </div>
-        </div>
+              {user?.firstName} {user?.lastName}
+            </Typography>
+            <Typography 
+              variant="caption" 
+              sx={{ 
+                color: 'rgba(255,255,255,0.8)',
+                fontSize: '0.75rem',
+                display: 'block',
+                mt: 0.5,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {user?.email}
+            </Typography>
+            <Chip
+              label={user?.role}
+              size="small"
+              sx={{ 
+                height: 22, 
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                mt: 1,
+                bgcolor: 'rgba(255,255,255,0.2)',
+                color: 'white',
+                border: '1px solid rgba(255,255,255,0.3)',
+                '& .MuiChip-label': {
+                  px: 1.5,
+                },
+                '&:hover': {
+                  bgcolor: 'rgba(255,255,255,0.25)',
+                }
+              }}
+            />
+          </Box>
+        </Box>
+      </Box>
 
-        {/* User Info */}
-        <div className="p-3 border-bottom border-secondary">
-          <div className="d-flex align-items-center">
-            <div className="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3"
-                 style={{ width: '40px', height: '40px' }}>
-              <i className="bi bi-person text-white"></i>
-            </div>
-            <div className="flex-grow-1">
-              <div className="fw-semibold">{user?.firstName} {user?.lastName}</div>
-              <small className="text-muted">{user?.role}</small>
-            </div>
-          </div>
-        </div>
-
-        {/* Navigation Menu */}
-        <nav className="p-3">
-          <ul className="nav flex-column">
-            {getMenuItems().map(renderMenuItem)}
-          </ul>
-        </nav>
-      </div>
-    </>
+      {/* Navigation Menu */}
+      <Box 
+        sx={{ 
+          flexGrow: 1, 
+          overflow: 'auto',
+          '&::-webkit-scrollbar': {
+            width: '6px',
+          },
+          '&::-webkit-scrollbar-track': {
+            background: 'rgba(255,255,255,0.1)',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: 'rgba(255,255,255,0.3)',
+            borderRadius: '3px',
+            '&:hover': {
+              background: 'rgba(255,255,255,0.4)',
+            },
+          },
+        }}
+      >
+        <List sx={{ py: 2, px: 1 }}>
+          {getMenuItems().map(renderMenuItem)}
+        </List>
+      </Box>
+    </Box>
   );
 };
 

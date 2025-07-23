@@ -1,6 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import {
+  Box,
+  Card,
+  CardContent,
+  TextField,
+  Button,
+  Typography,
+  Alert,
+  InputAdornment,
+  IconButton,
+  CircularProgress,
+  Container,
+  Paper,
+  Divider,
+  useTheme,
+} from '@mui/material';
+import {
+  Email,
+  Lock,
+  Visibility,
+  VisibilityOff,
+  Business,
+  Login as LoginIcon,
+  Info,
+} from '@mui/icons-material';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -13,6 +38,7 @@ const Login = () => {
 
   const { login, isAuthenticated, isLoading, error, clearError } = useAuth();
   const location = useLocation();
+  const theme = useTheme();
 
   // Clear error when component unmounts
   useEffect(() => {
@@ -135,157 +161,261 @@ const Login = () => {
 
   if (isLoading) {
     return (
-      <div className="d-flex justify-content-center align-items-center min-vh-100">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '100vh',
+          backgroundColor: theme.palette.background.default,
+        }}
+      >
+        <CircularProgress size={60} />
+      </Box>
     );
   }
 
   return (
-    <div className="min-vh-100 d-flex align-items-center bg-light">
-      <div className="container">
-        <div className="row justify-content-center">
-          <div className="col-md-6 col-lg-4">
-            <div className="card shadow">
-              <div className="card-body p-4">
-                {/* Header */}
-                <div className="text-center mb-4">
-                  <i className="bi bi-building text-primary" style={{ fontSize: '3rem' }}></i>
-                  <h2 className="card-title mt-2 mb-1">HRM System</h2>
-                  <p className="text-muted">Sign in to your account</p>
-                </div>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        backgroundColor: '#F8F9FA',
+        backgroundImage: 'linear-gradient(135deg, #FFFFFF 0%, #F1F3F4 100%)',
+      }}
+    >
+      <Container maxWidth="sm">
+        <Card
+          elevation={0}
+          sx={{
+            borderRadius: 3,
+            overflow: 'hidden',
+            backgroundColor: '#FFFFFF',
+            border: `1px solid ${theme.palette.grey[200]}`,
+            boxShadow: '0 4px 20px rgba(10, 25, 47, 0.1)',
+          }}
+        >
+          <CardContent sx={{ p: 5 }}>
+            {/* Header */}
+            <Box sx={{ textAlign: 'center', mb: 4 }}>
+              <Box
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 80,
+                  height: 80,
+                  borderRadius: '50%',
+                  backgroundColor: '#0A192F',
+                  mb: 2,
+                  boxShadow: '0 4px 12px rgba(10, 25, 47, 0.3)',
+                }}
+              >
+                <Business sx={{ fontSize: 40, color: '#FFFFFF' }} />
+              </Box>
+              <Typography
+                variant="h3"
+                component="h1"
+                sx={{
+                  fontWeight: 700,
+                  color: '#0A192F',
+                  mb: 1,
+                  fontSize: '2rem',
+                }}
+              >
+                Beeja HRM
+              </Typography>
+              <Typography
+                variant="body1"
+                sx={{
+                  color: '#4A5568',
+                  fontSize: '1.1rem',
+                }}
+              >
+                Sign in to your account
+              </Typography>
+            </Box>
 
-                {/* Error Alert */}
-                {error && (
-                  <div className="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i className="bi bi-exclamation-triangle-fill me-2"></i>
-                    {getErrorMessage(error)}
-                    <button 
-                      type="button" 
-                      className="btn-close" 
-                      onClick={clearError}
-                      aria-label="Close"
-                    ></button>
-                  </div>
-                )}
+            {/* Error Alert */}
+            {error && (
+              <Alert
+                severity="error"
+                onClose={clearError}
+                sx={{
+                  mb: 3,
+                  borderRadius: 2,
+                  '& .MuiAlert-message': {
+                    fontSize: '0.95rem',
+                  },
+                }}
+              >
+                {getErrorMessage(error)}
+              </Alert>
+            )}
 
-                {/* Login Form */}
-                <form onSubmit={handleSubmit} noValidate>
-                  {/* Email Field */}
-                  <div className="mb-3">
-                    <label htmlFor="email" className="form-label">
-                      Email Address
-                    </label>
-                    <div className="input-group">
-                      <span className="input-group-text">
-                        <i className="bi bi-envelope"></i>
-                      </span>
-                      <input
-                        type="email"
-                        className={`form-control ${validationErrors.email ? 'is-invalid' : ''}`}
-                        id="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        placeholder="Enter your email"
-                        required
-                        autoComplete="email"
-                        disabled={isSubmitting}
-                      />
-                      {validationErrors.email && (
-                        <div className="invalid-feedback">
-                          {validationErrors.email}
-                        </div>
-                      )}
-                    </div>
-                  </div>
+            {/* Login Form */}
+            <Box component="form" onSubmit={handleSubmit} noValidate>
+              {/* Email Field */}
+              <TextField
+                fullWidth
+                type="email"
+                name="email"
+                label="Email Address"
+                value={formData.email}
+                onChange={handleChange}
+                error={!!validationErrors.email}
+                helperText={validationErrors.email}
+                disabled={isSubmitting}
+                autoComplete="email"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Email sx={{ color: theme.palette.text.secondary }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  mb: 3,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                  },
+                }}
+              />
 
-                  {/* Password Field */}
-                  <div className="mb-3">
-                    <label htmlFor="password" className="form-label">
-                      Password
-                    </label>
-                    <div className="input-group">
-                      <span className="input-group-text">
-                        <i className="bi bi-lock"></i>
-                      </span>
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        className={`form-control ${validationErrors.password ? 'is-invalid' : ''}`}
-                        id="password"
-                        name="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        placeholder="Enter your password"
-                        required
-                        autoComplete="current-password"
-                        disabled={isSubmitting}
-                      />
-                      <button
-                        type="button"
-                        className="btn btn-outline-secondary"
+              {/* Password Field */}
+              <TextField
+                fullWidth
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                label="Password"
+                value={formData.password}
+                onChange={handleChange}
+                error={!!validationErrors.password}
+                helperText={validationErrors.password}
+                disabled={isSubmitting}
+                autoComplete="current-password"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Lock sx={{ color: theme.palette.text.secondary }} />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
                         onClick={togglePasswordVisibility}
                         disabled={isSubmitting}
+                        edge="end"
                       >
-                        <i className={`bi ${showPassword ? 'bi-eye-slash' : 'bi-eye'}`}></i>
-                      </button>
-                      {validationErrors.password && (
-                        <div className="invalid-feedback">
-                          {validationErrors.password}
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  mb: 4,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                  },
+                }}
+              />
 
-                  {/* Submit Button */}
-                  <div className="d-grid">
-                    <button
-                      type="submit"
-                      className="btn btn-primary"
-                      disabled={isSubmitting || !formData.email || !formData.password}
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <span className="spinner-border spinner-border-sm me-2" role="status">
-                            <span className="visually-hidden">Loading...</span>
-                          </span>
-                          Signing in...
-                        </>
-                      ) : (
-                        <>
-                          <i className="bi bi-box-arrow-in-right me-2"></i>
-                          Sign In
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </form>
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                size="large"
+                disabled={isSubmitting || !formData.email || !formData.password}
+                startIcon={
+                  isSubmitting ? (
+                    <CircularProgress size={20} color="inherit" />
+                  ) : (
+                    <LoginIcon />
+                  )
+                }
+                sx={{
+                  py: 1.5,
+                  fontSize: '1.1rem',
+                  fontWeight: 600,
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  backgroundColor: '#20C997',
+                  color: '#FFFFFF',
+                  boxShadow: '0 2px 8px rgba(32, 201, 151, 0.3)',
+                  '&:hover': {
+                    backgroundColor: '#17A085',
+                    boxShadow: '0 4px 12px rgba(32, 201, 151, 0.4)',
+                  },
+                  '&:disabled': {
+                    backgroundColor: '#A0AEC0',
+                    color: '#FFFFFF',
+                  },
+                }}
+              >
+                {isSubmitting ? 'Signing in...' : 'Sign In'}
+              </Button>
+            </Box>
 
-                {/* Demo Credentials */}
-                <div className="mt-4 p-3 bg-light rounded">
-                  <h6 className="text-muted mb-2">
-                    <i className="bi bi-info-circle me-1"></i>
-                    Demo Credentials
-                  </h6>
-                  <small className="text-muted">
-                    Contact your administrator for login credentials.
-                  </small>
-                </div>
-              </div>
-            </div>
+            {/* Divider */}
+            <Divider sx={{ my: 4 }} />
 
-            {/* Footer */}
-            <div className="text-center mt-3">
-              <small className="text-muted">
-                © 2024 HRM Management System. All rights reserved.
-              </small>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+            {/* Demo Credentials */}
+            <Paper
+              elevation={0}
+              sx={{
+                p: 3,
+                backgroundColor: theme.palette.background.secondary,
+                borderRadius: 2,
+                border: `1px solid ${theme.palette.grey[200]}`,
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <Info
+                  sx={{
+                    color: theme.palette.info.main,
+                    mr: 1,
+                    fontSize: 20,
+                  }}
+                />
+                <Typography
+                  variant="subtitle2"
+                  sx={{
+                    fontWeight: 600,
+                    color: theme.palette.text.primary,
+                  }}
+                >
+                  Demo Credentials
+                </Typography>
+              </Box>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: theme.palette.text.secondary,
+                  lineHeight: 1.5,
+                }}
+              >
+                Contact your administrator for login credentials.
+              </Typography>
+            </Paper>
+          </CardContent>
+        </Card>
+
+        {/* Footer */}
+        <Box sx={{ textAlign: 'center', mt: 3 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: theme.palette.text.secondary,
+              fontSize: '0.875rem',
+            }}
+          >
+            © 2024 HRM Management System. All rights reserved.
+          </Typography>
+        </Box>
+      </Container>
+    </Box>
   );
 };
 

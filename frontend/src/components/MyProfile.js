@@ -579,27 +579,7 @@ const MyProfile = () => {
       </div>
 
       <div className="row">
-        <div className="col-lg-3 col-md-4 mb-4">
-          <div className="card">
-            <div className="card-header">
-              <h6 className="mb-0">Profile Sections</h6>
-            </div>
-            <div className="list-group list-group-flush">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  className={`list-group-item list-group-item-action ${activeTab === tab.id ? 'active' : ''}`}
-                  onClick={() => setActiveTab(tab.id)}
-                >
-                  <span className="me-2">{tab.icon}</span>
-                  {tab.label.replace(/^\S+\s/, '')}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="col-lg-9 col-md-8">
+        <div className="col-12">
           <div className="card">
             <div className="card-header">
               <h5 className="mb-0">
