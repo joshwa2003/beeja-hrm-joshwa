@@ -4,6 +4,45 @@ import { leaveAPI } from '../../utils/api';
 import LeaveStatusBadge from '../shared/LeaveStatusBadge';
 import LeaveTimeline from '../shared/LeaveTimeline';
 import DocumentPreviewModal from '../shared/DocumentPreviewModal';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  Grid,
+  TextField,
+  MenuItem,
+  Alert,
+  Chip,
+  Paper,
+  Container,
+  FormControl,
+  InputLabel,
+  Select,
+  IconButton,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TablePagination,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  CircularProgress,
+} from '@mui/material';
+import {
+  CalendarToday,
+  Visibility,
+  Cancel,
+  Assessment,
+  FilterList,
+  Refresh,
+  AttachFile,
+} from '@mui/icons-material';
 
 const LeaveHistory = () => {
   const { user } = useAuth();
@@ -135,128 +174,162 @@ const LeaveHistory = () => {
   }
 
   return (
-    <div className="container-fluid">
+    <Container maxWidth={false} sx={{ py: 3 }}>
       {/* Page Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h2 className="mb-1">My Leave History</h2>
-          <p className="text-muted">View and manage your leave requests</p>
-        </div>
-      </div>
+      <Box
+        sx={{
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          borderRadius: 3,
+          p: 4,
+          mb: 4,
+          color: 'white',
+        }}
+      >
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box>
+            <Typography variant="h3" sx={{ fontWeight: 700, mb: 1, display: 'flex', alignItems: 'center' }}>
+              <Assessment sx={{ mr: 2, fontSize: '2.5rem' }} />
+              My Leave History
+            </Typography>
+            <Typography variant="h6" sx={{ opacity: 0.9 }}>
+              View and manage your leave requests
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
 
       {/* Statistics Cards */}
-      <div className="row mb-4">
-        <div className="col-md-3">
-          <div className="card bg-primary text-white">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <div className="flex-grow-1">
-                  <h5 className="card-title">Total Requests</h5>
-                  <h3 className="mb-0">{stats.totalRequests || 0}</h3>
-                </div>
-                <i className="bi bi-calendar3" style={{ fontSize: '2rem', opacity: 0.7 }}></i>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card bg-warning text-white">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <div className="flex-grow-1">
-                  <h5 className="card-title">Pending</h5>
-                  <h3 className="mb-0">{stats.pendingRequests || 0}</h3>
-                </div>
-                <i className="bi bi-clock" style={{ fontSize: '2rem', opacity: 0.7 }}></i>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card bg-success text-white">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <div className="flex-grow-1">
-                  <h5 className="card-title">Approved</h5>
-                  <h3 className="mb-0">{stats.approvedRequests || 0}</h3>
-                </div>
-                <i className="bi bi-check-circle" style={{ fontSize: '2rem', opacity: 0.7 }}></i>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card bg-info text-white">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <div className="flex-grow-1">
-                  <h5 className="card-title">Total Days</h5>
-                  <h3 className="mb-0">{stats.totalDays || 0}</h3>
-                </div>
-                <i className="bi bi-calendar-check" style={{ fontSize: '2rem', opacity: 0.7 }}></i>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)', color: 'white' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Box sx={{ flexGrow: 1 }}>
+                  <Typography variant="h6">Total Requests</Typography>
+                  <Typography variant="h3" sx={{ fontWeight: 700 }}>
+                    {stats.totalRequests || 0}
+                  </Typography>
+                </Box>
+                <CalendarToday sx={{ fontSize: '2rem', opacity: 0.7 }} />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ background: 'linear-gradient(135deg, #ed6c02 0%, #e65100 100%)', color: 'white' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Box sx={{ flexGrow: 1 }}>
+                  <Typography variant="h6">Pending</Typography>
+                  <Typography variant="h3" sx={{ fontWeight: 700 }}>
+                    {stats.pendingRequests || 0}
+                  </Typography>
+                </Box>
+                <Assessment sx={{ fontSize: '2rem', opacity: 0.7 }} />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ background: 'linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%)', color: 'white' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Box sx={{ flexGrow: 1 }}>
+                  <Typography variant="h6">Approved</Typography>
+                  <Typography variant="h3" sx={{ fontWeight: 700 }}>
+                    {stats.approvedRequests || 0}
+                  </Typography>
+                </Box>
+                <Assessment sx={{ fontSize: '2rem', opacity: 0.7 }} />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ background: 'linear-gradient(135deg, #0288d1 0%, #01579b 100%)', color: 'white' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Box sx={{ flexGrow: 1 }}>
+                  <Typography variant="h6">Total Days</Typography>
+                  <Typography variant="h3" sx={{ fontWeight: 700 }}>
+                    {stats.totalDays || 0}
+                  </Typography>
+                </Box>
+                <CalendarToday sx={{ fontSize: '2rem', opacity: 0.7 }} />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
 
       {/* Filters */}
-      <div className="card mb-4">
-        <div className="card-body">
-          <div className="row">
-            <div className="col-md-3">
-              <label className="form-label">Status</label>
-              <select
-                className="form-select"
-                name="status"
-                value={filters.status}
-                onChange={handleFilterChange}
-              >
-                <option value="all">All Status</option>
-                <option value="Pending">Pending</option>
-                <option value="Approved by TL">Approved by TL</option>
-                <option value="Approved">Approved</option>
-                <option value="Rejected">Rejected</option>
-                <option value="Cancelled">Cancelled</option>
-              </select>
-            </div>
-            <div className="col-md-3">
-              <label className="form-label">Leave Type</label>
-              <select
-                className="form-select"
-                name="leaveType"
-                value={filters.leaveType}
-                onChange={handleFilterChange}
-              >
-                <option value="all">All Types</option>
-                <option value="Casual">Casual</option>
-                <option value="Sick">Sick</option>
-                <option value="Earned">Earned</option>
-                <option value="Maternity">Maternity</option>
-                <option value="Paternity">Paternity</option>
-                <option value="Emergency">Emergency</option>
-                <option value="Unpaid">Unpaid</option>
-              </select>
-            </div>
-            <div className="col-md-3">
-              <label className="form-label">Year</label>
-              <select
-                className="form-select"
-                name="year"
-                value={filters.year}
-                onChange={handleFilterChange}
-              >
-                {[...Array(5)].map((_, i) => {
-                  const year = new Date().getFullYear() - i;
-                  return (
-                    <option key={year} value={year}>{year}</option>
-                  );
-                })}
-              </select>
-            </div>
-            <div className="col-md-3 d-flex align-items-end">
-              <button
-                className="btn btn-outline-secondary"
+      <Card sx={{ mb: 4, borderRadius: 3 }}>
+        <CardContent>
+          <Typography variant="h6" sx={{ mb: 3, display: 'flex', alignItems: 'center', color: 'primary.main' }}>
+            <FilterList sx={{ mr: 1 }} />
+            Filter Options
+          </Typography>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={3}>
+              <FormControl fullWidth>
+                <InputLabel>Status</InputLabel>
+                <Select
+                  name="status"
+                  value={filters.status}
+                  onChange={handleFilterChange}
+                  label="Status"
+                >
+                  <MenuItem value="all">All Status</MenuItem>
+                  <MenuItem value="Pending">Pending</MenuItem>
+                  <MenuItem value="Approved by TL">Approved by TL</MenuItem>
+                  <MenuItem value="Approved">Approved</MenuItem>
+                  <MenuItem value="Rejected">Rejected</MenuItem>
+                  <MenuItem value="Cancelled">Cancelled</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <FormControl fullWidth>
+                <InputLabel>Leave Type</InputLabel>
+                <Select
+                  name="leaveType"
+                  value={filters.leaveType}
+                  onChange={handleFilterChange}
+                  label="Leave Type"
+                >
+                  <MenuItem value="all">All Types</MenuItem>
+                  <MenuItem value="Casual">Casual</MenuItem>
+                  <MenuItem value="Sick">Sick</MenuItem>
+                  <MenuItem value="Earned">Earned</MenuItem>
+                  <MenuItem value="Maternity">Maternity</MenuItem>
+                  <MenuItem value="Paternity">Paternity</MenuItem>
+                  <MenuItem value="Emergency">Emergency</MenuItem>
+                  <MenuItem value="Unpaid">Unpaid</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <FormControl fullWidth>
+                <InputLabel>Year</InputLabel>
+                <Select
+                  name="year"
+                  value={filters.year}
+                  onChange={handleFilterChange}
+                  label="Year"
+                >
+                  {[...Array(5)].map((_, i) => {
+                    const year = new Date().getFullYear() - i;
+                    return (
+                      <MenuItem key={year} value={year}>{year}</MenuItem>
+                    );
+                  })}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={3} sx={{ display: 'flex', alignItems: 'flex-end' }}>
+              <Button
+                variant="outlined"
+                startIcon={<Refresh />}
                 onClick={() => {
                   setFilters({
                     status: 'all',
@@ -265,139 +338,131 @@ const LeaveHistory = () => {
                   });
                   setPagination(prev => ({ ...prev, currentPage: 1 }));
                 }}
+                fullWidth
               >
-                <i className="bi bi-arrow-clockwise me-1"></i>
                 Reset
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+              </Button>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
 
       {/* Error Alert */}
       {error && (
-        <div className="alert alert-danger alert-dismissible fade show" role="alert">
+        <Alert
+          severity="error"
+          onClose={() => setError('')}
+          sx={{ mb: 3, borderRadius: 2 }}
+        >
           {error}
-          <button type="button" className="btn-close" onClick={() => setError('')}></button>
-        </div>
+        </Alert>
       )}
 
       {/* Leave Requests Table */}
-      <div className="card">
-        <div className="card-body">
+      <Card sx={{ borderRadius: 3 }}>
+        <CardContent>
           {leaveRequests.length === 0 ? (
-            <div className="text-center py-5">
-              <i className="bi bi-calendar-x text-muted" style={{ fontSize: '3rem' }}></i>
-              <h5 className="mt-3 text-muted">No leave requests found</h5>
-              <p className="text-muted">You haven't submitted any leave requests yet.</p>
-            </div>
+            <Box sx={{ textAlign: 'center', py: 8 }}>
+              <CalendarToday sx={{ fontSize: '4rem', color: 'text.secondary', mb: 2 }} />
+              <Typography variant="h5" color="text.secondary" sx={{ mb: 1 }}>
+                No leave requests found
+              </Typography>
+              <Typography color="text.secondary">
+                You haven't submitted any leave requests yet.
+              </Typography>
+            </Box>
           ) : (
             <>
-              <div className="table-responsive">
-                <table className="table table-hover">
-                  <thead className="table-light">
-                    <tr>
-                      <th>Leave Type</th>
-                      <th>Duration</th>
-                      <th>Days</th>
-                      <th>Applied Date</th>
-                      <th>Status</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 600 }}>Leave Type</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Duration</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Days</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Applied Date</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
                     {leaveRequests.map((leave) => (
-                      <tr key={leave._id}>
-                        <td>
-                          <div>
-                            <div className="fw-semibold">{leave.leaveType}</div>
+                      <TableRow key={leave._id} hover>
+                        <TableCell>
+                          <Box>
+                            <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                              {leave.leaveType}
+                            </Typography>
                             {leave.isHalfDay && (
-                              <small className="text-muted">
+                              <Typography variant="caption" color="text.secondary">
                                 Half Day ({leave.halfDayPeriod})
-                              </small>
+                              </Typography>
                             )}
-                          </div>
-                        </td>
-                        <td>
-                          <div>
-                            <div>{formatDate(leave.startDate)}</div>
-                            <small className="text-muted">
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Box>
+                            <Typography variant="body2">
+                              {formatDate(leave.startDate)}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
                               to {formatDate(leave.endDate)}
-                            </small>
-                          </div>
-                        </td>
-                        <td>
-                          <span className="badge bg-info">{leave.totalDays}</span>
-                        </td>
-                        <td>{formatDate(leave.appliedDate)}</td>
-                        <td>
+                            </Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Chip label={leave.totalDays} color="info" size="small" />
+                        </TableCell>
+                        <TableCell>{formatDate(leave.appliedDate)}</TableCell>
+                        <TableCell>
                           <LeaveStatusBadge status={leave.status} />
-                        </td>
-                        <td>
-                          <div className="btn-group" role="group">
-                            <button
-                              className="btn btn-sm btn-outline-primary"
+                        </TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', gap: 1 }}>
+                            <IconButton
+                              size="small"
+                              color="primary"
                               onClick={() => handleViewDetails(leave._id)}
                               title="View Details"
                             >
-                              <i className="bi bi-eye"></i>
-                            </button>
+                              <Visibility />
+                            </IconButton>
                             {canCancelLeave(leave) && (
-                              <button
-                                className="btn btn-sm btn-outline-danger"
+                              <IconButton
+                                size="small"
+                                color="error"
                                 onClick={() => handleCancelLeave(leave._id)}
                                 title="Cancel Request"
                               >
-                                <i className="bi bi-x-circle"></i>
-                              </button>
+                                <Cancel />
+                              </IconButton>
                             )}
-                          </div>
-                        </td>
-                      </tr>
+                          </Box>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                  </TableBody>
+                </Table>
+              </TableContainer>
 
               {/* Pagination */}
               {pagination.totalPages > 1 && (
-                <nav className="mt-4">
-                  <ul className="pagination justify-content-center">
-                    <li className={`page-item ${pagination.currentPage === 1 ? 'disabled' : ''}`}>
-                      <button
-                        className="page-link"
-                        onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage - 1 }))}
-                        disabled={pagination.currentPage === 1}
-                      >
-                        Previous
-                      </button>
-                    </li>
-                    {[...Array(pagination.totalPages)].map((_, index) => (
-                      <li key={index} className={`page-item ${pagination.currentPage === index + 1 ? 'active' : ''}`}>
-                        <button
-                          className="page-link"
-                          onClick={() => setPagination(prev => ({ ...prev, currentPage: index + 1 }))}
-                        >
-                          {index + 1}
-                        </button>
-                      </li>
-                    ))}
-                    <li className={`page-item ${pagination.currentPage === pagination.totalPages ? 'disabled' : ''}`}>
-                      <button
-                        className="page-link"
-                        onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage + 1 }))}
-                        disabled={pagination.currentPage === pagination.totalPages}
-                      >
-                        Next
-                      </button>
-                    </li>
-                  </ul>
-                </nav>
+                <TablePagination
+                  component="div"
+                  count={pagination.totalCount}
+                  page={pagination.currentPage - 1}
+                  onPageChange={(event, newPage) => {
+                    setPagination(prev => ({ ...prev, currentPage: newPage + 1 }));
+                  }}
+                  rowsPerPage={10}
+                  onRowsPerPageChange={() => {}}
+                  rowsPerPageOptions={[10]}
+                />
               )}
             </>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Leave Details Modal */}
       {showModal && selectedLeave && (
@@ -576,7 +641,7 @@ const LeaveHistory = () => {
         leaveId={documentPreview.leaveId}
         attachment={documentPreview.attachment}
       />
-    </div>
+    </Container>
   );
 };
 

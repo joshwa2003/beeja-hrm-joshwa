@@ -1,6 +1,51 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { departmentAPI } from '../../utils/api';
+import {
+  Box,
+  Card,
+  CardContent,
+  CardHeader,
+  Typography,
+  Button,
+  Grid,
+  Alert,
+  CircularProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Chip,
+  TextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
+  Pagination,
+  Container,
+  InputAdornment,
+  Switch,
+  FormControlLabel,
+  Tooltip,
+  Paper,
+} from '@mui/material';
+import {
+  Add,
+  Search,
+  Edit,
+  Delete,
+  PlayArrow,
+  Pause,
+  Business,
+  CheckCircle,
+  Cancel,
+  People,
+  Refresh,
+  Close,
+} from '@mui/icons-material';
 
 const DepartmentManagement = () => {
   const { user } = useAuth();
@@ -179,389 +224,514 @@ const DepartmentManagement = () => {
 
   if (loading && departments.length === 0) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: '400px' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '400px',
+        }}
+      >
+        <CircularProgress size={60} sx={{ color: '#20C997' }} />
+      </Box>
     );
   }
 
   return (
-    <div className="container-fluid">
+    <Container maxWidth={false} sx={{ py: 3 }}>
       {/* Page Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h2 className="mb-1">Department Management</h2>
-          <p className="text-muted">Manage company departments and organizational structure</p>
-        </div>
-        <button 
-          className="btn btn-primary"
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 700, color: '#0A192F', mb: 1 }}>
+            Department Management
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Manage company departments and organizational structure
+          </Typography>
+        </Box>
+        <Button
+          variant="contained"
+          startIcon={<Add />}
           onClick={() => setShowModal(true)}
+          sx={{
+            backgroundColor: '#20C997',
+            '&:hover': {
+              backgroundColor: '#17A085',
+            },
+            borderRadius: 2,
+            px: 3,
+            py: 1.5,
+            fontWeight: 600,
+          }}
         >
-          <i className="bi bi-plus-circle me-2"></i>
           Add Department
-        </button>
-      </div>
+        </Button>
+      </Box>
 
       {/* Statistics Cards */}
-      <div className="row mb-4">
-        <div className="col-md-3">
-          <div className="card bg-primary text-white">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <div className="flex-grow-1">
-                  <h5 className="card-title">Total Departments</h5>
-                  <h3 className="mb-0">{stats.totalDepartments || 0}</h3>
-                </div>
-                <i className="bi bi-building" style={{ fontSize: '2rem', opacity: 0.7 }}></i>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card bg-success text-white">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <div className="flex-grow-1">
-                  <h5 className="card-title">Active Departments</h5>
-                  <h3 className="mb-0">{stats.activeDepartments || 0}</h3>
-                </div>
-                <i className="bi bi-check-circle" style={{ fontSize: '2rem', opacity: 0.7 }}></i>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card bg-warning text-white">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <div className="flex-grow-1">
-                  <h5 className="card-title">Inactive Departments</h5>
-                  <h3 className="mb-0">{stats.inactiveDepartments || 0}</h3>
-                </div>
-                <i className="bi bi-x-circle" style={{ fontSize: '2rem', opacity: 0.7 }}></i>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card bg-info text-white">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <div className="flex-grow-1">
-                  <h5 className="card-title">Avg Employees</h5>
-                  <h3 className="mb-0">
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card
+            sx={{
+              background: 'linear-gradient(135deg, #20C997 0%, #17A085 100%)',
+              color: 'white',
+              borderRadius: 3,
+            }}
+          >
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Box sx={{ flexGrow: 1 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                    Total Departments
+                  </Typography>
+                  <Typography variant="h3" sx={{ fontWeight: 700 }}>
+                    {stats.totalDepartments || 0}
+                  </Typography>
+                </Box>
+                <Business sx={{ fontSize: '3rem', opacity: 0.7 }} />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card
+            sx={{
+              background: 'linear-gradient(135deg, #4CAF50 0%, #388E3C 100%)',
+              color: 'white',
+              borderRadius: 3,
+            }}
+          >
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Box sx={{ flexGrow: 1 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                    Active Departments
+                  </Typography>
+                  <Typography variant="h3" sx={{ fontWeight: 700 }}>
+                    {stats.activeDepartments || 0}
+                  </Typography>
+                </Box>
+                <CheckCircle sx={{ fontSize: '3rem', opacity: 0.7 }} />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card
+            sx={{
+              background: 'linear-gradient(135deg, #FF9800 0%, #F57C00 100%)',
+              color: 'white',
+              borderRadius: 3,
+            }}
+          >
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Box sx={{ flexGrow: 1 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                    Inactive Departments
+                  </Typography>
+                  <Typography variant="h3" sx={{ fontWeight: 700 }}>
+                    {stats.inactiveDepartments || 0}
+                  </Typography>
+                </Box>
+                <Cancel sx={{ fontSize: '3rem', opacity: 0.7 }} />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card
+            sx={{
+              background: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)',
+              color: 'white',
+              borderRadius: 3,
+            }}
+          >
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Box sx={{ flexGrow: 1 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                    Avg Employees
+                  </Typography>
+                  <Typography variant="h3" sx={{ fontWeight: 700 }}>
                     {stats.departmentStats ? 
                       Math.round(stats.departmentStats.reduce((sum, dept) => sum + dept.activeEmployeeCount, 0) / stats.departmentStats.length) || 0
                       : 0
                     }
-                  </h3>
-                </div>
-                <i className="bi bi-people" style={{ fontSize: '2rem', opacity: 0.7 }}></i>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+                  </Typography>
+                </Box>
+                <People sx={{ fontSize: '3rem', opacity: 0.7 }} />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
 
       {/* Search and Filters */}
-      <div className="card mb-4">
-        <div className="card-body">
-          <div className="row">
-            <div className="col-md-6">
-              <div className="input-group">
-                <span className="input-group-text">
-                  <i className="bi bi-search"></i>
-                </span>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Search departments..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="col-md-6 text-end">
-              <button 
-                className="btn btn-outline-secondary me-2"
+      <Card sx={{ mb: 4, borderRadius: 3 }}>
+        <CardContent>
+          <Grid container spacing={3} alignItems="center">
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                placeholder="Search departments..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search sx={{ color: 'text.secondary' }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6} sx={{ textAlign: { xs: 'left', md: 'right' } }}>
+              <Button
+                variant="outlined"
+                startIcon={<Refresh />}
                 onClick={() => {
                   setSearchTerm('');
                   setCurrentPage(1);
                 }}
+                sx={{
+                  borderRadius: 2,
+                  px: 3,
+                  py: 1,
+                  borderColor: '#E0E0E0',
+                  color: '#666',
+                  '&:hover': {
+                    borderColor: '#20C997',
+                    backgroundColor: 'rgba(32, 201, 151, 0.04)',
+                  },
+                }}
               >
-                <i className="bi bi-arrow-clockwise me-1"></i>
                 Reset
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+              </Button>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
 
       {/* Error Alert */}
       {error && (
-        <div className="alert alert-danger alert-dismissible fade show" role="alert">
+        <Alert
+          severity="error"
+          onClose={() => setError('')}
+          sx={{ mb: 3, borderRadius: 2 }}
+        >
           {error}
-          <button 
-            type="button" 
-            className="btn-close" 
-            onClick={() => setError('')}
-          ></button>
-        </div>
+        </Alert>
       )}
 
       {/* Departments Table */}
-      <div className="card">
-        <div className="card-body">
-          <div className="table-responsive">
-            <table className="table table-hover">
-              <thead className="table-light">
-                <tr>
-                  <th>Department</th>
-                  <th>Code</th>
-                  <th>Head of Department</th>
-                  <th>Employees</th>
-                  <th>Budget</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
+      <Card sx={{ borderRadius: 3 }}>
+        <CardContent>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 600, color: '#0A192F' }}>Department</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: '#0A192F' }}>Code</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: '#0A192F' }}>Head of Department</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: '#0A192F' }}>Employees</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: '#0A192F' }}>Budget</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: '#0A192F' }}>Status</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: '#0A192F' }}>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
                 {departments.map((department) => (
-                  <tr key={department._id}>
-                    <td>
-                      <div>
-                        <div className="fw-semibold">{department.name}</div>
+                  <TableRow key={department._id} hover>
+                    <TableCell>
+                      <Box>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                          {department.name}
+                        </Typography>
                         {department.description && (
-                          <small className="text-muted">{department.description}</small>
+                          <Typography variant="caption" color="text.secondary">
+                            {department.description}
+                          </Typography>
                         )}
-                      </div>
-                    </td>
-                    <td>
-                      <span className="badge bg-secondary">{department.code}</span>
-                    </td>
-                    <td>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={department.code}
+                        variant="outlined"
+                        size="small"
+                        sx={{ fontFamily: 'monospace', fontWeight: 600 }}
+                      />
+                    </TableCell>
+                    <TableCell>
                       {department.headOfDepartment ? (
-                        <div>
-                          <div>{department.headOfDepartment.firstName} {department.headOfDepartment.lastName}</div>
-                          <small className="text-muted">{department.headOfDepartment.email}</small>
-                        </div>
+                        <Box>
+                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                            {department.headOfDepartment.firstName} {department.headOfDepartment.lastName}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {department.headOfDepartment.email}
+                          </Typography>
+                        </Box>
                       ) : (
-                        <span className="text-muted">Not assigned</span>
+                        <Typography variant="body2" color="text.secondary">
+                          Not assigned
+                        </Typography>
                       )}
-                    </td>
-                    <td>
-                      <span className="badge bg-info">{department.employeeCount || 0}</span>
-                    </td>
-                    <td>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={department.employeeCount || 0}
+                        color="info"
+                        size="small"
+                        sx={{ fontWeight: 600 }}
+                      />
+                    </TableCell>
+                    <TableCell>
                       {department.budget ? (
-                        <span>₹{department.budget.toLocaleString()}</span>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          ₹{department.budget.toLocaleString()}
+                        </Typography>
                       ) : (
-                        <span className="text-muted">Not set</span>
+                        <Typography variant="body2" color="text.secondary">
+                          Not set
+                        </Typography>
                       )}
-                    </td>
-                    <td>
-                      <span className={`badge ${department.isActive ? 'bg-success' : 'bg-danger'}`}>
-                        {department.isActive ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="btn-group" role="group">
-                        <button
-                          className="btn btn-sm btn-outline-primary"
-                          onClick={() => handleEdit(department)}
-                          title="Edit Department"
-                        >
-                          <i className="bi bi-pencil"></i>
-                        </button>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={department.isActive ? 'Active' : 'Inactive'}
+                        color={department.isActive ? 'success' : 'error'}
+                        size="small"
+                        sx={{ fontWeight: 500 }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Tooltip title="Edit Department">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleEdit(department)}
+                            sx={{
+                              color: '#20C997',
+                              '&:hover': {
+                                backgroundColor: 'rgba(32, 201, 151, 0.1)',
+                              },
+                            }}
+                          >
+                            <Edit fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
                         {['Admin', 'Vice President', 'HR BP', 'HR Manager', 'HR Executive', 'Team Manager', 'Team Leader'].includes(user?.role) && (
                           <>
-                            <button
-                              className={`btn btn-sm ${department.isActive ? 'btn-outline-warning' : 'btn-outline-success'}`}
-                              onClick={() => handleStatusToggle(department._id, department.isActive)}
-                              title={department.isActive ? 'Deactivate Department' : 'Activate Department'}
-                            >
-                              <i className={`bi ${department.isActive ? 'bi-pause-circle' : 'bi-play-circle'}`}></i>
-                            </button>
-                            <button
-                              className="btn btn-sm btn-outline-danger"
-                              onClick={() => handleDelete(department._id)}
-                              title="Delete Department"
-                            >
-                              <i className="bi bi-trash"></i>
-                            </button>
+                            <Tooltip title={department.isActive ? 'Deactivate Department' : 'Activate Department'}>
+                              <IconButton
+                                size="small"
+                                onClick={() => handleStatusToggle(department._id, department.isActive)}
+                                sx={{
+                                  color: department.isActive ? '#FF9800' : '#4CAF50',
+                                  '&:hover': {
+                                    backgroundColor: department.isActive ? 'rgba(255, 152, 0, 0.1)' : 'rgba(76, 175, 80, 0.1)',
+                                  },
+                                }}
+                              >
+                                {department.isActive ? <Pause fontSize="small" /> : <PlayArrow fontSize="small" />}
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Delete Department">
+                              <IconButton
+                                size="small"
+                                onClick={() => handleDelete(department._id)}
+                                sx={{
+                                  color: '#F44336',
+                                  '&:hover': {
+                                    backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                                  },
+                                }}
+                              >
+                                <Delete fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
                           </>
                         )}
-                      </div>
-                    </td>
-                  </tr>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </TableBody>
+            </Table>
+          </TableContainer>
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <nav className="mt-4">
-              <ul className="pagination justify-content-center">
-                <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-                  <button 
-                    className="page-link"
-                    onClick={() => setCurrentPage(currentPage - 1)}
-                    disabled={currentPage === 1}
-                  >
-                    Previous
-                  </button>
-                </li>
-                {[...Array(totalPages)].map((_, index) => (
-                  <li key={index} className={`page-item ${currentPage === index + 1 ? 'active' : ''}`}>
-                    <button 
-                      className="page-link"
-                      onClick={() => setCurrentPage(index + 1)}
-                    >
-                      {index + 1}
-                    </button>
-                  </li>
-                ))}
-                <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-                  <button 
-                    className="page-link"
-                    onClick={() => setCurrentPage(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                  >
-                    Next
-                  </button>
-                </li>
-              </ul>
-            </nav>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+              <Pagination
+                count={totalPages}
+                page={currentPage}
+                onChange={(event, page) => setCurrentPage(page)}
+                color="primary"
+                size="large"
+                sx={{
+                  '& .MuiPaginationItem-root': {
+                    '&.Mui-selected': {
+                      backgroundColor: '#20C997',
+                      '&:hover': {
+                        backgroundColor: '#17A085',
+                      },
+                    },
+                  },
+                }}
+              />
+            </Box>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* Add/Edit Department Modal */}
-      {showModal && (
-        <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-lg">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  {editingDepartment ? 'Edit Department' : 'Add New Department'}
-                </h5>
-                <button 
-                  type="button" 
-                  className="btn-close"
-                  onClick={handleCloseModal}
-                ></button>
-              </div>
-              <form onSubmit={handleSubmit}>
-                <div className="modal-body">
-                  <div className="row">
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label className="form-label">Department Name *</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          name="name"
-                          value={formData.name}
-                          onChange={handleInputChange}
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label className="form-label">Department Code *</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          name="code"
-                          value={formData.code}
-                          onChange={handleInputChange}
-                          style={{ textTransform: 'uppercase' }}
-                          placeholder="e.g., IT, HR, FIN"
-                          pattern="[A-Z0-9]+"
-                          title="Department code must contain only uppercase letters and numbers"
-                          maxLength="10"
-                          required
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="mb-3">
-                    <label className="form-label">Description</label>
-                    <textarea
-                      className="form-control"
-                      name="description"
-                      value={formData.description}
+      {/* Add/Edit Department Dialog */}
+      <Dialog
+        open={showModal}
+        onClose={handleCloseModal}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: { borderRadius: 3 }
+        }}
+      >
+        <DialogTitle sx={{ pb: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              {editingDepartment ? 'Edit Department' : 'Add New Department'}
+            </Typography>
+            <IconButton onClick={handleCloseModal} sx={{ color: 'text.secondary' }}>
+              <Close />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <form onSubmit={handleSubmit}>
+          <DialogContent>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Department Name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  required
+                  sx={{ mb: 2 }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Department Code"
+                  name="code"
+                  value={formData.code}
+                  onChange={handleInputChange}
+                  placeholder="e.g., IT, HR, FIN"
+                  inputProps={{
+                    maxLength: 10,
+                    pattern: '[A-Z0-9]+',
+                    style: { textTransform: 'uppercase' }
+                  }}
+                  helperText="Only uppercase letters and numbers allowed"
+                  required
+                  sx={{ mb: 2 }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  multiline
+                  rows={3}
+                  sx={{ mb: 2 }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Budget"
+                  name="budget"
+                  type="number"
+                  value={formData.budget}
+                  onChange={handleInputChange}
+                  inputProps={{ min: 0 }}
+                  sx={{ mb: 2 }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Location"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleInputChange}
+                  sx={{ mb: 2 }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={formData.isActive}
                       onChange={handleInputChange}
-                      rows="3"
-                    ></textarea>
-                  </div>
-
-                  <div className="row">
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label className="form-label">Budget</label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          name="budget"
-                          value={formData.budget}
-                          onChange={handleInputChange}
-                          min="0"
-                        />
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label className="form-label">Location</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          name="location"
-                          value={formData.location}
-                          onChange={handleInputChange}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <div className="form-check">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        name="isActive"
-                        checked={formData.isActive}
-                        onChange={handleInputChange}
-                      />
-                      <label className="form-check-label">
-                        Active Department
-                      </label>
-                    </div>
-                  </div>
-                </div>
-                <div className="modal-footer">
-                  <button 
-                    type="button" 
-                    className="btn btn-secondary"
-                    onClick={handleCloseModal}
-                  >
-                    Cancel
-                  </button>
-                  <button type="submit" className="btn btn-primary">
-                    {editingDepartment ? 'Update Department' : 'Create Department'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+                      name="isActive"
+                      sx={{
+                        '& .MuiSwitch-switchBase.Mui-checked': {
+                          color: '#20C997',
+                        },
+                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                          backgroundColor: '#20C997',
+                        },
+                      }}
+                    />
+                  }
+                  label="Active Department"
+                />
+              </Grid>
+            </Grid>
+          </DialogContent>
+          <DialogActions sx={{ px: 3, pb: 3 }}>
+            <Button
+              onClick={handleCloseModal}
+              sx={{
+                color: '#666',
+                borderColor: '#E0E0E0',
+                '&:hover': {
+                  borderColor: '#20C997',
+                  backgroundColor: 'rgba(32, 201, 151, 0.04)',
+                },
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              sx={{
+                backgroundColor: '#20C997',
+                '&:hover': {
+                  backgroundColor: '#17A085',
+                },
+                px: 3,
+                fontWeight: 600,
+              }}
+            >
+              {editingDepartment ? 'Update Department' : 'Create Department'}
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+    </Container>
   );
 };
 

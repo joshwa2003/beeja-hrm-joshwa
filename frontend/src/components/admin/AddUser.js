@@ -2,6 +2,34 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { userAPI, departmentAPI, teamAPI } from '../../utils/api';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Grid,
+  Alert,
+  CircularProgress,
+  Switch,
+  FormControlLabel,
+  Paper,
+  useTheme,
+  Container,
+  Divider,
+} from '@mui/material';
+import {
+  ArrowBack,
+  PersonAdd,
+  Save,
+  Groups,
+  Info,
+} from '@mui/icons-material';
 
 const AddUser = () => {
   const { user } = useAuth();
@@ -286,331 +314,338 @@ const AddUser = () => {
   };
 
   return (
-    <div className="container-fluid">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h2 className="mb-1">Add New User</h2>
-          <p className="text-muted">Create a new user account in the system</p>
-        </div>
-        <button 
-          className="btn btn-outline-secondary"
+    <Container maxWidth={false} sx={{ py: 3 }}>
+      {/* Header Section */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 700, color: '#0A192F', mb: 1 }}>
+            Add New User
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Create a new user account in the system
+          </Typography>
+        </Box>
+        <Button
+          variant="outlined"
+          startIcon={<ArrowBack />}
           onClick={() => navigate('/admin/users')}
+          sx={{
+            borderColor: 'grey.300',
+            color: 'text.secondary',
+            '&:hover': {
+              borderColor: 'grey.400',
+              backgroundColor: 'grey.50',
+            },
+          }}
         >
-          <i className="bi bi-arrow-left me-1"></i> Back to User Management
-        </button>
-      </div>
+          Back to User Management
+        </Button>
+      </Box>
 
+      {/* Success Alert */}
       {success && (
-        <div className="alert alert-success alert-dismissible fade show" role="alert">
-          <i className="bi bi-check-circle-fill me-2"></i>
+        <Alert
+          severity="success"
+          onClose={() => setSuccess('')}
+          sx={{ mb: 3 }}
+        >
           {success}
-          <button 
-            type="button" 
-            className="btn-close" 
-            onClick={() => setSuccess('')}
-          ></button>
-        </div>
+        </Alert>
       )}
 
+      {/* Error Alert */}
       {error && (
-        <div className="alert alert-danger alert-dismissible fade show" role="alert">
-          <i className="bi bi-exclamation-triangle-fill me-2"></i>
+        <Alert
+          severity="error"
+          onClose={() => setError('')}
+          sx={{ mb: 3 }}
+        >
           {error}
-          <button 
-            type="button" 
-            className="btn-close" 
-            onClick={() => setError('')}
-          ></button>
-        </div>
+        </Alert>
       )}
 
-      <div className="card">
-        <div className="card-body">
+      {/* Form Card */}
+      <Card sx={{ borderRadius: 3 }}>
+        <CardContent sx={{ p: 4 }}>
           <form onSubmit={handleSubmit} noValidate>
-            <div className="row g-3">
-              <div className="col-md-6">
-                <label className="form-label">First Name *</label>
-                <input
-                  type="text"
-                  className={`form-control ${validationErrors.firstName ? 'is-invalid' : ''}`}
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="First Name"
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleInputChange}
+                  error={!!validationErrors.firstName}
+                  helperText={validationErrors.firstName}
                   required
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                 />
-                {validationErrors.firstName && (
-                  <div className="invalid-feedback">
-                    {validationErrors.firstName}
-                  </div>
-                )}
-              </div>
-              <div className="col-md-6">
-                <label className="form-label">Last Name *</label>
-                <input
-                  type="text"
-                  className={`form-control ${validationErrors.lastName ? 'is-invalid' : ''}`}
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Last Name"
                   name="lastName"
                   value={formData.lastName}
                   onChange={handleInputChange}
+                  error={!!validationErrors.lastName}
+                  helperText={validationErrors.lastName}
                   required
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                 />
-                {validationErrors.lastName && (
-                  <div className="invalid-feedback">
-                    {validationErrors.lastName}
-                  </div>
-                )}
-              </div>
-              <div className="col-md-6">
-                <label className="form-label">Email Address *</label>
-                <input
-                  type="email"
-                  className={`form-control ${validationErrors.email ? 'is-invalid' : ''}`}
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Email Address"
                   name="email"
+                  type="email"
                   value={formData.email}
                   onChange={handleInputChange}
+                  error={!!validationErrors.email}
+                  helperText={validationErrors.email}
                   required
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                 />
-                {validationErrors.email && (
-                  <div className="invalid-feedback">
-                    {validationErrors.email}
-                  </div>
-                )}
-              </div>
-              <div className="col-md-6">
-                <label className="form-label">Password *</label>
-                <input
-                  type="password"
-                  className={`form-control ${validationErrors.password ? 'is-invalid' : ''}`}
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Password"
                   name="password"
+                  type="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  minLength="6"
+                  error={!!validationErrors.password}
+                  helperText={validationErrors.password}
                   required
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                 />
-                {validationErrors.password && (
-                  <div className="invalid-feedback">
-                    {validationErrors.password}
-                  </div>
-                )}
-              </div>
-              <div className="col-md-6">
-                <label className="form-label">Role *</label>
-                <select
-                  className={`form-select ${validationErrors.role ? 'is-invalid' : ''}`}
-                  name="role"
-                  value={formData.role}
-                  onChange={handleInputChange}
-                  required
-                >
-                  {roles.map(role => (
-                    <option key={role} value={role}>{role}</option>
-                  ))}
-                </select>
-                {validationErrors.role && (
-                  <div className="invalid-feedback">
-                    {validationErrors.role}
-                  </div>
-                )}
-              </div>
-              <div className="col-md-6">
-                <label className="form-label">Department</label>
-                <select
-                  className={`form-select ${validationErrors.department ? 'is-invalid' : ''}`}
-                  name="department"
-                  value={formData.department}
-                  onChange={handleInputChange}
-                >
-                  <option value="">Select Department</option>
-                  {departments.map(dept => (
-                    <option key={dept._id} value={dept._id}>{dept.name}</option>
-                  ))}
-                </select>
-                {validationErrors.department && (
-                  <div className="invalid-feedback">
-                    {validationErrors.department}
-                  </div>
-                )}
-              </div>
-              <div className="col-md-6">
-                <label className="form-label">
-                  Employee ID
-                  {user?.role !== 'Admin' && (
-                    <small className="text-muted ms-1">(Auto-generated)</small>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth error={!!validationErrors.role}>
+                  <InputLabel>Role *</InputLabel>
+                  <Select
+                    name="role"
+                    value={formData.role}
+                    onChange={handleInputChange}
+                    label="Role *"
+                    sx={{ borderRadius: 2 }}
+                  >
+                    {roles.map(role => (
+                      <MenuItem key={role} value={role}>{role}</MenuItem>
+                    ))}
+                  </Select>
+                  {validationErrors.role && (
+                    <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                      {validationErrors.role}
+                    </Typography>
                   )}
-                </label>
-                <input
-                  type="text"
-                  className={`form-control ${validationErrors.employeeId ? 'is-invalid' : ''}`}
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Department</InputLabel>
+                  <Select
+                    name="department"
+                    value={formData.department}
+                    onChange={handleInputChange}
+                    label="Department"
+                    sx={{ borderRadius: 2 }}
+                  >
+                    <MenuItem value="">Select Department</MenuItem>
+                    {departments.map(dept => (
+                      <MenuItem key={dept._id} value={dept._id}>{dept.name}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label={`Employee ID ${user?.role !== 'Admin' ? '(Auto-generated)' : ''}`}
                   name="employeeId"
                   value={formData.employeeId}
                   onChange={handleInputChange}
-                  placeholder="e.g., EMP001"
-                  readOnly={user?.role !== 'Admin'}
-                  style={user?.role !== 'Admin' ? { backgroundColor: '#f8f9fa' } : {}}
+                  error={!!validationErrors.employeeId}
+                  helperText={validationErrors.employeeId || (user?.role !== 'Admin' ? 'Employee ID is automatically generated based on role' : '')}
+                  InputProps={{
+                    readOnly: user?.role !== 'Admin',
+                  }}
+                  sx={{ 
+                    '& .MuiOutlinedInput-root': { 
+                      borderRadius: 2,
+                      backgroundColor: user?.role !== 'Admin' ? 'grey.50' : 'transparent'
+                    } 
+                  }}
                 />
-                {validationErrors.employeeId && (
-                  <div className="invalid-feedback">
-                    {validationErrors.employeeId}
-                  </div>
-                )}
-                {user?.role !== 'Admin' && (
-                  <small className="form-text text-muted">
-                    Employee ID is automatically generated based on role
-                  </small>
-                )}
-              </div>
-              <div className="col-md-6">
-                <label className="form-label">Phone Number</label>
-                <input
-                  type="tel"
-                  className={`form-control ${validationErrors.phoneNumber ? 'is-invalid' : ''}`}
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Phone Number"
                   name="phoneNumber"
                   value={formData.phoneNumber}
                   onChange={handleInputChange}
+                  error={!!validationErrors.phoneNumber}
+                  helperText={validationErrors.phoneNumber}
                   placeholder="e.g., +1234567890"
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                 />
-                {validationErrors.phoneNumber && (
-                  <div className="invalid-feedback">
-                    {validationErrors.phoneNumber}
-                  </div>
-                )}
-              </div>
-              <div className="col-md-6">
-                <label className="form-label">Designation</label>
-                <input
-                  type="text"
-                  className={`form-control ${validationErrors.designation ? 'is-invalid' : ''}`}
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Designation"
                   name="designation"
                   value={formData.designation}
                   onChange={handleInputChange}
+                  error={!!validationErrors.designation}
+                  helperText={validationErrors.designation}
                   placeholder="e.g., Software Engineer"
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                 />
-                {validationErrors.designation && (
-                  <div className="invalid-feedback">
-                    {validationErrors.designation}
-                  </div>
-                )}
-              </div>
-              <div className="col-md-6">
-                <label className="form-label">Joining Date</label>
-                <input
-                  type="date"
-                  className="form-control"
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Joining Date"
                   name="joiningDate"
+                  type="date"
                   value={formData.joiningDate}
                   onChange={handleInputChange}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                 />
-              </div>
-              <div className="col-md-12">
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    name="isActive"
-                    id="isActive"
-                    checked={formData.isActive}
-                    onChange={handleInputChange}
-                  />
-                  <label className="form-check-label" htmlFor="isActive">
-                    Active User (can login to the system)
-                  </label>
-                </div>
-              </div>
+              </Grid>
+              <Grid item xs={12}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      name="isActive"
+                      checked={formData.isActive}
+                      onChange={handleInputChange}
+                      sx={{
+                        '& .MuiSwitch-switchBase.Mui-checked': {
+                          color: '#20C997',
+                        },
+                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                          backgroundColor: '#20C997',
+                        },
+                      }}
+                    />
+                  }
+                  label="Active User (can login to the system)"
+                />
+              </Grid>
 
               {/* Team Assignment Section - Only for Employee role */}
               {(user?.role === 'Admin' || user?.role === 'HR Manager') && formData.role === 'Employee' && (
-                <div className="col-md-12">
-                  <hr className="my-4" />
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h6 className="mb-0">
-                      <i className="bi bi-people me-2"></i>
+                <Grid item xs={12}>
+                  <Divider sx={{ my: 2 }} />
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                    <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', fontWeight: 600 }}>
+                      <Groups sx={{ mr: 1 }} />
                       Team Assignment
-                    </h6>
-                    <div className="form-check form-switch">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="enableTeamAssignment"
-                        checked={showTeamCreation}
-                        onChange={(e) => handleTeamAssignmentToggle(e.target.checked)}
-                      />
-                      <label className="form-check-label" htmlFor="enableTeamAssignment">
-                        Assign to Team
-                      </label>
-                    </div>
-                  </div>
+                    </Typography>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={showTeamCreation}
+                          onChange={(e) => handleTeamAssignmentToggle(e.target.checked)}
+                          sx={{
+                            '& .MuiSwitch-switchBase.Mui-checked': {
+                              color: '#20C997',
+                            },
+                            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                              backgroundColor: '#20C997',
+                            },
+                          }}
+                        />
+                      }
+                      label="Assign to Team"
+                    />
+                  </Box>
                   
                   {showTeamCreation && (
-                    <div className="border rounded p-3 bg-light">
-                      <div className="row g-3">
-                        <div className="col-md-12">
-                          <label className="form-label">Select Team *</label>
-                          <select
-                            className="form-select"
-                            value={teamFormData.selectedTeam || ''}
-                            onChange={(e) => setTeamFormData(prev => ({...prev, selectedTeam: e.target.value}))}
-                          >
-                            <option value="">Choose a team...</option>
-                            {availableUsers.teams && availableUsers.teams.map(team => (
-                              <option key={team._id} value={team._id}>
-                                {team.name} ({team.code}) - {team.department?.name || 'No Department'}
-                              </option>
-                            ))}
-                          </select>
-                          <small className="form-text text-muted">
-                            Select an existing team to assign this user to. Teams are created in Team Management.
-                            <br />
-                            <strong>Note:</strong> Team assignment is only available for Employee role. Team Managers and Team Leaders are assigned through Team Management.
-                          </small>
-                        </div>
-                      </div>
-                    </div>
+                    <Paper sx={{ p: 3, backgroundColor: 'grey.50', borderRadius: 2 }}>
+                      <FormControl fullWidth>
+                        <InputLabel>Select Team *</InputLabel>
+                        <Select
+                          value={teamFormData.selectedTeam || ''}
+                          onChange={(e) => setTeamFormData(prev => ({...prev, selectedTeam: e.target.value}))}
+                          label="Select Team *"
+                          sx={{ borderRadius: 2 }}
+                        >
+                          <MenuItem value="">Choose a team...</MenuItem>
+                          {availableUsers.teams && availableUsers.teams.map(team => (
+                            <MenuItem key={team._id} value={team._id}>
+                              {team.name} ({team.code}) - {team.department?.name || 'No Department'}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                      <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                        Select an existing team to assign this user to. Teams are created in Team Management.
+                        <br />
+                        <strong>Note:</strong> Team assignment is only available for Employee role. Team Managers and Team Leaders are assigned through Team Management.
+                      </Typography>
+                    </Paper>
                   )}
-                </div>
+                </Grid>
               )}
               
               {/* Info message for non-Employee roles */}
               {(user?.role === 'Admin' || user?.role === 'HR Manager') && formData.role !== 'Employee' && ['Team Manager', 'Team Leader'].includes(formData.role) && (
-                <div className="col-md-12">
-                  <hr className="my-4" />
-                  <div className="alert alert-info">
-                    <i className="bi bi-info-circle me-2"></i>
-                    <strong>Team Assignment:</strong> {formData.role} roles are assigned to teams through the Team Management interface, not during user creation.
-                  </div>
-                </div>
+                <Grid item xs={12}>
+                  <Divider sx={{ my: 2 }} />
+                  <Alert severity="info" sx={{ borderRadius: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Info sx={{ mr: 1 }} />
+                      <Typography variant="body2">
+                        <strong>Team Assignment:</strong> {formData.role} roles are assigned to teams through the Team Management interface, not during user creation.
+                      </Typography>
+                    </Box>
+                  </Alert>
+                </Grid>
               )}
-            </div>
+            </Grid>
 
-            <div className="d-flex justify-content-end gap-2 mt-4">
-              <button 
-                type="button" 
-                className="btn btn-secondary"
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 4 }}>
+              <Button
+                variant="outlined"
                 onClick={() => navigate('/admin/users')}
+                sx={{
+                  borderColor: 'grey.300',
+                  color: 'text.secondary',
+                  '&:hover': {
+                    borderColor: 'grey.400',
+                    backgroundColor: 'grey.50',
+                  },
+                }}
               >
                 Cancel
-              </button>
-              <button 
-                type="submit" 
-                className="btn btn-primary"
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
                 disabled={loading}
+                startIcon={loading ? <CircularProgress size={20} /> : <Save />}
+                sx={{
+                  backgroundColor: '#20C997',
+                  '&:hover': {
+                    backgroundColor: '#17A085',
+                  },
+                }}
               >
-                {loading ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                    Creating User...
-                  </>
-                ) : (
-                  <>
-                    <i className="bi bi-plus-circle me-1"></i>
-                    Create User
-                  </>
-                )}
-              </button>
-            </div>
+                {loading ? 'Creating User...' : 'Create User'}
+              </Button>
+            </Box>
           </form>
-        </div>
-      </div>
-    </div>
+        </CardContent>
+      </Card>
+    </Container>
   );
 };
 

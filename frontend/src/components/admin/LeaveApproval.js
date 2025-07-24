@@ -4,6 +4,56 @@ import { leaveAPI } from '../../utils/api';
 import LeaveStatusBadge from '../shared/LeaveStatusBadge';
 import LeaveTimeline from '../shared/LeaveTimeline';
 import DocumentPreviewModal from '../shared/DocumentPreviewModal';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  Grid,
+  Alert,
+  CircularProgress,
+  TextField,
+  MenuItem,
+  Container,
+  Chip,
+  Avatar,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Pagination,
+  ButtonGroup,
+  Tooltip,
+  Divider,
+  Stack,
+} from '@mui/material';
+import {
+  CalendarToday,
+  Schedule,
+  CheckCircle,
+  Cancel,
+  Visibility,
+  Refresh,
+  FilterList,
+  Clear,
+  Person,
+  Business,
+  Event,
+  Assignment,
+  AttachFile,
+  PictureAsPdf,
+  Image,
+  Warning,
+} from '@mui/icons-material';
 
 const LeaveApproval = () => {
   const { user, hasAnyRole } = useAuth();
@@ -193,132 +243,192 @@ const LeaveApproval = () => {
 
   if (loading && leaveRequests.length === 0) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: '400px' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
+      <Container maxWidth={false} sx={{ py: 4 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '400px',
+          }}
+        >
+          <Box sx={{ textAlign: 'center' }}>
+            <CircularProgress size={60} sx={{ color: '#20C997', mb: 3 }} />
+            <Typography variant="body1" color="text.secondary">
+              Loading leave requests...
+            </Typography>
+          </Box>
+        </Box>
+      </Container>
     );
   }
 
   return (
-    <div className="container-fluid">
+    <Container maxWidth={false} sx={{ py: 3 }}>
       {/* Page Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h2 className="mb-1">{getPageTitle()}</h2>
-          <p className="text-muted">{getPageDescription()}</p>
-        </div>
-      </div>
+      <Box
+        sx={{
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          borderRadius: 3,
+          p: 4,
+          mb: 4,
+          color: 'white',
+        }}
+      >
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box>
+            <Typography variant="h3" sx={{ fontWeight: 700, mb: 1, display: 'flex', alignItems: 'center' }}>
+              <CalendarToday sx={{ mr: 2, fontSize: '2.5rem' }} />
+              {getPageTitle()}
+            </Typography>
+            <Typography variant="h6" sx={{ opacity: 0.9 }}>
+              {getPageDescription()}
+            </Typography>
+          </Box>
+          <Button
+            variant="contained"
+            size="large"
+            onClick={() => {
+              fetchLeaveRequests();
+              fetchLeaveStats();
+            }}
+            disabled={loading}
+            startIcon={<Refresh />}
+            sx={{
+              backgroundColor: 'rgba(255,255,255,0.2)',
+              '&:hover': {
+                backgroundColor: 'rgba(255,255,255,0.3)',
+              },
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.3)',
+            }}
+          >
+            Refresh
+          </Button>
+        </Box>
+      </Box>
 
-      {/* Statistics Cards */}
-      <div className="row mb-4">
-        <div className="col-md-3">
-          <div className="card bg-primary text-white">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <div className="flex-grow-1">
-                  <h5 className="card-title">Total Requests</h5>
-                  <h3 className="mb-0">{stats.totalRequests || 0}</h3>
-                </div>
-                <i className="bi bi-calendar3" style={{ fontSize: '2rem', opacity: 0.7 }}></i>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card bg-warning text-white">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <div className="flex-grow-1">
-                  <h5 className="card-title">Pending</h5>
-                  <h3 className="mb-0">{stats.pendingRequests || 0}</h3>
-                </div>
-                <i className="bi bi-clock" style={{ fontSize: '2rem', opacity: 0.7 }}></i>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card bg-success text-white">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <div className="flex-grow-1">
-                  <h5 className="card-title">Approved</h5>
-                  <h3 className="mb-0">{stats.approvedRequests || 0}</h3>
-                </div>
-                <i className="bi bi-check-circle" style={{ fontSize: '2rem', opacity: 0.7 }}></i>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card bg-danger text-white">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <div className="flex-grow-1">
-                  <h5 className="card-title">Rejected</h5>
-                  <h3 className="mb-0">{stats.rejectedRequests || 0}</h3>
-                </div>
-                <i className="bi bi-x-circle" style={{ fontSize: '2rem', opacity: 0.7 }}></i>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Statistics Cards - Compact Design */}
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid item xs={6} sm={3}>
+          <Card sx={{ bgcolor: '#1976d2', color: 'white', borderRadius: 1 }}>
+            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <CalendarToday sx={{ fontSize: '1.5rem', mr: 1 }} />
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  {stats.totalRequests || 0}
+                </Typography>
+              </Box>
+              <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
+                Total Requests
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={6} sm={3}>
+          <Card sx={{ bgcolor: '#ed6c02', color: 'white', borderRadius: 1 }}>
+            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <Schedule sx={{ fontSize: '1.5rem', mr: 1 }} />
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  {stats.pendingRequests || 0}
+                </Typography>
+              </Box>
+              <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
+                Pending
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={6} sm={3}>
+          <Card sx={{ bgcolor: '#2e7d32', color: 'white', borderRadius: 1 }}>
+            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <CheckCircle sx={{ fontSize: '1.5rem', mr: 1 }} />
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  {stats.approvedRequests || 0}
+                </Typography>
+              </Box>
+              <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
+                Approved
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={6} sm={3}>
+          <Card sx={{ bgcolor: '#d32f2f', color: 'white', borderRadius: 1 }}>
+            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <Cancel sx={{ fontSize: '1.5rem', mr: 1 }} />
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  {stats.rejectedRequests || 0}
+                </Typography>
+              </Box>
+              <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
+                Rejected
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
 
       {/* Filters */}
-      <div className="card mb-4">
-        <div className="card-body">
-          <div className="row">
-            <div className="col-md-4">
-              <label className="form-label">Status</label>
-              <select
-                className="form-select"
+      <Card sx={{ mb: 3, borderRadius: 2 }}>
+        <CardContent>
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={12} sm={4}>
+              <TextField
+                select
+                fullWidth
+                label="Status"
                 name="status"
                 value={filters.status}
                 onChange={handleFilterChange}
+                size="small"
               >
-                <option value="all">All Status</option>
+                <MenuItem value="all">All Status</MenuItem>
                 {isTeamLeader && !isHR && (
                   <>
-                    <option value="Pending">Pending</option>
-                    <option value="Approved by TL">Approved by TL</option>
-                    <option value="Rejected by TL">Rejected by TL</option>
-                    <option value="Approved">Approved by HR</option>
-                    <option value="Rejected">Rejected by HR</option>
+                    <MenuItem value="Pending">Pending</MenuItem>
+                    <MenuItem value="Approved by TL">Approved by TL</MenuItem>
+                    <MenuItem value="Rejected by TL">Rejected by TL</MenuItem>
+                    <MenuItem value="Approved">Approved by HR</MenuItem>
+                    <MenuItem value="Rejected">Rejected by HR</MenuItem>
                   </>
                 )}
                 {isHR && (
                   <>
-                    <option value="pending-hr">Pending HR Approval</option>
-                    <option value="Approved">Approved</option>
-                    <option value="Rejected">Rejected</option>
+                    <MenuItem value="pending-hr">Pending HR Approval</MenuItem>
+                    <MenuItem value="Approved">Approved</MenuItem>
+                    <MenuItem value="Rejected">Rejected</MenuItem>
                   </>
                 )}
-              </select>
-            </div>
-            <div className="col-md-4">
-              <label className="form-label">Leave Type</label>
-              <select
-                className="form-select"
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <TextField
+                select
+                fullWidth
+                label="Leave Type"
                 name="leaveType"
                 value={filters.leaveType}
                 onChange={handleFilterChange}
+                size="small"
               >
-                <option value="all">All Types</option>
-                <option value="Casual">Casual</option>
-                <option value="Sick">Sick</option>
-                <option value="Earned">Earned</option>
-                <option value="Maternity">Maternity</option>
-                <option value="Paternity">Paternity</option>
-                <option value="Emergency">Emergency</option>
-                <option value="Unpaid">Unpaid</option>
-              </select>
-            </div>
-            <div className="col-md-4 d-flex align-items-end">
-              <button
-                className="btn btn-outline-secondary"
+                <MenuItem value="all">All Types</MenuItem>
+                <MenuItem value="Casual">Casual</MenuItem>
+                <MenuItem value="Sick">Sick</MenuItem>
+                <MenuItem value="Earned">Earned</MenuItem>
+                <MenuItem value="Maternity">Maternity</MenuItem>
+                <MenuItem value="Paternity">Paternity</MenuItem>
+                <MenuItem value="Emergency">Emergency</MenuItem>
+                <MenuItem value="Unpaid">Unpaid</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={4} sx={{ display: 'flex', justifyContent: { xs: 'center', sm: 'flex-end' } }}>
+              <Button
+                variant="outlined"
+                startIcon={<Clear />}
                 onClick={() => {
                   setFilters({
                     status: 'all',
@@ -327,166 +437,206 @@ const LeaveApproval = () => {
                   });
                   setPagination(prev => ({ ...prev, currentPage: 1 }));
                 }}
+                sx={{
+                  borderColor: '#20C997',
+                  color: '#20C997',
+                  '&:hover': {
+                    borderColor: '#17A085',
+                    backgroundColor: 'rgba(32, 201, 151, 0.04)',
+                  },
+                }}
               >
-                <i className="bi bi-arrow-clockwise me-1"></i>
-                Reset
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+                Reset Filters
+              </Button>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
 
       {/* Success/Error Alerts */}
       {error && (
-        <div className="alert alert-danger alert-dismissible fade show" role="alert">
+        <Alert
+          severity="error"
+          onClose={() => setError('')}
+          sx={{ mb: 3, borderRadius: 2 }}
+        >
           {error}
-          <button type="button" className="btn-close" onClick={() => setError('')}></button>
-        </div>
+        </Alert>
       )}
 
       {success && (
-        <div className="alert alert-success alert-dismissible fade show" role="alert">
+        <Alert
+          severity="success"
+          onClose={() => setSuccess('')}
+          sx={{ mb: 3, borderRadius: 2 }}
+        >
           {success}
-          <button type="button" className="btn-close" onClick={() => setSuccess('')}></button>
-        </div>
+        </Alert>
       )}
 
       {/* Leave Requests Table */}
-      <div className="card">
-        <div className="card-body">
+      <Card sx={{ borderRadius: 2 }}>
+        <CardContent sx={{ p: 0 }}>
           {leaveRequests.length === 0 ? (
-            <div className="text-center py-5">
-              <i className="bi bi-calendar-x text-muted" style={{ fontSize: '3rem' }}></i>
-              <h5 className="mt-3 text-muted">No leave requests found</h5>
-              <p className="text-muted">No leave requests match your current filters.</p>
-            </div>
+            <Box sx={{ textAlign: 'center', py: 8 }}>
+              <Event sx={{ fontSize: '4rem', color: 'text.disabled', mb: 2, opacity: 0.3 }} />
+              <Typography variant="h4" sx={{ color: 'text.secondary', mb: 1 }}>
+                No Leave Requests Found
+              </Typography>
+              <Typography variant="body1" color="text.secondary">
+                No leave requests match your current filters.
+              </Typography>
+            </Box>
           ) : (
             <>
-              <div className="table-responsive">
-                <table className="table table-hover">
-                  <thead className="table-light">
-                    <tr>
-                      <th>Employee</th>
-                      <th>Leave Type</th>
-                      <th>Duration</th>
-                      <th>Days</th>
-                      <th>Applied Date</th>
-                      <th>Status</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow sx={{ bgcolor: 'grey.50' }}>
+                      <TableCell sx={{ fontWeight: 600 }}>Employee</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Leave Type</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Duration</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Days</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Applied Date</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
                     {leaveRequests.map((leave) => (
-                      <tr key={leave._id}>
-                        <td>
-                          <div>
-                            <div className="fw-semibold">
-                              {leave.employee?.firstName} {leave.employee?.lastName}
-                            </div>
-                            <small className="text-muted">
-                              {leave.employee?.employeeId} • {leave.employee?.designation}
-                            </small>
-                          </div>
-                        </td>
-                        <td>
-                          <div>
-                            <div className="fw-semibold">{leave.leaveType}</div>
-                            {leave.isHalfDay && (
-                              <small className="text-muted">
-                                Half Day ({leave.halfDayPeriod})
-                              </small>
-                            )}
-                          </div>
-                        </td>
-                        <td>
-                          <div>
-                            <div>{formatDate(leave.startDate)}</div>
-                            <small className="text-muted">
-                              to {formatDate(leave.endDate)}
-                            </small>
-                          </div>
-                        </td>
-                        <td>
-                          <span className="badge bg-info">{leave.totalDays}</span>
-                        </td>
-                        <td>{formatDate(leave.appliedDate)}</td>
-                        <td>
-                          <LeaveStatusBadge status={leave.status} />
-                        </td>
-                        <td>
-                          <div className="btn-group" role="group">
-                            <button
-                              className="btn btn-sm btn-outline-primary"
-                              onClick={() => handleViewDetails(leave._id)}
-                              title="View Details"
+                      <TableRow key={leave._id} hover>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <Avatar
+                              sx={{
+                                width: 32,
+                                height: 32,
+                                mr: 1.5,
+                                bgcolor: '#20C997',
+                                fontSize: '0.8rem',
+                              }}
                             >
-                              <i className="bi bi-eye"></i>
-                            </button>
+                              {leave.employee?.firstName?.[0]}{leave.employee?.lastName?.[0]}
+                            </Avatar>
+                            <Box>
+                              <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                {leave.employee?.firstName} {leave.employee?.lastName}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                                {leave.employee?.employeeId} • {leave.employee?.designation}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Box>
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                              {leave.leaveType}
+                            </Typography>
+                            {leave.isHalfDay && (
+                              <Typography variant="caption" color="text.secondary">
+                                Half Day ({leave.halfDayPeriod})
+                              </Typography>
+                            )}
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Box>
+                            <Typography variant="body2">
+                              {formatDate(leave.startDate)}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              to {formatDate(leave.endDate)}
+                            </Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={leave.totalDays}
+                            size="small"
+                            sx={{
+                              bgcolor: '#0288d1',
+                              color: 'white',
+                              fontWeight: 600,
+                              fontSize: '0.7rem',
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2">
+                            {formatDate(leave.appliedDate)}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <LeaveStatusBadge status={leave.status} />
+                        </TableCell>
+                        <TableCell>
+                          <ButtonGroup size="small" variant="outlined">
+                            <Tooltip title="View Details">
+                              <IconButton
+                                size="small"
+                                onClick={() => handleViewDetails(leave._id)}
+                                sx={{ borderColor: '#1976d2', color: '#1976d2' }}
+                              >
+                                <Visibility fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
                             {canApprove(leave) && (
                               <>
-                                <button
-                                  className="btn btn-sm btn-outline-success"
-                                  onClick={() => handleActionClick('approve', leave._id)}
-                                  title="Approve"
-                                >
-                                  <i className="bi bi-check-circle"></i>
-                                </button>
-                                <button
-                                  className="btn btn-sm btn-outline-danger"
-                                  onClick={() => handleActionClick('reject', leave._id)}
-                                  title="Reject"
-                                >
-                                  <i className="bi bi-x-circle"></i>
-                                </button>
+                                <Tooltip title="Approve">
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => handleActionClick('approve', leave._id)}
+                                    sx={{ borderColor: '#2e7d32', color: '#2e7d32' }}
+                                  >
+                                    <CheckCircle fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Reject">
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => handleActionClick('reject', leave._id)}
+                                    sx={{ borderColor: '#d32f2f', color: '#d32f2f' }}
+                                  >
+                                    <Cancel fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
                               </>
                             )}
-                          </div>
-                        </td>
-                      </tr>
+                          </ButtonGroup>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                  </TableBody>
+                </Table>
+              </TableContainer>
 
               {/* Pagination */}
               {pagination.totalPages > 1 && (
-                <nav className="mt-4">
-                  <ul className="pagination justify-content-center">
-                    <li className={`page-item ${pagination.currentPage === 1 ? 'disabled' : ''}`}>
-                      <button
-                        className="page-link"
-                        onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage - 1 }))}
-                        disabled={pagination.currentPage === 1}
-                      >
-                        Previous
-                      </button>
-                    </li>
-                    {[...Array(pagination.totalPages)].map((_, index) => (
-                      <li key={index} className={`page-item ${pagination.currentPage === index + 1 ? 'active' : ''}`}>
-                        <button
-                          className="page-link"
-                          onClick={() => setPagination(prev => ({ ...prev, currentPage: index + 1 }))}
-                        >
-                          {index + 1}
-                        </button>
-                      </li>
-                    ))}
-                    <li className={`page-item ${pagination.currentPage === pagination.totalPages ? 'disabled' : ''}`}>
-                      <button
-                        className="page-link"
-                        onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage + 1 }))}
-                        disabled={pagination.currentPage === pagination.totalPages}
-                      >
-                        Next
-                      </button>
-                    </li>
-                  </ul>
-                </nav>
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                  <Pagination
+                    count={pagination.totalPages}
+                    page={pagination.currentPage}
+                    onChange={(event, page) => setPagination(prev => ({ ...prev, currentPage: page }))}
+                    color="primary"
+                    size="large"
+                    sx={{
+                      '& .MuiPaginationItem-root': {
+                        '&.Mui-selected': {
+                          backgroundColor: '#20C997',
+                          '&:hover': {
+                            backgroundColor: '#17A085',
+                          },
+                        },
+                      },
+                    }}
+                  />
+                </Box>
               )}
             </>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Leave Details Modal */}
       {showModal && selectedLeave && (
@@ -746,7 +896,7 @@ const LeaveApproval = () => {
         leaveId={documentPreview.leaveId}
         attachment={documentPreview.attachment}
       />
-    </div>
+    </Container>
   );
 };
 

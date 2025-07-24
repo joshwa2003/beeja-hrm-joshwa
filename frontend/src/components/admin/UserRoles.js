@@ -1,6 +1,45 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { userAPI } from '../../utils/api';
+import {
+  Box,
+  Card,
+  CardContent,
+  CardHeader,
+  Typography,
+  Button,
+  Grid,
+  Alert,
+  CircularProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Chip,
+  Avatar,
+  ButtonGroup,
+  Pagination,
+  Container,
+  Paper,
+  Divider,
+  IconButton,
+} from '@mui/material';
+import {
+  People,
+  Security,
+  Business,
+  Groups,
+  Info,
+  CheckCircle,
+  Cancel,
+  Close,
+  Person,
+  Phone,
+  Email,
+  CalendarToday,
+} from '@mui/icons-material';
 
 const UserRoles = () => {
   const { user } = useAuth();
@@ -132,308 +171,394 @@ const UserRoles = () => {
     setCurrentPage(1);
   };
 
+  const getRoleChipColor = (role) => {
+    const colors = {
+      'Admin': 'error',
+      'Vice President': 'primary',
+      'HR BP': 'info',
+      'HR Manager': 'success',
+      'HR Executive': 'warning',
+      'Team Manager': 'secondary',
+      'Team Leader': 'default',
+      'Employee': 'default'
+    };
+    return colors[role] || 'default';
+  };
+
+  const getInitials = (firstName, lastName) => {
+    if (!firstName && !lastName) return 'U';
+    const first = firstName ? firstName.charAt(0).toUpperCase() : '';
+    const last = lastName ? lastName.charAt(0).toUpperCase() : '';
+    return first + last;
+  };
+
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: '400px' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '400px',
+        }}
+      >
+        <CircularProgress size={60} sx={{ color: '#20C997' }} />
+      </Box>
     );
   }
 
   return (
-    <div className="container-fluid">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h2 className="mb-1">User Roles Management</h2>
-          <p className="text-muted">Manage user roles, permissions, and role-based access control</p>
-        </div>
-        <div className="d-flex gap-2">
-          <span className="badge bg-primary fs-6">{summary.totalUsers} Total Users</span>
-          <span className="badge bg-success fs-6">{summary.activeUsers} Active</span>
-          <span className="badge bg-danger fs-6">{summary.inactiveUsers} Inactive</span>
-        </div>
-      </div>
+    <Container maxWidth={false} sx={{ py: 3 }}>
+      {/* Header Section */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 700, color: '#0A192F', mb: 1 }}>
+            User Roles Management
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Manage user roles, permissions, and role-based access control
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Chip label={`${summary.totalUsers} Total Users`} color="primary" sx={{ fontWeight: 600 }} />
+          <Chip label={`${summary.activeUsers} Active`} color="success" sx={{ fontWeight: 600 }} />
+          <Chip label={`${summary.inactiveUsers} Inactive`} color="error" sx={{ fontWeight: 600 }} />
+        </Box>
+      </Box>
 
+      {/* Error Alert */}
       {error && (
-        <div className="alert alert-danger alert-dismissible fade show" role="alert">
-          <i className="bi bi-exclamation-triangle-fill me-2"></i>
+        <Alert
+          severity="error"
+          onClose={() => setError('')}
+          sx={{ mb: 3 }}
+        >
           {error}
-          <button 
-            type="button" 
-            className="btn-close" 
-            onClick={() => setError('')}
-          ></button>
-        </div>
+        </Alert>
       )}
 
       {/* Role Statistics Overview */}
-      <div className="row mb-4">
-        <div className="col-12">
-          <div className="card">
-            <div className="card-header">
-              <h5 className="card-title mb-0">
-                <i className="bi bi-people-fill me-2"></i>
-                Role Distribution Overview
-              </h5>
-            </div>
-            <div className="card-body">
-              <div className="row g-3">
-                {roleStats
-                  .sort((a, b) => getRoleHierarchyLevel(a.role) - getRoleHierarchyLevel(b.role))
-                  .map((roleStat) => (
-                  <div key={roleStat.role} className="col-lg-3 col-md-4 col-sm-6">
-                    <div 
-                      className="card h-100 border-0 shadow-sm cursor-pointer"
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => handleRoleSelect(roleStat.role)}
-                    >
-                      <div className="card-body text-center">
-                        <div className="d-flex justify-content-between align-items-start mb-2">
-                          <span className={`badge ${getRoleBadgeColor(roleStat.role)} fs-6`}>
-                            {roleStat.role}
-                          </span>
-                          <small className="text-muted">Level {getRoleHierarchyLevel(roleStat.role)}</small>
-                        </div>
-                        <h3 className="text-primary mb-1">{roleStat.totalCount}</h3>
-                        <p className="text-muted small mb-2">Total Users</p>
-                        <div className="d-flex justify-content-between text-sm">
-                          <span className="text-success">
-                            <i className="bi bi-check-circle me-1"></i>
+      <Card sx={{ mb: 4, borderRadius: 3 }}>
+        <CardHeader
+          title={
+            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', fontWeight: 600 }}>
+              <People sx={{ mr: 1 }} />
+              Role Distribution Overview
+            </Typography>
+          }
+        />
+        <CardContent>
+          <Grid container spacing={3}>
+            {roleStats
+              .sort((a, b) => getRoleHierarchyLevel(a.role) - getRoleHierarchyLevel(b.role))
+              .map((roleStat) => (
+                <Grid item xs={12} sm={6} md={4} lg={3} key={roleStat.role}>
+                  <Card
+                    sx={{
+                      height: '100%',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease-in-out',
+                      '&:hover': {
+                        transform: 'translateY(-4px)',
+                        boxShadow: 4,
+                      },
+                    }}
+                    onClick={() => handleRoleSelect(roleStat.role)}
+                  >
+                    <CardContent sx={{ textAlign: 'center' }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                        <Chip
+                          label={roleStat.role}
+                          color={getRoleChipColor(roleStat.role)}
+                          sx={{ fontWeight: 600 }}
+                        />
+                        <Typography variant="caption" color="text.secondary">
+                          Level {getRoleHierarchyLevel(roleStat.role)}
+                        </Typography>
+                      </Box>
+                      <Typography variant="h3" sx={{ color: '#20C997', mb: 1, fontWeight: 700 }}>
+                        {roleStat.totalCount}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Total Users
+                      </Typography>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', color: 'success.main' }}>
+                          <CheckCircle sx={{ fontSize: '1rem', mr: 0.5 }} />
+                          <Typography variant="caption">
                             {roleStat.activeCount} Active
-                          </span>
-                          {roleStat.inactiveCount > 0 && (
-                            <span className="text-danger">
-                              <i className="bi bi-x-circle me-1"></i>
+                          </Typography>
+                        </Box>
+                        {roleStat.inactiveCount > 0 && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', color: 'error.main' }}>
+                            <Cancel sx={{ fontSize: '1rem', mr: 0.5 }} />
+                            <Typography variant="caption">
                               {roleStat.inactiveCount} Inactive
-                            </span>
-                          )}
-                        </div>
-                        <hr className="my-2" />
-                        <p className="text-muted small mb-0">
-                          {getRoleDescription(roleStat.role)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+                            </Typography>
+                          </Box>
+                        )}
+                      </Box>
+                      <Divider sx={{ my: 2 }} />
+                      <Typography variant="caption" color="text.secondary">
+                        {getRoleDescription(roleStat.role)}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+          </Grid>
+        </CardContent>
+      </Card>
 
       {/* Role Hierarchy Information */}
-      <div className="row mb-4">
-        <div className="col-12">
-          <div className="card">
-            <div className="card-header">
-              <h5 className="card-title mb-0">
-                <i className="bi bi-diagram-3 me-2"></i>
-                Role Hierarchy & Permissions
-              </h5>
-            </div>
-            <div className="card-body">
-              <div className="alert alert-info">
-                <h6><i className="bi bi-info-circle me-2"></i>Role Hierarchy Levels</h6>
-                <p className="mb-2">Lower numbers indicate higher authority levels. Users can typically manage users with higher level numbers.</p>
-                <div className="row">
-                  <div className="col-md-6">
-                    <ul className="list-unstyled">
-                      <li><strong>Level 1:</strong> Admin - Full system control</li>
-                      <li><strong>Level 2:</strong> Vice President - Executive oversight</li>
-                      <li><strong>Level 3:</strong> HR BP - HR Business Partner</li>
-                      <li><strong>Level 4:</strong> HR Manager - HR Management</li>
-                    </ul>
-                  </div>
-                  <div className="col-md-6">
-                    <ul className="list-unstyled">
-                      <li><strong>Level 5:</strong> HR Executive - HR Operations</li>
-                      <li><strong>Level 6:</strong> Team Manager - Multi-team management</li>
-                      <li><strong>Level 7:</strong> Team Leader - Team leadership</li>
-                      <li><strong>Level 8:</strong> Employee - Standard access</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Card sx={{ mb: 4, borderRadius: 3 }}>
+        <CardHeader
+          title={
+            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', fontWeight: 600 }}>
+              <Security sx={{ mr: 1 }} />
+              Role Hierarchy & Permissions
+            </Typography>
+          }
+        />
+        <CardContent>
+          <Alert severity="info" sx={{ borderRadius: 2 }}>
+            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+              <Info sx={{ mr: 1 }} />
+              Role Hierarchy Levels
+            </Typography>
+            <Typography variant="body2" sx={{ mb: 2 }}>
+              Lower numbers indicate higher authority levels. Users can typically manage users with higher level numbers.
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={6}>
+                <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }}>
+                  <li><strong>Level 1:</strong> Admin - Full system control</li>
+                  <li><strong>Level 2:</strong> Vice President - Executive oversight</li>
+                  <li><strong>Level 3:</strong> HR BP - HR Business Partner</li>
+                  <li><strong>Level 4:</strong> HR Manager - HR Management</li>
+                </Box>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }}>
+                  <li><strong>Level 5:</strong> HR Executive - HR Operations</li>
+                  <li><strong>Level 6:</strong> Team Manager - Multi-team management</li>
+                  <li><strong>Level 7:</strong> Team Leader - Team leadership</li>
+                  <li><strong>Level 8:</strong> Employee - Standard access</li>
+                </Box>
+              </Grid>
+            </Grid>
+          </Alert>
+        </CardContent>
+      </Card>
 
       {/* Selected Role Details */}
       {selectedRole && (
-        <div className="row">
-          <div className="col-12">
-            <div className="card">
-              <div className="card-header">
-                <div className="d-flex justify-content-between align-items-center">
-                  <h5 className="card-title mb-0">
-                    <span className={`badge ${getRoleBadgeColor(selectedRole)} me-2`}>
-                      {selectedRole}
-                    </span>
-                    Role Details
-                  </h5>
-                  <button 
-                    className="btn btn-outline-secondary btn-sm"
-                    onClick={() => setSelectedRole('')}
+        <Card sx={{ borderRadius: 3 }}>
+          <CardHeader
+            title={
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Chip
+                  label={selectedRole}
+                  color={getRoleChipColor(selectedRole)}
+                  sx={{ mr: 2, fontWeight: 600 }}
+                />
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  Role Details
+                </Typography>
+              </Box>
+            }
+            action={
+              <IconButton
+                onClick={() => setSelectedRole('')}
+                sx={{ color: 'text.secondary' }}
+              >
+                <Close />
+              </IconButton>
+            }
+          />
+          <CardContent>
+            <Grid container spacing={3} sx={{ mb: 3 }}>
+              <Grid item xs={12} md={8}>
+                <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+                  {getRoleDescription(selectedRole)}
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                  <Chip
+                    label={`Hierarchy Level: ${getRoleHierarchyLevel(selectedRole)}`}
+                    color="primary"
+                    variant="outlined"
+                  />
+                  <Chip
+                    label={`Total Users: ${roleStats.find(r => r.role === selectedRole)?.totalCount || 0}`}
+                    color="info"
+                    variant="outlined"
+                  />
+                </Box>
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <ButtonGroup fullWidth>
+                  <Button
+                    variant={statusFilter === 'all' ? 'contained' : 'outlined'}
+                    onClick={() => handleStatusFilter('all')}
+                    sx={{
+                      backgroundColor: statusFilter === 'all' ? '#20C997' : 'transparent',
+                      '&:hover': {
+                        backgroundColor: statusFilter === 'all' ? '#17A085' : 'rgba(32, 201, 151, 0.04)',
+                      },
+                    }}
                   >
-                    <i className="bi bi-x"></i> Close
-                  </button>
-                </div>
-              </div>
-              <div className="card-body">
-                <div className="row mb-3">
-                  <div className="col-md-8">
-                    <p className="text-muted mb-2">{getRoleDescription(selectedRole)}</p>
-                    <div className="d-flex gap-3">
-                      <span className="badge bg-primary">Hierarchy Level: {getRoleHierarchyLevel(selectedRole)}</span>
-                      <span className="badge bg-info">
-                        Total Users: {roleStats.find(r => r.role === selectedRole)?.totalCount || 0}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="col-md-4">
-                    <div className="btn-group w-100" role="group">
-                      <button
-                        type="button"
-                        className={`btn ${statusFilter === 'all' ? 'btn-primary' : 'btn-outline-primary'}`}
-                        onClick={() => handleStatusFilter('all')}
-                      >
-                        All Users
-                      </button>
-                      <button
-                        type="button"
-                        className={`btn ${statusFilter === 'active' ? 'btn-success' : 'btn-outline-success'}`}
-                        onClick={() => handleStatusFilter('active')}
-                      >
-                        Active
-                      </button>
-                      <button
-                        type="button"
-                        className={`btn ${statusFilter === 'inactive' ? 'btn-danger' : 'btn-outline-danger'}`}
-                        onClick={() => handleStatusFilter('inactive')}
-                      >
-                        Inactive
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                    All Users
+                  </Button>
+                  <Button
+                    variant={statusFilter === 'active' ? 'contained' : 'outlined'}
+                    color="success"
+                    onClick={() => handleStatusFilter('active')}
+                  >
+                    Active
+                  </Button>
+                  <Button
+                    variant={statusFilter === 'inactive' ? 'contained' : 'outlined'}
+                    color="error"
+                    onClick={() => handleStatusFilter('inactive')}
+                  >
+                    Inactive
+                  </Button>
+                </ButtonGroup>
+              </Grid>
+            </Grid>
 
-                {loadingUsers ? (
-                  <div className="text-center py-4">
-                    <div className="spinner-border text-primary" role="status">
-                      <span className="visually-hidden">Loading users...</span>
-                    </div>
-                  </div>
-                ) : roleUsers.length === 0 ? (
-                  <div className="text-center py-5">
-                    <i className="bi bi-people text-muted" style={{ fontSize: '3rem' }}></i>
-                    <h5 className="mt-3 text-muted">No users found</h5>
-                    <p className="text-muted">No users with {selectedRole} role match the current filter</p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="table-responsive">
-                      <table className="table table-hover">
-                        <thead className="table-light">
-                          <tr>
-                            <th>Employee</th>
-                            <th>Employee ID</th>
-                            <th>Department</th>
-                            <th>Team</th>
-                            <th>Contact</th>
-                            <th>Joining Date</th>
-                            <th>Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {roleUsers.map((userData) => (
-                            <tr key={userData._id}>
-                              <td>
-                                <div className="d-flex align-items-center">
-                                  <div className="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3"
-                                       style={{ width: '40px', height: '40px' }}>
-                                    <i className="bi bi-person text-white"></i>
-                                  </div>
-                                  <div>
-                                    <div className="fw-semibold">{userData.firstName} {userData.lastName}</div>
-                                    <small className="text-muted">{userData.email}</small>
-                                  </div>
-                                </div>
-                              </td>
-                              <td>
-                                <code>{userData.employeeId || 'Not assigned'}</code>
-                              </td>
-                              <td>
-                                {userData.department?.name || 'Not assigned'}
-                              </td>
-                              <td>
-                                {userData.team?.name || 'Not assigned'}
-                              </td>
-                              <td>
-                                <div>
-                                  <small className="d-block">{userData.phoneNumber || 'Not provided'}</small>
-                                  <small className="text-muted">{userData.designation || 'Not specified'}</small>
-                                </div>
-                              </td>
-                              <td>
-                                {formatDate(userData.joiningDate)}
-                              </td>
-                              <td>
-                                <span className={`badge ${userData.isActive ? 'bg-success' : 'bg-danger'}`}>
-                                  {userData.isActive ? 'Active' : 'Inactive'}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {totalPages > 1 && (
-                      <nav className="mt-4">
-                        <ul className="pagination justify-content-center">
-                          <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-                            <button 
-                              className="page-link"
-                              onClick={() => setCurrentPage(currentPage - 1)}
-                              disabled={currentPage === 1}
-                            >
-                              Previous
-                            </button>
-                          </li>
-                          {[...Array(totalPages)].map((_, index) => (
-                            <li key={index} className={`page-item ${currentPage === index + 1 ? 'active' : ''}`}>
-                              <button 
-                                className="page-link"
-                                onClick={() => setCurrentPage(index + 1)}
+            {loadingUsers ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <CircularProgress size={60} sx={{ color: '#20C997' }} />
+              </Box>
+            ) : roleUsers.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 8 }}>
+                <People sx={{ fontSize: '4rem', color: 'text.disabled', mb: 2 }} />
+                <Typography variant="h5" sx={{ color: 'text.secondary', mb: 1 }}>
+                  No users found
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  No users with {selectedRole} role match the current filter
+                </Typography>
+              </Box>
+            ) : (
+              <>
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 600, color: '#0A192F' }}>Employee</TableCell>
+                        <TableCell sx={{ fontWeight: 600, color: '#0A192F' }}>Employee ID</TableCell>
+                        <TableCell sx={{ fontWeight: 600, color: '#0A192F' }}>Department</TableCell>
+                        <TableCell sx={{ fontWeight: 600, color: '#0A192F' }}>Team</TableCell>
+                        <TableCell sx={{ fontWeight: 600, color: '#0A192F' }}>Contact</TableCell>
+                        <TableCell sx={{ fontWeight: 600, color: '#0A192F' }}>Joining Date</TableCell>
+                        <TableCell sx={{ fontWeight: 600, color: '#0A192F' }}>Status</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {roleUsers.map((userData) => (
+                        <TableRow key={userData._id} hover>
+                          <TableCell>
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <Avatar
+                                sx={{
+                                  bgcolor: '#0A192F',
+                                  color: 'white',
+                                  width: 40,
+                                  height: 40,
+                                  mr: 2,
+                                  fontWeight: 600,
+                                }}
                               >
-                                {index + 1}
-                              </button>
-                            </li>
-                          ))}
-                          <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-                            <button 
-                              className="page-link"
-                              onClick={() => setCurrentPage(currentPage + 1)}
-                              disabled={currentPage === totalPages}
-                            >
-                              Next
-                            </button>
-                          </li>
-                        </ul>
-                      </nav>
-                    )}
-                  </>
+                                {getInitials(userData.firstName, userData.lastName)}
+                              </Avatar>
+                              <Box>
+                                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                                  {userData.firstName} {userData.lastName}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {userData.email}
+                                </Typography>
+                              </Box>
+                            </Box>
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={userData.employeeId || 'Not assigned'}
+                              variant="outlined"
+                              size="small"
+                              sx={{ fontFamily: 'monospace' }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2">
+                              {userData.department?.name || 'Not assigned'}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2">
+                              {userData.team?.name || 'Not assigned'}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Box>
+                              <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                                <Phone sx={{ fontSize: '0.875rem', mr: 0.5, color: 'text.secondary' }} />
+                                {userData.phoneNumber || 'Not provided'}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {userData.designation || 'Not specified'}
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
+                              <CalendarToday sx={{ fontSize: '0.875rem', mr: 0.5, color: 'text.secondary' }} />
+                              {formatDate(userData.joiningDate)}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={userData.isActive ? 'Active' : 'Inactive'}
+                              color={userData.isActive ? 'success' : 'error'}
+                              size="small"
+                              sx={{ fontWeight: 500 }}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+
+                {totalPages > 1 && (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+                    <Pagination
+                      count={totalPages}
+                      page={currentPage}
+                      onChange={(event, page) => setCurrentPage(page)}
+                      color="primary"
+                      size="large"
+                      sx={{
+                        '& .MuiPaginationItem-root': {
+                          '&.Mui-selected': {
+                            backgroundColor: '#20C997',
+                            '&:hover': {
+                              backgroundColor: '#17A085',
+                            },
+                          },
+                        },
+                      }}
+                    />
+                  </Box>
                 )}
-              </div>
-            </div>
-          </div>
-        </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
       )}
-    </div>
+    </Container>
   );
 };
 

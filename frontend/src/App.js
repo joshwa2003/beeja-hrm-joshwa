@@ -8,6 +8,7 @@ import MyProfile from './components/MyProfile';
 import Dashboard from './components/Dashboard';
 import DepartmentManagement from './components/admin/DepartmentManagement';
 import LeaveApproval from './components/admin/LeaveApproval';
+import LeavePolicy from './components/admin/LeavePolicy';
 import LeaveRequest from './components/employee/LeaveRequest';
 import LeaveHistory from './components/employee/LeaveHistory';
 import UserManagement from './components/admin/UserManagement';
@@ -116,6 +117,18 @@ function App() {
                 <ProtectedRoute requiredRoles={['Admin', 'Vice President', 'HR BP', 'HR Manager', 'HR Executive', 'Team Manager', 'Team Leader']}>
                   <Layout>
                     <LeaveApproval />
+                  </Layout>
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Leave Policy Route */}
+            <Route 
+              path="/admin/leave/policies" 
+              element={
+                <ProtectedRoute requiredRoles={['Admin', 'Vice President', 'HR BP', 'HR Manager', 'HR Executive']}>
+                  <Layout>
+                    <LeavePolicy />
                   </Layout>
                 </ProtectedRoute>
               } 

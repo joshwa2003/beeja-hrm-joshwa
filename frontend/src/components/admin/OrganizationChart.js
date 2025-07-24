@@ -1,6 +1,48 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { userAPI, departmentAPI, teamAPI } from '../../utils/api';
+import {
+  Box,
+  Card,
+  CardContent,
+  CardHeader,
+  Typography,
+  Button,
+  Grid,
+  Alert,
+  CircularProgress,
+  TextField,
+  InputAdornment,
+  IconButton,
+  Container,
+  Chip,
+  Avatar,
+  Paper,
+  LinearProgress,
+  Divider,
+  Collapse,
+  ButtonGroup,
+  Tooltip,
+} from '@mui/material';
+import {
+  Search,
+  Clear,
+  Refresh,
+  ExpandMore,
+  ExpandLess,
+  AccountTree,
+  Hub,
+  Analytics,
+  People,
+  Business,
+  Groups,
+  PersonAdd,
+  TrendingUp,
+  Close,
+  ZoomIn,
+  ZoomOut,
+  RestartAlt,
+} from '@mui/icons-material';
 
 const OrganizationChart = () => {
   const { user } = useAuth();
@@ -28,6 +70,23 @@ const OrganizationChart = () => {
   useEffect(() => {
     fetchOrganizationData();
   }, []);
+
+  // Auto-expand first level by default to show more content
+  useEffect(() => {
+    if (organizationData.hierarchyTree && organizationData.hierarchyTree.length > 0) {
+      const firstLevelNodes = new Set();
+      organizationData.hierarchyTree.forEach(rootNode => {
+        firstLevelNodes.add(rootNode.id);
+        // Also expand first level children
+        if (rootNode.children && rootNode.children.length > 0) {
+          rootNode.children.forEach(child => {
+            firstLevelNodes.add(child.id);
+          });
+        }
+      });
+      setExpandedNodes(firstLevelNodes);
+    }
+  }, [organizationData.hierarchyTree]);
 
   const fetchOrganizationData = async () => {
     try {
@@ -191,11 +250,15 @@ const OrganizationChart = () => {
   const renderHierarchicalFlowChart = () => {
     if (!organizationData.hierarchyTree || organizationData.hierarchyTree.length === 0) {
       return (
-        <div className="text-center py-5">
-          <i className="bi bi-diagram-2 text-muted" style={{ fontSize: '4rem', opacity: 0.3 }}></i>
-          <h4 className="text-muted mt-3">No Hierarchy Data</h4>
-          <p className="text-muted">No organizational hierarchy found.</p>
-        </div>
+        <Box sx={{ textAlign: 'center', py: 8 }}>
+          <AccountTree sx={{ fontSize: '4rem', color: 'text.disabled', mb: 2, opacity: 0.3 }} />
+          <Typography variant="h4" sx={{ color: 'text.secondary', mb: 1 }}>
+            No Hierarchy Data
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            No organizational hierarchy found.
+          </Typography>
+        </Box>
       );
     }
 
@@ -204,76 +267,123 @@ const OrganizationChart = () => {
       const isExpanded = expandedNodes.has(node.id);
       
       return (
-        <div key={node.id} className="hierarchy-node" style={{ marginLeft: node.level * 40 }}>
-          {/* Node Card */}
-          <div className={`card mb-3 shadow-sm border-start border-4 ${getNodeBorderColor(node.role)}`}>
-            <div className="card-body p-3">
-              <div className="d-flex align-items-center justify-content-between">
-                <div className="d-flex align-items-center">
-                  {/* Role Icon */}
-                  <div 
-                    className={`rounded-circle text-white d-flex align-items-center justify-content-center me-3 ${getRoleBackgroundClass(node.role)}`}
-                    style={{ width: '50px', height: '50px', fontSize: '18px' }}
+        <Box key={node.id} sx={{ ml: node.level * 3, mb: 1.5 }}>
+          {/* Compact Node Card */}
+          <Card
+            sx={{
+              borderRadius: 1,
+              boxShadow: 1,
+              borderLeft: `3px solid ${getRoleColor(node.role)}`,
+              '&:hover': {
+                boxShadow: 2,
+                transform: 'translateY(-1px)',
+              },
+              transition: 'all 0.2s ease-in-out',
+            }}
+          >
+            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                  {/* Compact Avatar */}
+                  <Avatar
+                    sx={{
+                      width: 36,
+                      height: 36,
+                      mr: 1.5,
+                      bgcolor: getRoleColor(node.role),
+                      fontSize: '0.9rem',
+                    }}
                   >
-                    {getRoleIcon(node.role)}
-                  </div>
+                    {node.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                  </Avatar>
                   
-                  {/* User Info */}
-                  <div>
-                    <h6 className="mb-1 fw-bold text-dark">{node.name}</h6>
-                    <div className="d-flex align-items-center gap-2 mb-1">
-                      <span className={`badge ${getRoleBadgeClass(node.role)}`}>
-                        {node.role}
-                      </span>
-                      <small className="text-muted">#{node.employeeId}</small>
-                    </div>
-                    <small className="text-muted">
-                      <i className="bi bi-building me-1"></i>
+                  {/* User Info - More Compact */}
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.25, lineHeight: 1.2 }}>
+                      {node.name}
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.25 }}>
+                      <Chip
+                        label={node.role}
+                        size="small"
+                        sx={{
+                          bgcolor: getRoleColor(node.role),
+                          color: 'white',
+                          fontWeight: 500,
+                          fontSize: '0.7rem',
+                          height: 20,
+                        }}
+                      />
+                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                        #{node.employeeId}
+                      </Typography>
+                    </Box>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', fontSize: '0.7rem' }}>
+                      <Business sx={{ fontSize: '0.8rem', mr: 0.5 }} />
                       {node.department}
-                    </small>
-                  </div>
-                </div>
+                    </Typography>
+                  </Box>
+                </Box>
                 
-                {/* Actions */}
-                <div className="d-flex align-items-center gap-2">
-                  <span className={`badge ${node.isActive ? 'bg-success' : 'bg-danger'}`}>
-                    {node.isActive ? 'Active' : 'Inactive'}
-                  </span>
+                {/* Compact Actions */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, ml: 1 }}>
+                  <Chip
+                    label={node.isActive ? 'Active' : 'Inactive'}
+                    size="small"
+                    color={node.isActive ? 'success' : 'error'}
+                    variant="outlined"
+                    sx={{ fontSize: '0.65rem', height: 20 }}
+                  />
                   
                   {hasChildren && (
-                    <button
-                      className="btn btn-sm btn-outline-primary"
+                    <Button
+                      variant="outlined"
+                      size="small"
                       onClick={() => toggleNodeExpansion(node.id)}
+                      startIcon={isExpanded ? <ExpandLess /> : <ExpandMore />}
+                      sx={{
+                        minWidth: 'auto',
+                        borderColor: '#20C997',
+                        color: '#20C997',
+                        fontSize: '0.7rem',
+                        height: 24,
+                        px: 1,
+                        '&:hover': {
+                          borderColor: '#17A085',
+                          backgroundColor: 'rgba(32, 201, 151, 0.04)',
+                        },
+                      }}
                     >
-                      <i className={`bi bi-chevron-${isExpanded ? 'up' : 'down'}`}></i>
-                      <span className="ms-1">{node.children.length}</span>
-                    </button>
+                      {node.children.length}
+                    </Button>
                   )}
-                </div>
-              </div>
-            </div>
-          </div>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
           
-          {/* Connection Line */}
+          {/* Connection Line and Children */}
           {hasChildren && isExpanded && (
-            <div className="ms-4 mb-3">
-              <div className="border-start border-2 border-secondary ps-3">
+            <Box sx={{ ml: 2, mt: 1 }}>
+              <Box
+                sx={{
+                  borderLeft: '2px solid',
+                  borderColor: 'divider',
+                  pl: 2,
+                }}
+              >
                 {node.children.map((child, childIndex) => renderNode(child, childIndex))}
-              </div>
-            </div>
+              </Box>
+            </Box>
           )}
-        </div>
+        </Box>
       );
     };
 
     return (
-      <div className="hierarchy-container">
-        <div className="row">
-          <div className="col-12">
-            {organizationData.hierarchyTree.map((rootNode, index) => renderNode(rootNode, index))}
-          </div>
-        </div>
-      </div>
+      <Box>
+        {organizationData.hierarchyTree.map((rootNode, index) => renderNode(rootNode, index))}
+      </Box>
     );
   };
 
@@ -649,6 +759,34 @@ const OrganizationChart = () => {
     return icons[role] || icons['Employee'];
   };
 
+  const getRoleMUIIcon = (role) => {
+    const iconMap = {
+      'Admin': '🛡️',
+      'Vice President': '👑',
+      'HR BP': '⚙️',
+      'HR Manager': '👥',
+      'HR Executive': '✅',
+      'Team Manager': '📊',
+      'Team Leader': '👤',
+      'Employee': '👨‍💼'
+    };
+    return iconMap[role] || iconMap['Employee'];
+  };
+
+  const getRoleColor = (role) => {
+    const colors = {
+      'Admin': '#dc3545',
+      'Vice President': '#fd7e14',
+      'HR BP': '#0dcaf0',
+      'HR Manager': '#20c997',
+      'HR Executive': '#0d6efd',
+      'Team Manager': '#6f42c1',
+      'Team Leader': '#495057',
+      'Employee': '#6c757d'
+    };
+    return colors[role] || colors['Employee'];
+  };
+
   const getRoleBackgroundClass = (role) => {
     const classes = {
       'Admin': 'bg-danger',
@@ -703,235 +841,307 @@ const OrganizationChart = () => {
 
   if (loading) {
     return (
-      <div className="container-fluid p-4">
-        <div className="d-flex justify-content-center align-items-center" style={{ height: '400px' }}>
-          <div className="text-center">
-            <div className="spinner-border text-primary mb-3" role="status">
-              <span className="visually-hidden">Loading...</span>
-            </div>
-            <p className="text-muted">Loading organization chart...</p>
-          </div>
-        </div>
-      </div>
+      <Container maxWidth={false} sx={{ py: 4 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '400px',
+          }}
+        >
+          <Box sx={{ textAlign: 'center' }}>
+            <CircularProgress size={60} sx={{ color: '#20C997', mb: 3 }} />
+            <Typography variant="body1" color="text.secondary">
+              Loading organization chart...
+            </Typography>
+          </Box>
+        </Box>
+      </Container>
     );
   }
 
   return (
-    <>
-      {/* Enhanced Page Header - Always visible at top */}
-      <div className="container-fluid text-white mb-4" style={{ 
-        backgroundColor: '#667eea',
-        padding: '2rem 1rem'
-      }}>
-        <div className="d-flex justify-content-between align-items-center">
-          <div>
-            <h1 className="mb-2 fw-bold text-white">
-              <i className="bi bi-diagram-2 me-2"></i>
+    <Container maxWidth={false} sx={{ py: 3 }}>
+      {/* Page Header */}
+      <Box
+        sx={{
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          borderRadius: 3,
+          p: 4,
+          mb: 4,
+          color: 'white',
+        }}
+      >
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box>
+            <Typography variant="h3" sx={{ fontWeight: 700, mb: 1, display: 'flex', alignItems: 'center' }}>
+              <AccountTree sx={{ mr: 2, fontSize: '2.5rem' }} />
               Organization Chart
-            </h1>
-            <p className="mb-0 opacity-75 fs-5">Interactive visualization of company structure and analytics</p>
-          </div>
-          <div className="d-flex gap-2">
-            <button 
-              className="btn btn-light btn-lg"
-              onClick={fetchOrganizationData}
-              disabled={loading}
-            >
-              <i className="bi bi-arrow-clockwise me-1"></i>
-              Refresh
-            </button>
-          </div>
-        </div>
-      </div>
+            </Typography>
+            <Typography variant="h6" sx={{ opacity: 0.9 }}>
+              Interactive visualization of company structure and analytics
+            </Typography>
+          </Box>
+          <Button
+            variant="contained"
+            size="large"
+            onClick={fetchOrganizationData}
+            disabled={loading}
+            startIcon={<Refresh />}
+            sx={{
+              backgroundColor: 'rgba(255,255,255,0.2)',
+              '&:hover': {
+                backgroundColor: 'rgba(255,255,255,0.3)',
+              },
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.3)',
+            }}
+          >
+            Refresh
+          </Button>
+        </Box>
+      </Box>
 
-      {/* Enhanced Statistics Cards - Always visible */}
-      <div className="container-fluid px-4 mb-4">
-        <div className="row g-3">
-          <div className="col-lg-2 col-md-4 col-sm-6">
-            <div className="card text-white h-100 shadow-lg" style={{ 
-              backgroundColor: '#667eea',
-              minHeight: '140px'
-            }}>
-              <div className="card-body text-center d-flex flex-column justify-content-center">
-                <i className="bi bi-people mb-2" style={{ fontSize: '3rem' }}></i>
-                <h3 className="mb-1 fw-bold">{organizationData.stats.totalEmployees}</h3>
-                <small className="fw-semibold">Total Employees</small>
-              </div>
-            </div>
-          </div>
-          <div className="col-lg-2 col-md-4 col-sm-6">
-            <div className="card text-white h-100 shadow-lg" style={{ 
-              backgroundColor: '#f093fb',
-              minHeight: '140px'
-            }}>
-              <div className="card-body text-center d-flex flex-column justify-content-center">
-                <i className="bi bi-person-check mb-2" style={{ fontSize: '3rem' }}></i>
-                <h3 className="mb-1 fw-bold">{organizationData.stats.activeEmployees}</h3>
-                <small className="fw-semibold">Active Employees</small>
-              </div>
-            </div>
-          </div>
-          <div className="col-lg-2 col-md-4 col-sm-6">
-            <div className="card text-white h-100 shadow-lg" style={{ 
-              backgroundColor: '#4facfe',
-              minHeight: '140px'
-            }}>
-              <div className="card-body text-center d-flex flex-column justify-content-center">
-                <i className="bi bi-building mb-2" style={{ fontSize: '3rem' }}></i>
-                <h3 className="mb-1 fw-bold">{organizationData.stats.totalDepartments}</h3>
-                <small className="fw-semibold">Departments</small>
-              </div>
-            </div>
-          </div>
-          <div className="col-lg-2 col-md-4 col-sm-6">
-            <div className="card text-white h-100 shadow-lg" style={{ 
-              backgroundColor: '#43e97b',
-              minHeight: '140px'
-            }}>
-              <div className="card-body text-center d-flex flex-column justify-content-center">
-                <i className="bi bi-diagram-3 mb-2" style={{ fontSize: '3rem' }}></i>
-                <h3 className="mb-1 fw-bold">{organizationData.stats.totalTeams}</h3>
-                <small className="fw-semibold">Teams</small>
-              </div>
-            </div>
-          </div>
-          <div className="col-lg-2 col-md-4 col-sm-6">
-            <div className="card text-white h-100 shadow-lg" style={{ 
-              backgroundColor: '#fa709a',
-              minHeight: '140px'
-            }}>
-              <div className="card-body text-center d-flex flex-column justify-content-center">
-                <i className="bi bi-person-badge mb-2" style={{ fontSize: '3rem' }}></i>
-                <h3 className="mb-1 fw-bold">{organizationData.stats.managementRoles}</h3>
-                <small className="fw-semibold">Management</small>
-              </div>
-            </div>
-          </div>
-          <div className="col-lg-2 col-md-4 col-sm-6">
-            <div className="card text-white h-100 shadow-lg" style={{ 
-              backgroundColor: '#a8edea',
-              minHeight: '140px'
-            }}>
-              <div className="card-body text-center d-flex flex-column justify-content-center">
-                <i className="bi bi-graph-up mb-2" style={{ fontSize: '3rem' }}></i>
-                <h3 className="mb-1 fw-bold">
+      {/* Statistics Cards - Compact Design */}
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid item xs={6} sm={4} md={2}>
+          <Card sx={{ bgcolor: '#1976d2', color: 'white', borderRadius: 1 }}>
+            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <People sx={{ fontSize: '1.5rem', mr: 1 }} />
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  {organizationData.stats.totalEmployees}
+                </Typography>
+              </Box>
+              <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
+                Total Employees
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={6} sm={4} md={2}>
+          <Card sx={{ bgcolor: '#388e3c', color: 'white', borderRadius: 1 }}>
+            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <PersonAdd sx={{ fontSize: '1.5rem', mr: 1 }} />
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  {organizationData.stats.activeEmployees}
+                </Typography>
+              </Box>
+              <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
+                Active
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={6} sm={4} md={2}>
+          <Card sx={{ bgcolor: '#f57c00', color: 'white', borderRadius: 1 }}>
+            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <Business sx={{ fontSize: '1.5rem', mr: 1 }} />
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  {organizationData.stats.totalDepartments}
+                </Typography>
+              </Box>
+              <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
+                Departments
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={6} sm={4} md={2}>
+          <Card sx={{ bgcolor: '#7b1fa2', color: 'white', borderRadius: 1 }}>
+            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <Groups sx={{ fontSize: '1.5rem', mr: 1 }} />
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  {organizationData.stats.totalTeams}
+                </Typography>
+              </Box>
+              <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
+                Teams
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={6} sm={4} md={2}>
+          <Card sx={{ bgcolor: '#d32f2f', color: 'white', borderRadius: 1 }}>
+            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <People sx={{ fontSize: '1.5rem', mr: 1 }} />
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  {organizationData.stats.managementRoles}
+                </Typography>
+              </Box>
+              <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
+                Management
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={6} sm={4} md={2}>
+          <Card sx={{ bgcolor: '#00796b', color: 'white', borderRadius: 1 }}>
+            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <TrendingUp sx={{ fontSize: '1.5rem', mr: 1 }} />
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
                   {organizationData.stats.totalEmployees > 0 ? 
                     Math.round((organizationData.stats.activeEmployees / organizationData.stats.totalEmployees) * 100) : 0}%
-                </h3>
-                <small className="fw-semibold">Active Rate</small>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+                </Typography>
+              </Box>
+              <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
+                Active Rate
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
 
-      {/* Main Content Container */}
-      <div className="container-fluid px-4">
-        {/* Enhanced View Controls */}
-        <div className="card mb-4">
-          <div className="card-body">
-            <div className="row align-items-center">
-              <div className="col-md-6">
-                <div className="input-group">
-                  <span className="input-group-text">
-                    <i className="bi bi-search"></i>
-                  </span>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Search employees, departments, or teams..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                  {searchTerm && (
-                    <button 
-                      className="btn btn-outline-secondary"
-                      onClick={() => setSearchTerm('')}
-                    >
-                      <i className="bi bi-x"></i>
-                    </button>
-                  )}
-                </div>
-              </div>
-              <div className="col-md-6 text-end mt-2 mt-md-0">
-                <div className="btn-group" role="group">
-                  <button
-                    className={`btn ${selectedView === 'flowchart' ? 'btn-primary' : 'btn-outline-primary'}`}
-                    onClick={() => setSelectedView('flowchart')}
-                  >
-                    <i className="bi bi-diagram-2 me-1"></i>
-                    Flow Chart
-                  </button>
-                  <button
-                    className={`btn ${selectedView === 'network' ? 'btn-primary' : 'btn-outline-primary'}`}
-                    onClick={() => setSelectedView('network')}
-                  >
-                    <i className="bi bi-diagram-3 me-1"></i>
-                    Network
-                  </button>
-                  <button
-                    className={`btn ${selectedView === 'analytics' ? 'btn-primary' : 'btn-outline-primary'}`}
-                    onClick={() => setSelectedView('analytics')}
-                  >
-                    <i className="bi bi-graph-up me-1"></i>
-                    Analytics
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* View Controls */}
+      <Card sx={{ mb: 4, borderRadius: 3 }}>
+        <CardContent>
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                placeholder="Search employees, departments, or teams..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search />
+                    </InputAdornment>
+                  ),
+                  endAdornment: searchTerm && (
+                    <InputAdornment position="end">
+                      <IconButton onClick={() => setSearchTerm('')} size="small">
+                        <Clear />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{ borderRadius: 2 }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6} sx={{ display: 'flex', justifyContent: { xs: 'center', md: 'flex-end' } }}>
+              <ButtonGroup variant="outlined" size="large">
+                <Button
+                  variant={selectedView === 'flowchart' ? 'contained' : 'outlined'}
+                  onClick={() => setSelectedView('flowchart')}
+                  startIcon={<AccountTree />}
+                  sx={{
+                    backgroundColor: selectedView === 'flowchart' ? '#20C997' : 'transparent',
+                    borderColor: '#20C997',
+                    color: selectedView === 'flowchart' ? 'white' : '#20C997',
+                    '&:hover': {
+                      backgroundColor: selectedView === 'flowchart' ? '#17A085' : 'rgba(32, 201, 151, 0.04)',
+                      borderColor: '#20C997',
+                    },
+                  }}
+                >
+                  Flow Chart
+                </Button>
+                <Button
+                  variant={selectedView === 'network' ? 'contained' : 'outlined'}
+                  onClick={() => setSelectedView('network')}
+                  startIcon={<Hub />}
+                  sx={{
+                    backgroundColor: selectedView === 'network' ? '#20C997' : 'transparent',
+                    borderColor: '#20C997',
+                    color: selectedView === 'network' ? 'white' : '#20C997',
+                    '&:hover': {
+                      backgroundColor: selectedView === 'network' ? '#17A085' : 'rgba(32, 201, 151, 0.04)',
+                      borderColor: '#20C997',
+                    },
+                  }}
+                >
+                  Network
+                </Button>
+                <Button
+                  variant={selectedView === 'analytics' ? 'contained' : 'outlined'}
+                  onClick={() => setSelectedView('analytics')}
+                  startIcon={<Analytics />}
+                  sx={{
+                    backgroundColor: selectedView === 'analytics' ? '#20C997' : 'transparent',
+                    borderColor: '#20C997',
+                    color: selectedView === 'analytics' ? 'white' : '#20C997',
+                    '&:hover': {
+                      backgroundColor: selectedView === 'analytics' ? '#17A085' : 'rgba(32, 201, 151, 0.04)',
+                      borderColor: '#20C997',
+                    },
+                  }}
+                >
+                  Analytics
+                </Button>
+              </ButtonGroup>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
 
-        {/* Error Alert */}
-        {error && (
-          <div className="alert alert-danger alert-dismissible fade show" role="alert">
-            <i className="bi bi-exclamation-triangle me-2"></i>
-            {error}
-            <button 
-              type="button" 
-              className="btn-close" 
-              onClick={() => setError('')}
-            ></button>
-          </div>
-        )}
+      {/* Error Alert */}
+      {error && (
+        <Alert
+          severity="error"
+          onClose={() => setError('')}
+          sx={{ mb: 3, borderRadius: 2 }}
+        >
+          {error}
+        </Alert>
+      )}
 
-        {/* Organization Chart Content */}
-        <div className="row">
-          <div className="col-12">
-            {selectedView === 'flowchart' && renderHierarchicalFlowChart()}
-            {selectedView === 'network' && renderInteractiveNetwork()}
-            {selectedView === 'analytics' && renderAnalyticsView()}
-          </div>
-        </div>
+      {/* Organization Chart Content */}
+      <Box>
+        {selectedView === 'flowchart' && renderHierarchicalFlowChart()}
+        {selectedView === 'network' && renderInteractiveNetwork()}
+        {selectedView === 'analytics' && renderAnalyticsView()}
+      </Box>
 
-        {/* Empty State */}
-        {!loading && organizationData.departments.length === 0 && (
-          <div className="text-center py-5">
-            <i className="bi bi-building text-muted" style={{ fontSize: '4rem', opacity: 0.3 }}></i>
-            <h4 className="text-muted mt-3">No Organization Data</h4>
-            <p className="text-muted">
-              No departments or employees found. Start by creating departments and adding employees.
-            </p>
-            <div className="mt-3">
-              <button 
-                className="btn btn-primary me-2"
-                onClick={() => window.location.href = '/admin/departments'}
-              >
-                <i className="bi bi-building me-1"></i>
-                Manage Departments
-              </button>
-              <button 
-                className="btn btn-outline-primary"
-                onClick={() => window.location.href = '/admin/users'}
-              >
-                <i className="bi bi-people me-1"></i>
-                Manage Users
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    </>
+      {/* Empty State */}
+      {!loading && organizationData.departments.length === 0 && (
+        <Box sx={{ textAlign: 'center', py: 8 }}>
+          <Business sx={{ fontSize: '4rem', color: 'text.disabled', mb: 2, opacity: 0.3 }} />
+          <Typography variant="h4" sx={{ color: 'text.secondary', mb: 1 }}>
+            No Organization Data
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+            No departments or employees found. Start by creating departments and adding employees.
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+            <Button
+              variant="contained"
+              startIcon={<Business />}
+              onClick={() => window.location.href = '/admin/departments'}
+              sx={{
+                backgroundColor: '#20C997',
+                '&:hover': {
+                  backgroundColor: '#17A085',
+                },
+              }}
+            >
+              Manage Departments
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<People />}
+              onClick={() => window.location.href = '/admin/users'}
+              sx={{
+                borderColor: '#20C997',
+                color: '#20C997',
+                '&:hover': {
+                  borderColor: '#17A085',
+                  backgroundColor: 'rgba(32, 201, 151, 0.04)',
+                },
+              }}
+            >
+              Manage Users
+            </Button>
+          </Box>
+        </Box>
+      )}
+    </Container>
   );
 };
 

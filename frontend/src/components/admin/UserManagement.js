@@ -2,6 +2,59 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { userAPI, departmentAPI, teamAPI } from '../../utils/api';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Chip,
+  Avatar,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Grid,
+  Alert,
+  CircularProgress,
+  Pagination,
+  InputAdornment,
+  Switch,
+  FormControlLabel,
+  Tooltip,
+  useTheme,
+  Container,
+} from '@mui/material';
+import {
+  Search,
+  Add,
+  Edit,
+  Delete,
+  Visibility,
+  VisibilityOff,
+  Person,
+  FilterList,
+  Refresh,
+  PersonAdd,
+  Business,
+  Groups,
+  Phone,
+  Email,
+  CalendarToday,
+} from '@mui/icons-material';
 
 const UserManagement = () => {
   const { user } = useAuth();
@@ -541,778 +594,825 @@ const UserManagement = () => {
     }
   };
 
+  const theme = useTheme();
+
+  const getRoleChipColor = (role) => {
+    const colors = {
+      'Admin': 'error',
+      'Vice President': 'primary',
+      'HR BP': 'info',
+      'HR Manager': 'success',
+      'HR Executive': 'warning',
+      'Team Manager': 'secondary',
+      'Team Leader': 'default',
+      'Employee': 'default'
+    };
+    return colors[role] || 'default';
+  };
+
+  const getInitials = (firstName, lastName) => {
+    if (!firstName && !lastName) return 'U';
+    const first = firstName ? firstName.charAt(0).toUpperCase() : '';
+    const last = lastName ? lastName.charAt(0).toUpperCase() : '';
+    return first + last;
+  };
+
   if (loading && users.length === 0) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: '400px' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '400px',
+        }}
+      >
+        <CircularProgress size={60} sx={{ color: '#20C997' }} />
+      </Box>
     );
   }
 
   return (
-    <div className="container-fluid">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h2 className="mb-1">User Management</h2>
-          <p className="text-muted">Manage all users and their information</p>
-        </div>
-        <div className="d-flex gap-2">
-          <span className="badge bg-primary fs-6">{totalUsers} Total Users</span>
+    <Container maxWidth={false} sx={{ py: 3 }}>
+      {/* Header Section */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 700, color: '#0A192F', mb: 1 }}>
+            User Management
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Manage all users and their information
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          <Chip
+            label={`${totalUsers} Total Users`}
+            color="primary"
+            sx={{ fontWeight: 600 }}
+          />
           {(user?.role === 'Admin' || user?.role === 'Vice President' || user?.role === 'HR Manager') && (
             <>
-              <button 
-                className="btn btn-outline-primary" 
+              <Button
+                variant="outlined"
+                startIcon={<PersonAdd />}
                 onClick={() => navigate('/admin/users/add')}
+                sx={{
+                  borderColor: '#20C997',
+                  color: '#20C997',
+                  '&:hover': {
+                    borderColor: '#17A085',
+                    backgroundColor: 'rgba(32, 201, 151, 0.04)',
+                  },
+                }}
               >
-                <i className="bi bi-plus-circle me-1"></i> Add User
-              </button>
-              <button className="btn btn-primary" onClick={handleOpenAddModal}>
-                <i className="bi bi-plus-circle me-1"></i> Quick Add
-              </button>
+                Add User
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<Add />}
+                onClick={handleOpenAddModal}
+                sx={{
+                  backgroundColor: '#20C997',
+                  '&:hover': {
+                    backgroundColor: '#17A085',
+                  },
+                }}
+              >
+                Quick Add
+              </Button>
             </>
           )}
-        </div>
-      </div>
+        </Box>
+      </Box>
 
+      {/* Success Alert */}
       {success && (
-        <div className="alert alert-success alert-dismissible fade show" role="alert">
-          <i className="bi bi-check-circle-fill me-2"></i>
+        <Alert
+          severity="success"
+          onClose={() => setSuccess('')}
+          sx={{ mb: 3 }}
+        >
           {success}
-          <button 
-            type="button" 
-            className="btn-close" 
-            onClick={() => setSuccess('')}
-          ></button>
-        </div>
+        </Alert>
       )}
 
+      {/* Error Alert */}
       {error && (
-        <div className="alert alert-danger alert-dismissible fade show" role="alert">
-          <i className="bi bi-exclamation-triangle-fill me-2"></i>
+        <Alert
+          severity="error"
+          onClose={() => setError('')}
+          sx={{ mb: 3 }}
+        >
           {error}
-          <button 
-            type="button" 
-            className="btn-close" 
-            onClick={() => setError('')}
-          ></button>
-        </div>
+        </Alert>
       )}
 
-      <div className="card mb-4">
-        <div className="card-body">
-          <div className="row g-3">
-            <div className="col-md-4">
-              <label className="form-label">Search Users</label>
-              <div className="input-group">
-                <span className="input-group-text">
-                  <i className="bi bi-search"></i>
-                </span>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Search by name, email, or employee ID..."
-                  value={searchTerm}
-                  onChange={handleSearch}
-                />
-              </div>
-            </div>
-            <div className="col-md-3">
-              <label className="form-label">Filter by Role</label>
-              <select
-                className="form-select"
-                value={roleFilter}
-                onChange={handleRoleFilter}
-              >
-                <option value="">All Roles</option>
-                {roles.map(role => (
-                  <option key={role} value={role}>{role}</option>
-                ))}
-              </select>
-            </div>
-            <div className="col-md-3">
-              <label className="form-label">Filter by Department</label>
-              <select
-                className="form-select"
-                value={departmentFilter}
-                onChange={handleDepartmentFilter}
-              >
-                <option value="">All Departments</option>
-                {departments.map(dept => (
-                  <option key={dept._id} value={dept._id}>{dept.name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="col-md-2">
-              <label className="form-label">&nbsp;</label>
-              <button 
-                className="btn btn-outline-secondary w-100"
+      {/* Filters Card */}
+      <Card sx={{ mb: 4, borderRadius: 3 }}>
+        <CardContent sx={{ p: 3 }}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                label="Search Users"
+                placeholder="Search by name, email, or employee ID..."
+                value={searchTerm}
+                onChange={handleSearch}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search sx={{ color: 'text.secondary' }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <FormControl fullWidth>
+                <InputLabel>Filter by Role</InputLabel>
+                <Select
+                  value={roleFilter}
+                  onChange={handleRoleFilter}
+                  label="Filter by Role"
+                  sx={{ borderRadius: 2 }}
+                >
+                  <MenuItem value="">All Roles</MenuItem>
+                  {roles.map(role => (
+                    <MenuItem key={role} value={role}>{role}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <FormControl fullWidth>
+                <InputLabel>Filter by Department</InputLabel>
+                <Select
+                  value={departmentFilter}
+                  onChange={handleDepartmentFilter}
+                  label="Filter by Department"
+                  sx={{ borderRadius: 2 }}
+                >
+                  <MenuItem value="">All Departments</MenuItem>
+                  {departments.map(dept => (
+                    <MenuItem key={dept._id} value={dept._id}>{dept.name}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={2}>
+              <Button
+                fullWidth
+                variant="outlined"
+                startIcon={<Refresh />}
                 onClick={resetFilters}
+                sx={{
+                  height: '56px',
+                  borderRadius: 2,
+                  borderColor: 'grey.300',
+                  color: 'text.secondary',
+                  '&:hover': {
+                    borderColor: 'grey.400',
+                    backgroundColor: 'grey.50',
+                  },
+                }}
               >
-                <i className="bi bi-arrow-clockwise me-1"></i>
                 Reset
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+              </Button>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
 
-      <div className="card">
-        <div className="card-body">
+      {/* Users Table Card */}
+      <Card sx={{ borderRadius: 3 }}>
+        <CardContent sx={{ p: 0 }}>
           {loading ? (
-            <div className="text-center py-4">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-            </div>
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+              <CircularProgress size={60} sx={{ color: '#20C997' }} />
+            </Box>
           ) : users.length === 0 ? (
-            <div className="text-center py-5">
-              <i className="bi bi-people text-muted" style={{ fontSize: '3rem' }}></i>
-              <h5 className="mt-3 text-muted">No users found</h5>
-              <p className="text-muted">Try adjusting your search criteria</p>
-            </div>
+            <Box sx={{ textAlign: 'center', py: 8 }}>
+              <Person sx={{ fontSize: '4rem', color: 'text.disabled', mb: 2 }} />
+              <Typography variant="h5" sx={{ color: 'text.secondary', mb: 1 }}>
+                No users found
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Try adjusting your search criteria
+              </Typography>
+            </Box>
           ) : (
             <>
-              <div className="table-responsive">
-                <table className="table table-hover">
-                  <thead className="table-light">
-                    <tr>
-                      <th>Employee</th>
-                      <th>Role</th>
-                      <th>Department</th>
-                      <th>Team</th>
-                      <th>Employee ID</th>
-                      <th>Contact</th>
-                      <th>Joining Date</th>
-                      <th>Status</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 600, color: '#0A192F' }}>Employee</TableCell>
+                      <TableCell sx={{ fontWeight: 600, color: '#0A192F' }}>Role</TableCell>
+                      <TableCell sx={{ fontWeight: 600, color: '#0A192F' }}>Department</TableCell>
+                      <TableCell sx={{ fontWeight: 600, color: '#0A192F' }}>Team</TableCell>
+                      <TableCell sx={{ fontWeight: 600, color: '#0A192F' }}>Employee ID</TableCell>
+                      <TableCell sx={{ fontWeight: 600, color: '#0A192F' }}>Contact</TableCell>
+                      <TableCell sx={{ fontWeight: 600, color: '#0A192F' }}>Joining Date</TableCell>
+                      <TableCell sx={{ fontWeight: 600, color: '#0A192F' }}>Status</TableCell>
+                      <TableCell sx={{ fontWeight: 600, color: '#0A192F' }}>Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
                     {users.map((userData) => (
-                      <tr key={userData._id}>
-                        <td>
-                          <div className="d-flex align-items-center">
-                            <div className="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3"
-                                 style={{ width: '40px', height: '40px' }}>
-                              <i className="bi bi-person text-white"></i>
-                            </div>
-                            <div>
-                              <div className="fw-semibold">{userData.firstName} {userData.lastName}</div>
-                              <small className="text-muted">{userData.email}</small>
-                            </div>
-                          </div>
-                        </td>
-                        <td>
-                          <span className={`badge ${getRoleBadgeColor(userData.role)}`}>
-                            {userData.role}
-                          </span>
-                        </td>
-                        <td>
-                          {userData.department?.name || 'Not assigned'}
-                        </td>
-                        <td>
-                          {userData.team?.name || 'Not assigned'}
-                        </td>
-                        <td>
-                          <code>{userData.employeeId || 'Not assigned'}</code>
-                        </td>
-                        <td>
-                          <div>
-                            <small className="d-block">{userData.phoneNumber || 'Not provided'}</small>
-                          </div>
-                        </td>
-                        <td>
-                          {formatDate(userData.joiningDate)}
-                        </td>
-                        <td>
-                          <span className={`badge ${userData.isActive ? 'bg-success' : 'bg-danger'}`}>
-                            {userData.isActive ? 'Active' : 'Inactive'}
-                          </span>
-                        </td>
-                        <td>
-                          <div className="btn-group" role="group">
-                            <button
-                              className="btn btn-sm btn-outline-primary"
-                              title={userData.isActive ? "Deactivate User" : "Activate User"}
-                              onClick={() => handleToggleUserStatus(userData)}
-                              disabled={user?.role === 'Employee'}
+                      <TableRow key={userData._id} hover>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <Avatar
+                              sx={{
+                                bgcolor: '#0A192F',
+                                color: 'white',
+                                width: 40,
+                                height: 40,
+                                mr: 2,
+                                fontWeight: 600,
+                              }}
                             >
-                              <i className={`bi ${userData.isActive ? 'bi-eye-slash text-warning' : 'bi-eye text-success'}`}></i>
-                            </button>
+                              {getInitials(userData.firstName, userData.lastName)}
+                            </Avatar>
+                            <Box>
+                              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                                {userData.firstName} {userData.lastName}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {userData.email}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={userData.role}
+                            color={getRoleChipColor(userData.role)}
+                            size="small"
+                            sx={{ fontWeight: 500 }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2">
+                            {userData.department?.name || 'Not assigned'}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2">
+                            {userData.team?.name || 'Not assigned'}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={userData.employeeId || 'Not assigned'}
+                            variant="outlined"
+                            size="small"
+                            sx={{ fontFamily: 'monospace' }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Box>
+                            <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                              <Phone sx={{ fontSize: '0.875rem', mr: 0.5, color: 'text.secondary' }} />
+                              {userData.phoneNumber || 'Not provided'}
+                            </Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
+                            <CalendarToday sx={{ fontSize: '0.875rem', mr: 0.5, color: 'text.secondary' }} />
+                            {formatDate(userData.joiningDate)}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={userData.isActive ? 'Active' : 'Inactive'}
+                            color={userData.isActive ? 'success' : 'error'}
+                            size="small"
+                            sx={{ fontWeight: 500 }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', gap: 1 }}>
+                            <Tooltip title={userData.isActive ? "Deactivate User" : "Activate User"}>
+                              <IconButton
+                                size="small"
+                                onClick={() => handleToggleUserStatus(userData)}
+                                disabled={user?.role === 'Employee'}
+                                sx={{
+                                  color: userData.isActive ? 'warning.main' : 'success.main',
+                                  '&:hover': {
+                                    backgroundColor: userData.isActive ? 'warning.light' : 'success.light',
+                                  },
+                                }}
+                              >
+                                {userData.isActive ? <VisibilityOff /> : <Visibility />}
+                              </IconButton>
+                            </Tooltip>
                             {(user?.role === 'Admin' || user?.role === 'Vice President' || user?.role === 'HR BP' || user?.role === 'HR Manager' || user?.role === 'HR Executive') && (
                               <>
-                                <button
-                                  className="btn btn-sm btn-outline-secondary"
-                                  title="Edit User"
-                                  onClick={() => handleEditUser(userData)}
-                                >
-                                  <i className="bi bi-pencil"></i>
-                                </button>
-                                <button
-                                  className="btn btn-sm btn-outline-danger ms-1"
-                                  title="Delete User"
-                                  onClick={async () => {
-                                    if (window.confirm(`Are you sure you want to delete user ${userData.firstName} ${userData.lastName}?`)) {
-                                      try {
-                                        const response = await userAPI.deleteUser(userData._id);
-                                        if (response.data.success) {
-                                          setSuccess('User deleted successfully!');
-                                          fetchUsers();
+                                <Tooltip title="Edit User">
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => handleEditUser(userData)}
+                                    sx={{
+                                      color: 'primary.main',
+                                      '&:hover': {
+                                        backgroundColor: 'primary.light',
+                                      },
+                                    }}
+                                  >
+                                    <Edit />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Delete User">
+                                  <IconButton
+                                    size="small"
+                                    onClick={async () => {
+                                      if (window.confirm(`Are you sure you want to delete user ${userData.firstName} ${userData.lastName}?`)) {
+                                        try {
+                                          const response = await userAPI.deleteUser(userData._id);
+                                          if (response.data.success) {
+                                            setSuccess('User deleted successfully!');
+                                            fetchUsers();
+                                          }
+                                        } catch (err) {
+                                          setError(getErrorMessage(err));
                                         }
-                                      } catch (err) {
-                                        setError(getErrorMessage(err));
                                       }
-                                    }
-                                  }}
-                                >
-                                  <i className="bi bi-trash"></i>
-                                </button>
+                                    }}
+                                    sx={{
+                                      color: 'error.main',
+                                      '&:hover': {
+                                        backgroundColor: 'error.light',
+                                      },
+                                    }}
+                                  >
+                                    <Delete />
+                                  </IconButton>
+                                </Tooltip>
                               </>
                             )}
-                          </div>
-                        </td>
-                      </tr>
+                          </Box>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                  </TableBody>
+                </Table>
+              </TableContainer>
 
+              {/* Pagination */}
               {totalPages > 1 && (
-                <nav className="mt-4">
-                  <ul className="pagination justify-content-center">
-                    <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-                      <button 
-                        className="page-link"
-                        onClick={() => setCurrentPage(currentPage - 1)}
-                        disabled={currentPage === 1}
-                      >
-                        Previous
-                      </button>
-                    </li>
-                    {[...Array(totalPages)].map((_, index) => (
-                      <li key={index} className={`page-item ${currentPage === index + 1 ? 'active' : ''}`}>
-                        <button 
-                          className="page-link"
-                          onClick={() => setCurrentPage(index + 1)}
-                        >
-                          {index + 1}
-                        </button>
-                      </li>
-                    ))}
-                    <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-                      <button 
-                        className="page-link"
-                        onClick={() => setCurrentPage(currentPage + 1)}
-                        disabled={currentPage === totalPages}
-                      >
-                        Next
-                      </button>
-                    </li>
-                  </ul>
-                </nav>
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                  <Pagination
+                    count={totalPages}
+                    page={currentPage}
+                    onChange={(event, page) => setCurrentPage(page)}
+                    color="primary"
+                    size="large"
+                    sx={{
+                      '& .MuiPaginationItem-root': {
+                        '&.Mui-selected': {
+                          backgroundColor: '#20C997',
+                          '&:hover': {
+                            backgroundColor: '#17A085',
+                          },
+                        },
+                      },
+                    }}
+                  />
+                </Box>
               )}
             </>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      {showAddModal && (
-        <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-lg">
-            <div className="modal-content">
-              <form onSubmit={handleAddUser} noValidate>
-                <div className="modal-header">
-                  <h5 className="modal-title">Add New User</h5>
-                  <button 
-                    type="button" 
-                    className="btn-close"
-                    onClick={() => {
-                      setShowAddModal(false);
-                      setValidationErrors({});
-                    }}
-                  ></button>
-                </div>
-                <div className="modal-body">
-                  <div className="row g-3">
-                    <div className="col-md-6">
-                      <label className="form-label">First Name *</label>
-                      <input
-                        type="text"
-                        className={`form-control ${validationErrors.firstName ? 'is-invalid' : ''}`}
-                        name="firstName"
-                        value={addFormData.firstName}
-                        onChange={handleAddInputChange}
-                        required
-                      />
-                      {validationErrors.firstName && (
-                        <div className="invalid-feedback">
-                          {validationErrors.firstName}
-                        </div>
-                      )}
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Last Name *</label>
-                      <input
-                        type="text"
-                        className={`form-control ${validationErrors.lastName ? 'is-invalid' : ''}`}
-                        name="lastName"
-                        value={addFormData.lastName}
-                        onChange={handleAddInputChange}
-                        required
-                      />
-                      {validationErrors.lastName && (
-                        <div className="invalid-feedback">
-                          {validationErrors.lastName}
-                        </div>
-                      )}
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Email Address *</label>
-                      <input
-                        type="email"
-                        className={`form-control ${validationErrors.email ? 'is-invalid' : ''}`}
-                        name="email"
-                        value={addFormData.email}
-                        onChange={handleAddInputChange}
-                        required
-                      />
-                      {validationErrors.email && (
-                        <div className="invalid-feedback">
-                          {validationErrors.email}
-                        </div>
-                      )}
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Password *</label>
-                      <input
-                        type="password"
-                        className={`form-control ${validationErrors.password ? 'is-invalid' : ''}`}
-                        name="password"
-                        value={addFormData.password}
-                        onChange={handleAddInputChange}
-                        minLength="6"
-                        required
-                      />
-                      {validationErrors.password && (
-                        <div className="invalid-feedback">
-                          {validationErrors.password}
-                        </div>
-                      )}
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Role *</label>
-                      <select
-                        className={`form-select ${validationErrors.role ? 'is-invalid' : ''}`}
-                        name="role"
-                        value={addFormData.role}
-                        onChange={handleAddInputChange}
-                        required
-                      >
-                        {roles.map(role => (
-                          <option key={role} value={role}>{role}</option>
-                        ))}
-                      </select>
-                      {validationErrors.role && (
-                        <div className="invalid-feedback">
-                          {validationErrors.role}
-                        </div>
-                      )}
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Department</label>
-                      <select
-                        className={`form-select ${validationErrors.department ? 'is-invalid' : ''}`}
-                        name="department"
-                        value={addFormData.department}
-                        onChange={handleAddInputChange}
-                      >
-                        <option value="">Select Department</option>
-                        {departments.map(dept => (
-                          <option key={dept._id} value={dept._id}>{dept.name}</option>
-                        ))}
-                      </select>
-                      {validationErrors.department && (
-                        <div className="invalid-feedback">
-                          {validationErrors.department}
-                        </div>
-                      )}
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">
-                        Employee ID
-                        {user?.role !== 'Admin' && (
-                          <small className="text-muted ms-1">(Auto-generated)</small>
-                        )}
-                      </label>
-                      <input
-                        type="text"
-                        className={`form-control ${validationErrors.employeeId ? 'is-invalid' : ''}`}
-                        name="employeeId"
-                        value={addFormData.employeeId}
-                        onChange={handleAddInputChange}
-                        placeholder="e.g., EMP001"
-                        readOnly={user?.role !== 'Admin'}
-                        style={user?.role !== 'Admin' ? { backgroundColor: '#f8f9fa' } : {}}
-                      />
-                      {validationErrors.employeeId && (
-                        <div className="invalid-feedback">
-                          {validationErrors.employeeId}
-                        </div>
-                      )}
-                      {user?.role !== 'Admin' && (
-                        <small className="form-text text-muted">
-                          Employee ID is automatically generated based on role
-                        </small>
-                      )}
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Phone Number</label>
-                      <input
-                        type="tel"
-                        className={`form-control ${validationErrors.phoneNumber ? 'is-invalid' : ''}`}
-                        name="phoneNumber"
-                        value={addFormData.phoneNumber}
-                        onChange={handleAddInputChange}
-                        placeholder="e.g., +1234567890"
-                      />
-                      {validationErrors.phoneNumber && (
-                        <div className="invalid-feedback">
-                          {validationErrors.phoneNumber}
-                        </div>
-                      )}
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Designation</label>
-                      <input
-                        type="text"
-                        className={`form-control ${validationErrors.designation ? 'is-invalid' : ''}`}
-                        name="designation"
-                        value={addFormData.designation}
-                        onChange={handleAddInputChange}
-                        placeholder="e.g., Software Engineer"
-                      />
-                      {validationErrors.designation && (
-                        <div className="invalid-feedback">
-                          {validationErrors.designation}
-                        </div>
-                      )}
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Joining Date</label>
-                      <input
-                        type="date"
-                        className="form-control"
-                        name="joiningDate"
-                        value={addFormData.joiningDate}
-                        onChange={handleAddInputChange}
-                      />
-                    </div>
-                    <div className="col-md-12">
-                      <div className="form-check">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          name="isActive"
-                          id="isActive"
-                          checked={addFormData.isActive}
-                          onChange={handleAddInputChange}
-                        />
-                        <label className="form-check-label" htmlFor="isActive">
-                          Active User (can login to the system)
-                        </label>
-                      </div>
-                    </div>
-
-                    {/* Team Assignment Section - Only for Employee role */}
-                    {(user?.role === 'Admin' || user?.role === 'HR Manager') && addFormData.role === 'Employee' && (
-                      <div className="col-md-12">
-                        <hr className="my-4" />
-                        <div className="d-flex justify-content-between align-items-center mb-3">
-                          <h6 className="mb-0">
-                            <i className="bi bi-people me-2"></i>
-                            Team Assignment
-                          </h6>
-                          <div className="form-check form-switch">
-                            <input
-                              className="form-check-input"
-                              type="checkbox"
-                              id="enableTeamAssignment"
-                              checked={showTeamCreation}
-                              onChange={(e) => setShowTeamCreation(e.target.checked)}
-                            />
-                            <label className="form-check-label" htmlFor="enableTeamAssignment">
-                              Assign to Team
-                            </label>
-                          </div>
-                        </div>
-                        
-                        {showTeamCreation && (
-                          <div className="border rounded p-3 bg-light">
-                            <div className="row g-3">
-                              <div className="col-md-12">
-                                <label className="form-label">Select Team *</label>
-                                <select
-                                  className="form-select"
-                                  value={teamFormData.selectedTeam || ''}
-                                  onChange={(e) => setTeamFormData(prev => ({...prev, selectedTeam: e.target.value}))}
-                                >
-                                  <option value="">Choose a team...</option>
-                                  {availableUsers.teams && availableUsers.teams.map(team => (
-                                    <option key={team._id} value={team._id}>
-                                      {team.name} ({team.code}) - {team.department?.name || 'No Department'}
-                                    </option>
-                                  ))}
-                                </select>
-                                <small className="form-text text-muted">
-                                  Select an existing team to assign this user to. Teams are created in Team Management.
-                                  <br />
-                                  <strong>Note:</strong> Team assignment is only available for Employee role. Team Managers and Team Leaders are assigned through Team Management.
-                                </small>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    
-                    {/* Info message for non-Employee roles */}
-                    {(user?.role === 'Admin' || user?.role === 'HR Manager') && addFormData.role !== 'Employee' && ['Team Manager', 'Team Leader'].includes(addFormData.role) && (
-                      <div className="col-md-12">
-                        <hr className="my-4" />
-                        <div className="alert alert-info">
-                          <i className="bi bi-info-circle me-2"></i>
-                          <strong>Team Assignment:</strong> {addFormData.role} roles are assigned to teams through the Team Management interface, not during user creation.
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="modal-footer">
-                  <button 
-                    type="button" 
-                    className="btn btn-secondary"
-                    onClick={() => {
-                      setShowAddModal(false);
-                      setValidationErrors({});
-                    }}
+      {/* Add User Dialog */}
+      <Dialog
+        open={showAddModal}
+        onClose={() => {
+          setShowAddModal(false);
+          setValidationErrors({});
+        }}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: { borderRadius: 3 }
+        }}
+      >
+        <DialogTitle sx={{ pb: 2 }}>
+          <Typography variant="h5" sx={{ fontWeight: 600, color: '#0A192F' }}>
+            Add New User
+          </Typography>
+        </DialogTitle>
+        <form onSubmit={handleAddUser} noValidate>
+          <DialogContent sx={{ pt: 1 }}>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="First Name"
+                  name="firstName"
+                  value={addFormData.firstName}
+                  onChange={handleAddInputChange}
+                  error={!!validationErrors.firstName}
+                  helperText={validationErrors.firstName}
+                  required
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Last Name"
+                  name="lastName"
+                  value={addFormData.lastName}
+                  onChange={handleAddInputChange}
+                  error={!!validationErrors.lastName}
+                  helperText={validationErrors.lastName}
+                  required
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Email Address"
+                  name="email"
+                  type="email"
+                  value={addFormData.email}
+                  onChange={handleAddInputChange}
+                  error={!!validationErrors.email}
+                  helperText={validationErrors.email}
+                  required
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Password"
+                  name="password"
+                  type="password"
+                  value={addFormData.password}
+                  onChange={handleAddInputChange}
+                  error={!!validationErrors.password}
+                  helperText={validationErrors.password}
+                  required
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth error={!!validationErrors.role}>
+                  <InputLabel>Role *</InputLabel>
+                  <Select
+                    name="role"
+                    value={addFormData.role}
+                    onChange={handleAddInputChange}
+                    label="Role *"
+                    sx={{ borderRadius: 2 }}
                   >
-                    Cancel
-                  </button>
-                  <button type="submit" className="btn btn-primary">
-                    Create User
-                  </button>                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showEditModal && editingUser && (
-        <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-lg">
-            <div className="modal-content">
-              <form onSubmit={handleUpdateUser} noValidate>
-                <div className="modal-header">
-                  <h5 className="modal-title">Edit User</h5>
-                  <button 
-                    type="button" 
-                    className="btn-close"
-                    onClick={() => {
-                      setShowEditModal(false);
-                      setEditingUser(null);
-                      setValidationErrors({});
-                    }}
-                  ></button>
-                </div>
-                <div className="modal-body">
-                  <div className="row g-3">
-                    <div className="col-md-6">
-                      <label className="form-label">First Name *</label>
-                      <input
-                        type="text"
-                        className={`form-control ${validationErrors.firstName ? 'is-invalid' : ''}`}
-                        name="firstName"
-                        value={editFormData.firstName}
-                        onChange={handleEditInputChange}
-                        required
-                      />
-                      {validationErrors.firstName && (
-                        <div className="invalid-feedback">
-                          {validationErrors.firstName}
-                        </div>
-                      )}
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Last Name *</label>
-                      <input
-                        type="text"
-                        className={`form-control ${validationErrors.lastName ? 'is-invalid' : ''}`}
-                        name="lastName"
-                        value={editFormData.lastName}
-                        onChange={handleEditInputChange}
-                        required
-                      />
-                      {validationErrors.lastName && (
-                        <div className="invalid-feedback">
-                          {validationErrors.lastName}
-                        </div>
-                      )}
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Email Address *</label>
-                      <input
-                        type="email"
-                        className={`form-control ${validationErrors.email ? 'is-invalid' : ''}`}
-                        name="email"
-                        value={editFormData.email}
-                        onChange={handleEditInputChange}
-                        required
-                      />
-                      {validationErrors.email && (
-                        <div className="invalid-feedback">
-                          {validationErrors.email}
-                        </div>
-                      )}
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Role *</label>
-                      <select
-                        className={`form-select ${validationErrors.role ? 'is-invalid' : ''}`}
-                        name="role"
-                        value={editFormData.role}
-                        onChange={handleEditInputChange}
-                        required
-                      >
-                        {roles.map(role => (
-                          <option key={role} value={role}>{role}</option>
-                        ))}
-                      </select>
-                      {validationErrors.role && (
-                        <div className="invalid-feedback">
-                          {validationErrors.role}
-                        </div>
-                      )}
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Department</label>
-                      <select
-                        className={`form-select ${validationErrors.department ? 'is-invalid' : ''}`}
-                        name="department"
-                        value={editFormData.department}
-                        onChange={handleEditInputChange}
-                      >
-                        <option value="">Select Department</option>
-                        {departments.map(dept => (
-                          <option key={dept._id} value={dept._id}>{dept.name}</option>
-                        ))}
-                      </select>
-                      {validationErrors.department && (
-                        <div className="invalid-feedback">
-                          {validationErrors.department}
-                        </div>
-                      )}
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">
-                        Employee ID
-                        <small className="text-muted ms-1">(Read-only)</small>
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="employeeId"
-                        value={editFormData.employeeId}
-                        placeholder="e.g., EMP001"
-                        readOnly
-                        style={{ backgroundColor: '#f8f9fa' }}
-                      />
-                      <small className="form-text text-muted">
-                        Employee ID cannot be changed after creation
-                      </small>
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Phone Number</label>
-                      <input
-                        type="tel"
-                        className={`form-control ${validationErrors.phoneNumber ? 'is-invalid' : ''}`}
-                        name="phoneNumber"
-                        value={editFormData.phoneNumber}
-                        onChange={handleEditInputChange}
-                        placeholder="e.g., +1234567890"
-                      />
-                      {validationErrors.phoneNumber && (
-                        <div className="invalid-feedback">
-                          {validationErrors.phoneNumber}
-                        </div>
-                      )}
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Designation</label>
-                      <input
-                        type="text"
-                        className={`form-control ${validationErrors.designation ? 'is-invalid' : ''}`}
-                        name="designation"
-                        value={editFormData.designation}
-                        onChange={handleEditInputChange}
-                        placeholder="e.g., Software Engineer"
-                      />
-                      {validationErrors.designation && (
-                        <div className="invalid-feedback">
-                          {validationErrors.designation}
-                        </div>
-                      )}
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Joining Date</label>
-                      <input
-                        type="date"
-                        className="form-control"
-                        name="joiningDate"
-                        value={editFormData.joiningDate}
-                        onChange={handleEditInputChange}
-                      />
-                    </div>
-                    <div className="col-md-12">
-                      <div className="form-check">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          name="isActive"
-                          id="editIsActive"
-                          checked={editFormData.isActive}
-                          onChange={handleEditInputChange}
-                        />
-                        <label className="form-check-label" htmlFor="editIsActive">
-                          Active User (can login to the system)
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="modal-footer">
-                  <button 
-                    type="button" 
-                    className="btn btn-secondary"
-                    onClick={() => {
-                      setShowEditModal(false);
-                      setEditingUser(null);
-                      setValidationErrors({});
-                    }}
+                    {roles.map(role => (
+                      <MenuItem key={role} value={role}>{role}</MenuItem>
+                    ))}
+                  </Select>
+                  {validationErrors.role && (
+                    <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                      {validationErrors.role}
+                    </Typography>
+                  )}
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Department</InputLabel>
+                  <Select
+                    name="department"
+                    value={addFormData.department}
+                    onChange={handleAddInputChange}
+                    label="Department"
+                    sx={{ borderRadius: 2 }}
                   >
-                    Cancel
-                  </button>
-                  <button type="submit" className="btn btn-primary">
-                    Update User
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+                    <MenuItem value="">Select Department</MenuItem>
+                    {departments.map(dept => (
+                      <MenuItem key={dept._id} value={dept._id}>{dept.name}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label={`Employee ID ${user?.role !== 'Admin' ? '(Auto-generated)' : ''}`}
+                  name="employeeId"
+                  value={addFormData.employeeId}
+                  onChange={handleAddInputChange}
+                  error={!!validationErrors.employeeId}
+                  helperText={validationErrors.employeeId || (user?.role !== 'Admin' ? 'Employee ID is automatically generated based on role' : '')}
+                  InputProps={{
+                    readOnly: user?.role !== 'Admin',
+                  }}
+                  sx={{ 
+                    '& .MuiOutlinedInput-root': { 
+                      borderRadius: 2,
+                      backgroundColor: user?.role !== 'Admin' ? 'grey.50' : 'transparent'
+                    } 
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Phone Number"
+                  name="phoneNumber"
+                  value={addFormData.phoneNumber}
+                  onChange={handleAddInputChange}
+                  error={!!validationErrors.phoneNumber}
+                  helperText={validationErrors.phoneNumber}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Designation"
+                  name="designation"
+                  value={addFormData.designation}
+                  onChange={handleAddInputChange}
+                  error={!!validationErrors.designation}
+                  helperText={validationErrors.designation}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Joining Date"
+                  name="joiningDate"
+                  type="date"
+                  value={addFormData.joiningDate}
+                  onChange={handleAddInputChange}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      name="isActive"
+                      checked={addFormData.isActive}
+                      onChange={handleAddInputChange}
+                      sx={{
+                        '& .MuiSwitch-switchBase.Mui-checked': {
+                          color: '#20C997',
+                        },
+                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                          backgroundColor: '#20C997',
+                        },
+                      }}
+                    />
+                  }
+                  label="Active User (can login to the system)"
+                />
+              </Grid>
+            </Grid>
+          </DialogContent>
+          <DialogActions sx={{ p: 3, pt: 2 }}>
+            <Button
+              onClick={() => {
+                setShowAddModal(false);
+                setValidationErrors({});
+              }}
+              sx={{ color: 'text.secondary' }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              sx={{
+                backgroundColor: '#20C997',
+                '&:hover': {
+                  backgroundColor: '#17A085',
+                },
+              }}
+            >
+              Create User
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+
+      {/* Edit User Dialog */}
+      <Dialog
+        open={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setEditingUser(null);
+          setValidationErrors({});
+        }}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: { borderRadius: 3 }
+        }}
+      >
+        <DialogTitle sx={{ pb: 2 }}>
+          <Typography variant="h5" sx={{ fontWeight: 600, color: '#0A192F' }}>
+            Edit User
+          </Typography>
+        </DialogTitle>
+        <form onSubmit={handleUpdateUser} noValidate>
+          <DialogContent sx={{ pt: 1 }}>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="First Name"
+                  name="firstName"
+                  value={editFormData.firstName}
+                  onChange={handleEditInputChange}
+                  error={!!validationErrors.firstName}
+                  helperText={validationErrors.firstName}
+                  required
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Last Name"
+                  name="lastName"
+                  value={editFormData.lastName}
+                  onChange={handleEditInputChange}
+                  error={!!validationErrors.lastName}
+                  helperText={validationErrors.lastName}
+                  required
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Email Address"
+                  name="email"
+                  type="email"
+                  value={editFormData.email}
+                  onChange={handleEditInputChange}
+                  error={!!validationErrors.email}
+                  helperText={validationErrors.email}
+                  required
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth error={!!validationErrors.role}>
+                  <InputLabel>Role *</InputLabel>
+                  <Select
+                    name="role"
+                    value={editFormData.role}
+                    onChange={handleEditInputChange}
+                    label="Role *"
+                    sx={{ borderRadius: 2 }}
+                  >
+                    {roles.map(role => (
+                      <MenuItem key={role} value={role}>{role}</MenuItem>
+                    ))}
+                  </Select>
+                  {validationErrors.role && (
+                    <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                      {validationErrors.role}
+                    </Typography>
+                  )}
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Department</InputLabel>
+                  <Select
+                    name="department"
+                    value={editFormData.department}
+                    onChange={handleEditInputChange}
+                    label="Department"
+                    sx={{ borderRadius: 2 }}
+                  >
+                    <MenuItem value="">Select Department</MenuItem>
+                    {departments.map(dept => (
+                      <MenuItem key={dept._id} value={dept._id}>{dept.name}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Employee ID (Read-only)"
+                  name="employeeId"
+                  value={editFormData.employeeId}
+                  InputProps={{
+                    readOnly: true,
+                  }}
+                  helperText="Employee ID cannot be changed after creation"
+                  sx={{ 
+                    '& .MuiOutlinedInput-root': { 
+                      borderRadius: 2,
+                      backgroundColor: 'grey.50'
+                    } 
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Phone Number"
+                  name="phoneNumber"
+                  value={editFormData.phoneNumber}
+                  onChange={handleEditInputChange}
+                  error={!!validationErrors.phoneNumber}
+                  helperText={validationErrors.phoneNumber}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Designation"
+                  name="designation"
+                  value={editFormData.designation}
+                  onChange={handleEditInputChange}
+                  error={!!validationErrors.designation}
+                  helperText={validationErrors.designation}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Joining Date"
+                  name="joiningDate"
+                  type="date"
+                  value={editFormData.joiningDate}
+                  onChange={handleEditInputChange}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      name="isActive"
+                      checked={editFormData.isActive}
+                      onChange={handleEditInputChange}
+                      sx={{
+                        '& .MuiSwitch-switchBase.Mui-checked': {
+                          color: '#20C997',
+                        },
+                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                          backgroundColor: '#20C997',
+                        },
+                      }}
+                    />
+                  }
+                  label="Active User (can login to the system)"
+                />
+              </Grid>
+            </Grid>
+          </DialogContent>
+          <DialogActions sx={{ p: 3, pt: 2 }}>
+            <Button
+              onClick={() => {
+                setShowEditModal(false);
+                setEditingUser(null);
+                setValidationErrors({});
+              }}
+              sx={{ color: 'text.secondary' }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              sx={{
+                backgroundColor: '#20C997',
+                '&:hover': {
+                  backgroundColor: '#17A085',
+                },
+              }}
+            >
+              Update User
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+    </Container>
   );
 };
 

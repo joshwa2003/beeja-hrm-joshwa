@@ -1,6 +1,55 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { holidayAPI } from '../../utils/api';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  Grid,
+  Alert,
+  CircularProgress,
+  TextField,
+  MenuItem,
+  Container,
+  Chip,
+  Avatar,
+  Paper,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  ButtonGroup,
+  Tooltip,
+  Divider,
+  Stack,
+  FormControl,
+  InputLabel,
+  Select,
+  TextareaAutosize,
+} from '@mui/material';
+import {
+  CalendarToday,
+  Event,
+  Add,
+  Edit,
+  Delete,
+  Upload,
+  Download,
+  ChevronLeft,
+  ChevronRight,
+  Today,
+  Close,
+  CloudUpload,
+  GetApp,
+  Info,
+  CheckCircle,
+  Warning,
+  Error,
+  Flag,
+} from '@mui/icons-material';
 
 const HolidayCalendar = () => {
   const { hasAnyRole } = useAuth();
@@ -354,443 +403,295 @@ const HolidayCalendar = () => {
   const calendarDays = generateCalendarDays();
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      padding: '2rem',
-      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
-    }}>
-      {/* Modern Header */}
-      <div style={{
-        background: 'rgba(255, 255, 255, 0.95)',
-        backdropFilter: 'blur(10px)',
-        borderRadius: '20px',
-        padding: '2rem',
-        marginBottom: '2rem',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
-      }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '1rem'
-        }}>
-          <div>
-            <h1 style={{
-              fontSize: '2.5rem',
-              fontWeight: '700',
-              color: '#2d3748',
-              margin: '0',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '1rem'
-            }}>
-              <i className="bi bi-calendar-event" style={{ color: '#667eea' }}></i>
+    <Container maxWidth={false} sx={{ py: 3 }}>
+      {/* Page Header */}
+      <Box
+        sx={{
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          borderRadius: 3,
+          p: 4,
+          mb: 4,
+          color: 'white',
+        }}
+      >
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box>
+            <Typography variant="h3" sx={{ fontWeight: 700, mb: 1, display: 'flex', alignItems: 'center' }}>
+              <Event sx={{ mr: 2, fontSize: '2.5rem' }} />
               Holiday Calendar
-            </h1>
-            <p style={{
-              color: '#718096',
-              margin: '0.5rem 0 0 0',
-              fontSize: '1.1rem'
-            }}>Manage and view company holidays</p>
-          </div>
-          
+            </Typography>
+            <Typography variant="h6" sx={{ opacity: 0.9 }}>
+              Manage and view company holidays
+            </Typography>
+          </Box>
           {canManageHolidays && (
-            <div style={{
-              display: 'flex',
-              gap: '1rem',
-              alignItems: 'center',
-              flexWrap: 'wrap'
-            }}>
-              <button
-                style={{
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  color: 'white',
-                  border: 'none',
-                  padding: '1rem 2rem',
-                  borderRadius: '50px',
-                  fontSize: '1rem',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)'
-                }}
+            <Stack direction="row" spacing={2}>
+              <Button
+                variant="contained"
+                size="large"
                 onClick={() => openAddModal()}
-              >
-                <i className="bi bi-plus-circle"></i>
-                Add Holiday
-              </button>
-              
-              <button
-                style={{
-                  background: 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)',
-                  color: 'white',
-                  border: 'none',
-                  padding: '1rem 2rem',
-                  borderRadius: '50px',
-                  fontSize: '1rem',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 15px rgba(72, 187, 120, 0.4)'
+                startIcon={<Add />}
+                sx={{
+                  backgroundColor: 'rgba(255,255,255,0.2)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255,255,255,0.3)',
+                  },
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255,255,255,0.3)',
                 }}
-                onClick={() => setShowExcelUploadModal(true)}
               >
-                <i className="bi bi-file-earmark-excel"></i>
+                Add Holiday
+              </Button>
+              <Button
+                variant="contained"
+                size="large"
+                onClick={() => setShowExcelUploadModal(true)}
+                startIcon={<Upload />}
+                sx={{
+                  backgroundColor: 'rgba(255,255,255,0.2)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255,255,255,0.3)',
+                  },
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                }}
+              >
                 Upload Excel
-              </button>
-            </div>
+              </Button>
+            </Stack>
           )}
-        </div>
-      </div>
+        </Box>
+      </Box>
 
       {/* Alerts */}
       {error && (
-        <div style={{
-          padding: '1rem 1.5rem',
-          borderRadius: '12px',
-          marginBottom: '1rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '1rem',
-          background: '#fed7d7',
-          color: '#c53030',
-          border: '1px solid #feb2b2'
-        }}>
-          <i className="bi bi-exclamation-triangle"></i>
+        <Alert
+          severity="error"
+          onClose={() => setError('')}
+          sx={{ mb: 3, borderRadius: 2 }}
+        >
           {error}
-          <button 
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              marginLeft: 'auto',
-              padding: '0.25rem',
-              borderRadius: '50%'
-            }}
-            onClick={() => setError('')}
-          >
-            <i className="bi bi-x"></i>
-          </button>
-        </div>
+        </Alert>
       )}
 
       {success && (
-        <div style={{
-          padding: '1rem 1.5rem',
-          borderRadius: '12px',
-          marginBottom: '1rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '1rem',
-          background: '#c6f6d5',
-          color: '#2f855a',
-          border: '1px solid #9ae6b4'
-        }}>
-          <i className="bi bi-check-circle"></i>
+        <Alert
+          severity="success"
+          onClose={() => setSuccess('')}
+          sx={{ mb: 3, borderRadius: 2 }}
+        >
           {success}
-          <button 
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              marginLeft: 'auto',
-              padding: '0.25rem',
-              borderRadius: '50%'
-            }}
-            onClick={() => setSuccess('')}
-          >
-            <i className="bi bi-x"></i>
-          </button>
-        </div>
+        </Alert>
       )}
 
       {/* Calendar Navigation */}
-      <div style={{
-        background: 'rgba(255, 255, 255, 0.95)',
-        backdropFilter: 'blur(10px)',
-        borderRadius: '20px',
-        padding: '1.5rem 2rem',
-        marginBottom: '2rem',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
-      }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '2rem'
-        }}>
-          <button 
-            style={{
-              background: '#f7fafc',
-              border: '2px solid #e2e8f0',
-              borderRadius: '12px',
-              width: '50px',
-              height: '50px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              fontSize: '1.2rem',
-              color: '#4a5568'
-            }}
-            onClick={() => navigateMonth(-1)}
-          >
-            <i className="bi bi-chevron-left"></i>
-          </button>
-          
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minWidth: '300px'
-          }}>
-            <div style={{
-              display: 'flex',
-              gap: '1rem',
-              alignItems: 'center'
-            }}>
-              <select 
-                style={{
-                  padding: '0.5rem 1rem',
-                  border: '2px solid #e2e8f0',
-                  borderRadius: '8px',
-                  background: 'white',
-                  fontSize: '1rem',
-                  fontWeight: '600',
-                  color: '#2d3748',
-                  cursor: 'pointer'
+      <Card sx={{ mb: 3, borderRadius: 2 }}>
+        <CardContent>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Stack direction="row" spacing={2} alignItems="center">
+              <IconButton
+                onClick={() => navigateMonth(-1)}
+                sx={{
+                  bgcolor: 'grey.100',
+                  '&:hover': { bgcolor: 'grey.200' },
                 }}
-                value={currentDate.getMonth()}
-                onChange={(e) => navigateToMonth(parseInt(e.target.value), currentDate.getFullYear())}
               >
-                {months.map((month, index) => (
-                  <option key={index} value={index}>
-                    {month}
-                  </option>
-                ))}
-              </select>
+                <ChevronLeft />
+              </IconButton>
               
-              <select 
-                style={{
-                  padding: '0.5rem 1rem',
-                  border: '2px solid #e2e8f0',
-                  borderRadius: '8px',
-                  background: 'white',
-                  fontSize: '1rem',
-                  fontWeight: '600',
-                  color: '#2d3748',
-                  cursor: 'pointer'
-                }}
-                value={currentDate.getFullYear()}
-                onChange={(e) => navigateToMonth(currentDate.getMonth(), parseInt(e.target.value))}
-              >
-                {Array.from({ length: 10 }, (_, i) => {
-                  const year = new Date().getFullYear() - 5 + i;
-                  return (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-          </div>
-          
-          <button 
-            style={{
-              background: '#f7fafc',
-              border: '2px solid #e2e8f0',
-              borderRadius: '12px',
-              width: '50px',
-              height: '50px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              fontSize: '1.2rem',
-              color: '#4a5568'
-            }}
-            onClick={() => navigateMonth(1)}
-          >
-            <i className="bi bi-chevron-right"></i>
-          </button>
-        </div>
-        
-        <button 
-          style={{
-            background: 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)',
-            color: 'white',
-            border: 'none',
-            padding: '0.75rem 1.5rem',
-            borderRadius: '25px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}
-          onClick={navigateToToday}
-        >
-          <i className="bi bi-calendar-day"></i>
-          Today
-        </button>
-      </div>
-
-      {/* Calendar Grid */}
-      <div style={{
-        background: 'rgba(255, 255, 255, 0.95)',
-        backdropFilter: 'blur(10px)',
-        borderRadius: '20px',
-        padding: '2rem',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-        position: 'relative'
-      }}>
-        {loading && (
-          <div style={{
-            position: 'absolute',
-            top: '0',
-            left: '0',
-            right: '0',
-            bottom: '0',
-            background: 'rgba(255, 255, 255, 0.8)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: '10'
-          }}>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              border: '4px solid #e2e8f0',
-              borderTop: '4px solid #667eea',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite'
-            }}></div>
-          </div>
-        )}
-        
-        <div style={{ width: '100%' }}>
-          {/* Week Days Header */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(7, 1fr)',
-            gap: '1px',
-            marginBottom: '1rem'
-          }}>
-            {weekDays.map(day => (
-              <div key={day} style={{
-                textAlign: 'center',
-                fontWeight: '700',
-                color: '#4a5568',
-                padding: '1rem',
-                fontSize: '1.1rem',
-                textTransform: 'uppercase',
-                letterSpacing: '1px'
-              }}>
-                {day}
-              </div>
-            ))}
-          </div>
-          
-          {/* Calendar Days */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(7, 1fr)',
-            gap: '1px',
-            background: '#e2e8f0',
-            borderRadius: '12px',
-            overflow: 'hidden'
-          }}>
-            {calendarDays.map((day, index) => (
-              <div
-                key={index}
-                style={{
-                  background: day.isToday 
-                    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' 
-                    : !day.isCurrentMonth 
-                      ? '#f8f9fa' 
-                      : day.holidays.length > 0 
-                        ? 'white' 
-                        : 'white',
-                  minHeight: '120px',
-                  padding: '1rem',
-                  cursor: 'pointer',
-                  position: 'relative',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  borderLeft: day.holidays.length > 0 ? '4px solid #667eea' : 'none',
-                  color: day.isToday ? 'white' : !day.isCurrentMonth ? '#a0aec0' : '#2d3748'
-                }}
-                onClick={() => handleDateClick(day)}
-              >
-                <div style={{
-                  fontSize: '1.2rem',
-                  fontWeight: '700',
-                  marginBottom: '0.5rem'
-                }}>
-                  {day.date.getDate()}
-                </div>
+              <Stack direction="row" spacing={1}>
+                <FormControl size="small" sx={{ minWidth: 120 }}>
+                  <Select
+                    value={currentDate.getMonth()}
+                    onChange={(e) => navigateToMonth(parseInt(e.target.value), currentDate.getFullYear())}
+                  >
+                    {months.map((month, index) => (
+                      <MenuItem key={index} value={index}>
+                        {month}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
                 
-                {day.holidays.length > 0 && (
-                  <div style={{
-                    flex: '1',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.25rem'
-                  }}>
-                    {day.holidays.slice(0, 2).map((holiday, idx) => {
-                      const typeConfig = getTypeConfig(holiday.holidayType);
+                <FormControl size="small" sx={{ minWidth: 80 }}>
+                  <Select
+                    value={currentDate.getFullYear()}
+                    onChange={(e) => navigateToMonth(currentDate.getMonth(), parseInt(e.target.value))}
+                  >
+                    {Array.from({ length: 10 }, (_, i) => {
+                      const year = new Date().getFullYear() - 5 + i;
                       return (
-                        <div
-                          key={idx}
-                          style={{
-                            padding: '0.25rem 0.5rem',
-                            borderRadius: '6px',
-                            fontSize: '0.75rem',
-                            fontWeight: '600',
-                            textAlign: 'center',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            backgroundColor: typeConfig.color,
-                            color: 'white'
-                          }}
-                          title={holiday.holidayName}
-                        >
-                          {holiday.holidayName.length > 12 
-                            ? holiday.holidayName.substring(0, 12) + '...' 
-                            : holiday.holidayName}
-                        </div>
+                        <MenuItem key={year} value={year}>
+                          {year}
+                        </MenuItem>
                       );
                     })}
-                    {day.holidays.length > 2 && (
-                      <div style={{
-                        fontSize: '0.7rem',
-                        color: '#718096',
-                        textAlign: 'center',
-                        fontStyle: 'italic',
-                        marginTop: '0.25rem'
-                      }}>
-                        +{day.holidays.length - 2} more
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+                  </Select>
+                </FormControl>
+              </Stack>
+              
+              <IconButton
+                onClick={() => navigateMonth(1)}
+                sx={{
+                  bgcolor: 'grey.100',
+                  '&:hover': { bgcolor: 'grey.200' },
+                }}
+              >
+                <ChevronRight />
+              </IconButton>
+            </Stack>
+            
+            <Button
+              variant="contained"
+              onClick={navigateToToday}
+              startIcon={<Today />}
+              sx={{
+                backgroundColor: '#20C997',
+                '&:hover': {
+                  backgroundColor: '#17A085',
+                },
+              }}
+            >
+              Today
+            </Button>
+          </Box>
+        </CardContent>
+      </Card>
+
+      {/* Calendar Grid */}
+      <Card sx={{ borderRadius: 3, overflow: 'hidden' }}>
+        <CardContent sx={{ p: 2, position: 'relative' }}>
+          {loading && (
+            <Box
+              sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                bgcolor: 'rgba(255, 255, 255, 0.8)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 10,
+              }}
+            >
+              <CircularProgress />
+            </Box>
+          )}
+          
+          {/* Week Days Header */}
+          <Grid container spacing={0} sx={{ mb: 1 }}>
+            {weekDays.map(day => (
+              <Grid item xs key={day}>
+                <Box
+                  sx={{
+                    textAlign: 'center',
+                    fontWeight: 700,
+                    color: 'text.secondary',
+                    py: 1,
+                    fontSize: '0.875rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                    borderBottom: '2px solid',
+                    borderColor: 'divider',
+                  }}
+                >
+                  {day}
+                </Box>
+              </Grid>
             ))}
-          </div>
-        </div>
-      </div>
+          </Grid>
+          
+          {/* Calendar Days */}
+          <Grid container spacing={0.5}>
+            {calendarDays.map((day, index) => (
+              <Grid item xs key={index}>
+                <Paper
+                  elevation={day.holidays.length > 0 ? 2 : 0}
+                  sx={{
+                    minHeight: 80,
+                    p: 1,
+                    cursor: 'pointer',
+                    position: 'relative',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    bgcolor: day.isToday 
+                      ? 'primary.main' 
+                      : !day.isCurrentMonth 
+                        ? 'grey.50' 
+                        : day.holidays.length > 0 
+                          ? 'background.paper' 
+                          : 'background.paper',
+                    color: day.isToday ? 'primary.contrastText' : !day.isCurrentMonth ? 'text.disabled' : 'text.primary',
+                    borderLeft: day.holidays.length > 0 ? 3 : 0,
+                    borderLeftColor: 'primary.main',
+                    transition: 'all 0.2s ease-in-out',
+                    '&:hover': {
+                      elevation: 3,
+                      transform: 'translateY(-1px)',
+                    },
+                  }}
+                  onClick={() => handleDateClick(day)}
+                >
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: 700,
+                      mb: 0.5,
+                      fontSize: '0.875rem',
+                    }}
+                  >
+                    {day.date.getDate()}
+                  </Typography>
+                  
+                  {day.holidays.length > 0 && (
+                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0.25 }}>
+                      {day.holidays.slice(0, 2).map((holiday, idx) => {
+                        const typeConfig = getTypeConfig(holiday.holidayType);
+                        return (
+                          <Chip
+                            key={idx}
+                            label={holiday.holidayName.length > 10 
+                              ? holiday.holidayName.substring(0, 10) + '...' 
+                              : holiday.holidayName}
+                            size="small"
+                            sx={{
+                              height: 20,
+                              fontSize: '0.65rem',
+                              fontWeight: 600,
+                              bgcolor: typeConfig.color,
+                              color: 'white',
+                              '& .MuiChip-label': {
+                                px: 0.5,
+                              },
+                            }}
+                            title={holiday.holidayName}
+                          />
+                        );
+                      })}
+                      {day.holidays.length > 2 && (
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            fontSize: '0.6rem',
+                            color: 'text.secondary',
+                            textAlign: 'center',
+                            fontStyle: 'italic',
+                            mt: 0.25,
+                          }}
+                        >
+                          +{day.holidays.length - 2} more
+                        </Typography>
+                      )}
+                    </Box>
+                  )}
+                </Paper>
+              </Grid>
+            ))}
+          </Grid>
+        </CardContent>
+      </Card>
 
       {/* Holiday Details Modal */}
       {showModal && selectedDate && (
@@ -1497,7 +1398,7 @@ const HolidayCalendar = () => {
           }
         `}
       </style>
-    </div>
+    </Container>
   );
 };
 

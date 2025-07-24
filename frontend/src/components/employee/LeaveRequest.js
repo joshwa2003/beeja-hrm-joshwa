@@ -1,6 +1,45 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { leaveAPI, authAPI } from '../../utils/api';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  Grid,
+  TextField,
+  MenuItem,
+  FormControlLabel,
+  Switch,
+  Alert,
+  LinearProgress,
+  Chip,
+  Paper,
+  Divider,
+  Container,
+  FormControl,
+  InputLabel,
+  Select,
+  IconButton,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  CircularProgress,
+} from '@mui/material';
+import {
+  CalendarToday,
+  Person,
+  Send,
+  AttachFile,
+  Delete,
+  CheckCircle,
+  Phone,
+  Lightbulb,
+  PieChart,
+  Assignment,
+} from '@mui/icons-material';
 
 const LeaveRequest = () => {
   const { user } = useAuth();
@@ -240,434 +279,493 @@ const LeaveRequest = () => {
   const availableBalance = getAvailableBalance();
 
   return (
-    <div className="container-fluid">
+    <Container maxWidth={false} sx={{ py: 3 }}>
       {/* Page Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h2 className="mb-1">Apply for Leave</h2>
-          <p className="text-muted">Submit a new leave request</p>
-        </div>
-      </div>
+      <Box
+        sx={{
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          borderRadius: 3,
+          p: 4,
+          mb: 4,
+          color: 'white',
+        }}
+      >
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box>
+            <Typography variant="h3" sx={{ fontWeight: 700, mb: 1, display: 'flex', alignItems: 'center' }}>
+              <CalendarToday sx={{ mr: 2, fontSize: '2.5rem' }} />
+              Apply for Leave
+            </Typography>
+            <Typography variant="h6" sx={{ opacity: 0.9 }}>
+              Submit a new leave request
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
 
-      <div className="row">
+      {/* Alerts */}
+      {error && (
+        <Alert
+          severity="error"
+          onClose={() => setError('')}
+          sx={{ mb: 3, borderRadius: 2 }}
+        >
+          {error}
+        </Alert>
+      )}
+
+      {success && (
+        <Alert
+          severity="success"
+          onClose={() => setSuccess('')}
+          sx={{ mb: 3, borderRadius: 2 }}
+        >
+          {success}
+        </Alert>
+      )}
+
+      <Grid container spacing={3}>
         {/* Leave Request Form */}
-        <div className="col-lg-8">
-          <div className="card">
-            <div className="card-header">
-              <h5 className="card-title mb-0">
-                <i className="bi bi-calendar-plus me-2"></i>
+        <Grid item xs={12} lg={8}>
+          <Card sx={{ borderRadius: 3 }}>
+            <CardContent sx={{ p: 4 }}>
+              <Typography variant="h5" sx={{ mb: 3, display: 'flex', alignItems: 'center', color: 'primary.main' }}>
+                <Assignment sx={{ mr: 2 }} />
                 Leave Request Form
-              </h5>
-            </div>
-            <div className="card-body">
-              {error && (
-                <div className="alert alert-danger alert-dismissible fade show" role="alert">
-                  {error}
-                  <button type="button" className="btn-close" onClick={() => setError('')}></button>
-                </div>
-              )}
-
-              {success && (
-                <div className="alert alert-success alert-dismissible fade show" role="alert">
-                  {success}
-                  <button type="button" className="btn-close" onClick={() => setSuccess('')}></button>
-                </div>
-              )}
+              </Typography>
 
               <form onSubmit={handleSubmit}>
                 {/* Employee Details (Auto-filled) */}
-                <div className="row mb-4">
-                  <div className="col-12">
-                    <h6 className="text-primary mb-3">
-                      <i className="bi bi-person me-2"></i>
-                      Employee Details
-                    </h6>
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Employee ID</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                  value={profile?.employeeId || user?.employeeId || 'N/A'}
-                      disabled
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Employee Name</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                  value={`${profile?.firstName || user?.firstName} ${profile?.lastName || user?.lastName}`}
-                      disabled
-                    />
-                  </div>
-                  <div className="col-md-6 mt-3">
-                    <label className="form-label">Department</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={profile?.department?.name || user?.department?.name || user?.department || 'N/A'}
-                      disabled
-                    />
-                  </div>
-                  <div className="col-md-6 mt-3">
-                    <label className="form-label">Designation</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={profile?.designation || user?.designation || 'N/A'}
-                      disabled
-                    />
-                  </div>
-                </div>
+                <Box sx={{ mb: 4 }}>
+                  <Typography variant="h6" sx={{ mb: 3, display: 'flex', alignItems: 'center', color: 'primary.main' }}>
+                    <Person sx={{ mr: 1 }} />
+                    Employee Details
+                  </Typography>
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        label="Employee ID"
+                        value={profile?.employeeId || user?.employeeId || ''}
+                        disabled
+                        variant="outlined"
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        label="Employee Name"
+                        value={`${profile?.firstName || user?.firstName || ''} ${profile?.lastName || user?.lastName || ''}`.trim()}
+                        disabled
+                        variant="outlined"
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        label="Department"
+                        value={profile?.department?.name || user?.department?.name || user?.department || ''}
+                        disabled
+                        variant="outlined"
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        label="Designation"
+                        value={profile?.designation || user?.designation || ''}
+                        disabled
+                        variant="outlined"
+                      />
+                    </Grid>
+                  </Grid>
+                </Box>
+
+                <Divider sx={{ my: 4 }} />
 
                 {/* Leave Details */}
-                <div className="row mb-4">
-                  <div className="col-12">
-                    <h6 className="text-primary mb-3">
-                      <i className="bi bi-calendar3 me-2"></i>
-                      Leave Details
-                    </h6>
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Leave Type *</label>
-                    <select
-                      className="form-select"
-                      name="leaveType"
-                      value={formData.leaveType}
-                      onChange={handleInputChange}
-                      required
-                    >
-                      <option value="">Select Leave Type</option>
-                      {leaveTypes.map(type => (
-                        <option key={type.value} value={type.value}>
-                          {type.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Half Day Leave?</label>
-                    <div className="form-check form-switch">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        name="isHalfDay"
-                        checked={formData.isHalfDay}
-                        onChange={handleInputChange}
+                <Box sx={{ mb: 4 }}>
+                  <Typography variant="h6" sx={{ mb: 3, display: 'flex', alignItems: 'center', color: 'primary.main' }}>
+                    <CalendarToday sx={{ mr: 1 }} />
+                    Leave Details
+                  </Typography>
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} md={6}>
+                      <FormControl fullWidth required>
+                        <InputLabel>Leave Type</InputLabel>
+                        <Select
+                          name="leaveType"
+                          value={formData.leaveType}
+                          onChange={handleInputChange}
+                          label="Leave Type"
+                        >
+                          {leaveTypes.map(type => (
+                            <MenuItem key={type.value} value={type.value}>
+                              {type.label}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            name="isHalfDay"
+                            checked={formData.isHalfDay}
+                            onChange={handleInputChange}
+                          />
+                        }
+                        label="Half Day Leave"
                       />
-                      <label className="form-check-label">
-                        Yes, this is a half day leave
-                      </label>
-                    </div>
-                  </div>
-                  
-                  {formData.isHalfDay && (
-                    <div className="col-md-6 mt-3">
-                      <label className="form-label">Half Day Period</label>
-                      <select
-                        className="form-select"
-                        name="halfDayPeriod"
-                        value={formData.halfDayPeriod}
+                    </Grid>
+                    
+                    {formData.isHalfDay && (
+                      <Grid item xs={12} md={6}>
+                        <FormControl fullWidth>
+                          <InputLabel>Half Day Period</InputLabel>
+                          <Select
+                            name="halfDayPeriod"
+                            value={formData.halfDayPeriod}
+                            onChange={handleInputChange}
+                            label="Half Day Period"
+                          >
+                            <MenuItem value="Morning">Morning</MenuItem>
+                            <MenuItem value="Afternoon">Afternoon</MenuItem>
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                    )}
+
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        type="date"
+                        label="Start Date"
+                        name="startDate"
+                        value={formData.startDate}
                         onChange={handleInputChange}
-                      >
-                        <option value="Morning">Morning</option>
-                        <option value="Afternoon">Afternoon</option>
-                      </select>
-                    </div>
-                  )}
+                        InputLabelProps={{ shrink: true }}
+                        inputProps={{ min: new Date().toISOString().split('T')[0] }}
+                        required
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        type="date"
+                        label="End Date"
+                        name="endDate"
+                        value={formData.endDate}
+                        onChange={handleInputChange}
+                        InputLabelProps={{ shrink: true }}
+                        inputProps={{ min: formData.startDate || new Date().toISOString().split('T')[0] }}
+                        required
+                      />
+                    </Grid>
 
-                  <div className="col-md-6 mt-3">
-                    <label className="form-label">Start Date *</label>
-                    <input
-                      type="date"
-                      className="form-control"
-                      name="startDate"
-                      value={formData.startDate}
-                      onChange={handleInputChange}
-                      min={new Date().toISOString().split('T')[0]}
-                      required
-                    />
-                  </div>
-                  <div className="col-md-6 mt-3">
-                    <label className="form-label">End Date *</label>
-                    <input
-                      type="date"
-                      className="form-control"
-                      name="endDate"
-                      value={formData.endDate}
-                      onChange={handleInputChange}
-                      min={formData.startDate || new Date().toISOString().split('T')[0]}
-                      required
-                    />
-                  </div>
+                    {totalDays > 0 && (
+                      <Grid item xs={12}>
+                        <Alert severity="info" sx={{ borderRadius: 2 }}>
+                          <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                            Total Leave Days: {totalDays}
+                            {availableBalance !== null && (
+                              <Typography component="span" sx={{ ml: 3 }}>
+                                Available Balance: {availableBalance} days
+                              </Typography>
+                            )}
+                          </Typography>
+                        </Alert>
+                      </Grid>
+                    )}
 
-                  {totalDays > 0 && (
-                    <div className="col-12 mt-3">
-                      <div className="alert alert-info">
-                        <strong>Total Leave Days: {totalDays}</strong>
-                        {availableBalance !== null && (
-                          <span className="ms-3">
-                            Available Balance: {availableBalance} days
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        multiline
+                        rows={4}
+                        label="Reason for Leave"
+                        name="reason"
+                        value={formData.reason}
+                        onChange={handleInputChange}
+                        placeholder="Please provide a detailed reason for your leave request"
+                        inputProps={{ maxLength: 500 }}
+                        helperText={`${formData.reason.length}/500 characters`}
+                        required
+                      />
+                    </Grid>
+                  </Grid>
+                </Box>
 
-                  <div className="col-12 mt-3">
-                    <label className="form-label">Reason for Leave *</label>
-                    <textarea
-                      className="form-control"
-                      name="reason"
-                      value={formData.reason}
-                      onChange={handleInputChange}
-                      rows="3"
-                      placeholder="Please provide a detailed reason for your leave request"
-                      maxLength="500"
-                      required
-                    ></textarea>
-                    <small className="text-muted">
-                      {formData.reason.length}/500 characters
-                    </small>
-                  </div>
-                </div>
+                <Divider sx={{ my: 4 }} />
 
                 {/* Handover Information */}
-                <div className="row mb-4">
-                  <div className="col-12">
-                    <h6 className="text-primary mb-3">
-                      <i className="bi bi-arrow-left-right me-2"></i>
-                      Handover Information (Optional)
-                    </h6>
-                  </div>
-                  <div className="col-12">
-                    <label className="form-label">Handover Notes</label>
-                    <textarea
-                      className="form-control"
-                      name="handoverNotes"
-                      value={formData.handoverNotes}
-                      onChange={handleInputChange}
-                      rows="3"
-                      placeholder="Provide details about work handover, pending tasks, or important information for colleagues"
-                      maxLength="1000"
-                    ></textarea>
-                    <small className="text-muted">
-                      {formData.handoverNotes.length}/1000 characters
-                    </small>
-                  </div>
-                </div>
+                <Box sx={{ mb: 4 }}>
+                  <Typography variant="h6" sx={{ mb: 3, display: 'flex', alignItems: 'center', color: 'primary.main' }}>
+                    <Assignment sx={{ mr: 1 }} />
+                    Handover Information (Optional)
+                  </Typography>
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={4}
+                    label="Handover Notes"
+                    name="handoverNotes"
+                    value={formData.handoverNotes}
+                    onChange={handleInputChange}
+                    placeholder="Provide details about work handover, pending tasks, or important information for colleagues"
+                    inputProps={{ maxLength: 1000 }}
+                    helperText={`${formData.handoverNotes.length}/1000 characters`}
+                  />
+                </Box>
 
                 {/* Document Upload Section */}
                 {shouldShowDocumentUpload() && (
-                  <div className="row mb-4">
-                    <div className="col-12">
-                      <h6 className="text-primary mb-3">
-                        <i className="bi bi-paperclip me-2"></i>
-                        Upload Supporting Documents (Optional)
-                      </h6>
-                      <p className="text-muted small mb-3">
-                        For {formData.leaveType} leave, you may upload supporting documents such as medical certificates, 
-                        official letters, etc. Accepted formats: PDF, JPG, PNG (Max 5MB per file, up to 5 files)
-                      </p>
-                    </div>
+                  <Box sx={{ mb: 4 }}>
+                    <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', color: 'primary.main' }}>
+                      <AttachFile sx={{ mr: 1 }} />
+                      Upload Supporting Documents (Optional)
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                      For {formData.leaveType} leave, you may upload supporting documents such as medical certificates, 
+                      official letters, etc. Accepted formats: PDF, JPG, PNG (Max 5MB per file, up to 5 files)
+                    </Typography>
                     
-                    <div className="col-12">
-                      <div className="mb-3">
+                    <Box sx={{ mb: 3 }}>
+                      <Button
+                        variant="outlined"
+                        component="label"
+                        startIcon={<AttachFile />}
+                        disabled={loading || isUploading}
+                        sx={{ mb: 1 }}
+                      >
+                        Select Files
                         <input
                           type="file"
-                          className="form-control"
+                          hidden
                           multiple
                           accept=".pdf,.jpg,.jpeg,.png"
                           onChange={handleFileSelect}
-                          disabled={loading || isUploading}
                         />
-                        <small className="text-muted">
-                          Select PDF, JPG, or PNG files (Max 5MB each, up to 5 files total)
-                        </small>
-                      </div>
-                      
-                      {/* Selected Files Preview */}
-                      {selectedFiles.length > 0 && (
-                        <div className="border rounded p-3 bg-light">
-                          <h6 className="mb-3">Selected Files ({selectedFiles.length}/5):</h6>
-                          {selectedFiles.map((file, index) => (
-                            <div key={index} className="d-flex justify-content-between align-items-center mb-2 p-2 bg-white rounded border">
-                              <div className="d-flex align-items-center">
-                                <i className={`bi ${file.type === 'application/pdf' ? 'bi-file-earmark-pdf text-danger' : 'bi-file-earmark-image text-primary'} me-2`}></i>
-                                <div>
-                                  <div className="fw-semibold">{file.name}</div>
-                                  <small className="text-muted">{formatFileSize(file.size)}</small>
-                                </div>
-                              </div>
-                              <button
-                                type="button"
-                                className="btn btn-sm btn-outline-danger"
-                                onClick={() => removeFile(index)}
-                                disabled={loading || isUploading}
-                              >
-                                <i className="bi bi-trash"></i>
-                              </button>
-                            </div>
-                          ))}
-                          
-                          {/* Upload Progress */}
-                          {isUploading && (
-                            <div className="mt-3">
-                              <div className="d-flex align-items-center mb-2">
-                                <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                                <span>Uploading documents...</span>
-                              </div>
-                              <div className="progress">
-                                <div 
-                                  className="progress-bar progress-bar-striped progress-bar-animated" 
-                                  role="progressbar" 
-                                  style={{ width: `${uploadProgress}%` }}
-                                ></div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                      </Button>
+                      <Typography variant="caption" display="block" color="text.secondary">
+                        Select PDF, JPG, or PNG files (Max 5MB each, up to 5 files total)
+                      </Typography>
+                    </Box>
+                    
+                    {/* Selected Files Preview */}
+                    {selectedFiles.length > 0 && (
+                      <Paper sx={{ p: 3, bgcolor: 'grey.50' }}>
+                        <Typography variant="h6" sx={{ mb: 3 }}>
+                          Selected Files ({selectedFiles.length}/5):
+                        </Typography>
+                        {selectedFiles.map((file, index) => (
+                          <Paper key={index} sx={{ p: 2, mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <Box sx={{ mr: 2 }}>
+                                {file.type === 'application/pdf' ? (
+                                  <AttachFile color="error" />
+                                ) : (
+                                  <AttachFile color="primary" />
+                                )}
+                              </Box>
+                              <Box>
+                                <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                                  {file.name}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {formatFileSize(file.size)}
+                                </Typography>
+                              </Box>
+                            </Box>
+                            <IconButton
+                              onClick={() => removeFile(index)}
+                              disabled={loading || isUploading}
+                              color="error"
+                            >
+                              <Delete />
+                            </IconButton>
+                          </Paper>
+                        ))}
+                        
+                        {/* Upload Progress */}
+                        {isUploading && (
+                          <Box sx={{ mt: 3 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                              <CircularProgress size={20} sx={{ mr: 2 }} />
+                              <Typography>Uploading documents...</Typography>
+                            </Box>
+                            <LinearProgress
+                              variant="determinate"
+                              value={uploadProgress}
+                              sx={{ height: 8, borderRadius: 4 }}
+                            />
+                          </Box>
+                        )}
+                      </Paper>
+                    )}
+                  </Box>
                 )}
 
+                <Divider sx={{ my: 4 }} />
+
                 {/* Emergency Contact */}
-                <div className="row mb-4">
-                  <div className="col-12">
-                    <h6 className="text-primary mb-3">
-                      <i className="bi bi-telephone me-2"></i>
-                      Emergency Contact (Optional)
-                    </h6>
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label">Contact Name</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="emergencyContact.name"
-                      value={formData.emergencyContact.name}
-                      onChange={handleInputChange}
-                      placeholder="Full name"
-                    />
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label">Phone Number</label>
-                    <input
-                      type="tel"
-                      className="form-control"
-                      name="emergencyContact.phone"
-                      value={formData.emergencyContact.phone}
-                      onChange={handleInputChange}
-                      placeholder="+1 (555) 123-4567"
-                    />
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label">Relationship</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="emergencyContact.relationship"
-                      value={formData.emergencyContact.relationship}
-                      onChange={handleInputChange}
-                      placeholder="e.g., Spouse, Parent, Friend"
-                    />
-                  </div>
-                </div>
+                <Box sx={{ mb: 4 }}>
+                  <Typography variant="h6" sx={{ mb: 3, display: 'flex', alignItems: 'center', color: 'primary.main' }}>
+                    <Phone sx={{ mr: 1 }} />
+                    Emergency Contact (Optional)
+                  </Typography>
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} md={4}>
+                      <TextField
+                        fullWidth
+                        label="Contact Name"
+                        name="emergencyContact.name"
+                        value={formData.emergencyContact.name}
+                        onChange={handleInputChange}
+                        placeholder="Full name"
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                      <TextField
+                        fullWidth
+                        label="Phone Number"
+                        name="emergencyContact.phone"
+                        value={formData.emergencyContact.phone}
+                        onChange={handleInputChange}
+                        placeholder="Phone number"
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                      <TextField
+                        fullWidth
+                        label="Relationship"
+                        name="emergencyContact.relationship"
+                        value={formData.emergencyContact.relationship}
+                        onChange={handleInputChange}
+                        placeholder="e.g., Spouse, Parent, Friend"
+                      />
+                    </Grid>
+                  </Grid>
+                </Box>
 
                 {/* Submit Button */}
-                <div className="d-flex justify-content-end">
-                  <button
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <Button
                     type="submit"
-                    className="btn btn-primary"
+                    variant="contained"
+                    size="large"
                     disabled={loading || isUploading}
+                    startIcon={loading || isUploading ? <CircularProgress size={20} /> : <Send />}
+                    sx={{
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      px: 4,
+                      py: 1.5,
+                    }}
                   >
-                    {loading || isUploading ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                        {isUploading ? 'Uploading Documents...' : 'Submitting...'}
-                      </>
-                    ) : (
-                      <>
-                        <i className="bi bi-send me-2"></i>
-                        Submit Leave Request
-                      </>
-                    )}
-                  </button>
-                </div>
+                    {loading || isUploading ? 
+                      (isUploading ? 'Uploading Documents...' : 'Submitting...') : 
+                      'Submit Leave Request'
+                    }
+                  </Button>
+                </Box>
               </form>
-            </div>
-          </div>
-        </div>
+            </CardContent>
+          </Card>
+        </Grid>
 
         {/* Leave Balance Sidebar */}
-        <div className="col-lg-4">
-          <div className="card">
-            <div className="card-header">
-              <h5 className="card-title mb-0">
-                <i className="bi bi-pie-chart me-2"></i>
+        <Grid item xs={12} lg={4}>
+          <Card sx={{ borderRadius: 3, mb: 3 }}>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 3, display: 'flex', alignItems: 'center', color: 'primary.main' }}>
+                <PieChart sx={{ mr: 1 }} />
                 Leave Balance
-              </h5>
-            </div>
-            <div className="card-body">
+              </Typography>
               {Object.entries(leaveBalance).map(([type, balance]) => (
-                <div key={type} className="mb-3">
-                  <div className="d-flex justify-content-between align-items-center mb-1">
-                    <span className="fw-semibold text-capitalize">{type} Leave</span>
-                    <span className="badge bg-primary">{balance.available}/{balance.total}</span>
-                  </div>
-                  <div className="progress" style={{ height: '8px' }}>
-                    <div
-                      className="progress-bar"
-                      role="progressbar"
-                      style={{ width: `${(balance.available / balance.total) * 100}%` }}
-                    ></div>
-                  </div>
-                  <small className="text-muted">
+                <Box key={type} sx={{ mb: 3 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                    <Typography variant="body1" sx={{ fontWeight: 600, textTransform: 'capitalize' }}>
+                      {type} Leave
+                    </Typography>
+                    <Chip 
+                      label={`${balance.available}/${balance.total}`} 
+                      color="primary" 
+                      size="small"
+                    />
+                  </Box>
+                  <LinearProgress
+                    variant="determinate"
+                    value={(balance.available / balance.total) * 100}
+                    sx={{ height: 8, borderRadius: 4, mb: 1 }}
+                  />
+                  <Typography variant="caption" color="text.secondary">
                     Used: {balance.used} days
-                  </small>
-                </div>
+                  </Typography>
+                </Box>
               ))}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Quick Tips */}
-          <div className="card mt-4">
-            <div className="card-header">
-              <h5 className="card-title mb-0">
-                <i className="bi bi-lightbulb me-2"></i>
+          <Card sx={{ borderRadius: 3 }}>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 3, display: 'flex', alignItems: 'center', color: 'primary.main' }}>
+                <Lightbulb sx={{ mr: 1 }} />
                 Quick Tips
-              </h5>
-            </div>
-            <div className="card-body">
-              <ul className="list-unstyled mb-0">
-                <li className="mb-2">
-                  <i className="bi bi-check-circle text-success me-2"></i>
-                  Submit requests at least 2 days in advance
-                </li>
-                <li className="mb-2">
-                  <i className="bi bi-check-circle text-success me-2"></i>
-                  Provide detailed handover notes for longer leaves
-                </li>
-                <li className="mb-2">
-                  <i className="bi bi-check-circle text-success me-2"></i>
-                  Check your leave balance before applying
-                </li>
-                <li className="mb-2">
-                  <i className="bi bi-check-circle text-success me-2"></i>
-                  Upload supporting documents for medical/emergency leaves
-                </li>
-                <li className="mb-0">
-                  <i className="bi bi-check-circle text-success me-2"></i>
-                  Contact HR for any policy questions
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+              </Typography>
+              <List dense>
+                <ListItem>
+                  <ListItemIcon>
+                    <CheckCircle color="success" fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Submit requests at least 2 days in advance"
+                    primaryTypographyProps={{ variant: 'body2' }}
+                  />
+                </ListItem>
+                <ListItem>
+                  <ListItemIcon>
+                    <CheckCircle color="success" fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Provide detailed handover notes for longer leaves"
+                    primaryTypographyProps={{ variant: 'body2' }}
+                  />
+                </ListItem>
+                <ListItem>
+                  <ListItemIcon>
+                    <CheckCircle color="success" fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Check your leave balance before applying"
+                    primaryTypographyProps={{ variant: 'body2' }}
+                  />
+                </ListItem>
+                <ListItem>
+                  <ListItemIcon>
+                    <CheckCircle color="success" fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Upload supporting documents for medical/emergency leaves"
+                    primaryTypographyProps={{ variant: 'body2' }}
+                  />
+                </ListItem>
+                <ListItem>
+                  <ListItemIcon>
+                    <CheckCircle color="success" fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Contact HR for any policy questions"
+                    primaryTypographyProps={{ variant: 'body2' }}
+                  />
+                </ListItem>
+              </List>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+    </Container>
   );
 };
 

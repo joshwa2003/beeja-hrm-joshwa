@@ -1,6 +1,58 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { teamAPI, userAPI, departmentAPI } from '../../utils/api';
+import {
+  Box,
+  Card,
+  CardContent,
+  CardHeader,
+  Typography,
+  Button,
+  Grid,
+  Alert,
+  CircularProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Chip,
+  TextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
+  Container,
+  Switch,
+  FormControlLabel,
+  Tooltip,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Checkbox,
+  FormGroup,
+  Divider,
+  Avatar,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  Paper,
+} from '@mui/material';
+import {
+  Add,
+  Edit,
+  Delete,
+  People,
+  Close,
+  PersonAdd,
+  Group,
+  Business,
+  Warning,
+} from '@mui/icons-material';
 
 const TeamManagement = () => {
   const { user, hasAnyRole } = useAuth();
@@ -544,773 +596,1110 @@ const TeamManagement = () => {
     );
   };
 
+  const getInitials = (firstName, lastName) => {
+    if (!firstName && !lastName) return 'U';
+    const first = firstName ? firstName.charAt(0).toUpperCase() : '';
+    const last = lastName ? lastName.charAt(0).toUpperCase() : '';
+    return first + last;
+  };
+
   if (loading && teams.length === 0) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: '400px' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '400px',
+        }}
+      >
+        <CircularProgress size={60} sx={{ color: '#20C997' }} />
+      </Box>
     );
   }
 
   return (
-    <div className="container-fluid">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h2 className="mb-1">Team Management</h2>
-          <p className="text-muted">
+    <Container maxWidth={false} sx={{ py: 3 }}>
+      {/* Page Header */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 700, color: '#0A192F', mb: 1 }}>
+            Team Management
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
             {isTeamLeader ? 'View your team details' : 
              isTeamManager ? 'Manage your assigned teams' : 
              'Manage all teams and their members'}
-          </p>
-        </div>
-        <div className="d-flex gap-2">
-          <span className="badge bg-primary fs-6">{totalTeams} Total Teams</span>
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          <Chip 
+            label={`${totalTeams} Total Teams`} 
+            color="primary" 
+            sx={{ fontWeight: 600 }} 
+          />
           {canCreateTeams && (
-            <button className="btn btn-primary" onClick={handleOpenAddModal}>
-              <i className="bi bi-plus-circle me-1"></i> Add Team
-            </button>
+            <Button
+              variant="contained"
+              startIcon={<Add />}
+              onClick={handleOpenAddModal}
+              sx={{
+                backgroundColor: '#20C997',
+                '&:hover': {
+                  backgroundColor: '#17A085',
+                },
+                borderRadius: 2,
+                px: 3,
+                py: 1.5,
+                fontWeight: 600,
+              }}
+            >
+              Add Team
+            </Button>
           )}
-        </div>
-      </div>
+        </Box>
+      </Box>
 
+      {/* Success Alert */}
       {success && (
-        <div className="alert alert-success alert-dismissible fade show" role="alert">
-          <i className="bi bi-check-circle-fill me-2"></i>
+        <Alert
+          severity="success"
+          onClose={() => setSuccess('')}
+          sx={{ mb: 3, borderRadius: 2 }}
+        >
           {success}
-          <button 
-            type="button" 
-            className="btn-close" 
-            onClick={() => setSuccess('')}
-          ></button>
-        </div>
+        </Alert>
       )}
 
+      {/* Error Alert */}
       {error && (
-        <div className="alert alert-danger alert-dismissible fade show" role="alert">
-          <i className="bi bi-exclamation-triangle-fill me-2"></i>
+        <Alert
+          severity="error"
+          onClose={() => setError('')}
+          sx={{ mb: 3, borderRadius: 2 }}
+        >
           {error}
-          <button 
-            type="button" 
-            className="btn-close" 
-            onClick={() => setError('')}
-          ></button>
-        </div>
+        </Alert>
       )}
 
       {/* Teams Table */}
-      <div className="card">
-        <div className="card-body">
+      <Card sx={{ borderRadius: 3 }}>
+        <CardContent>
           {loading ? (
-            <div className="text-center py-4">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-            </div>
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <CircularProgress size={60} sx={{ color: '#20C997' }} />
+            </Box>
           ) : teams.length === 0 ? (
-            <div className="text-center py-5">
-              <i className="bi bi-people text-muted" style={{ fontSize: '3rem' }}></i>
-              <h5 className="mt-3 text-muted">No teams found</h5>
-              <p className="text-muted">
+            <Box sx={{ textAlign: 'center', py: 8 }}>
+              <Group sx={{ fontSize: '4rem', color: 'text.disabled', mb: 2 }} />
+              <Typography variant="h5" sx={{ color: 'text.secondary', mb: 1 }}>
+                No teams found
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
                 {canCreateTeams ? 'Create your first team to get started' : 'No teams available'}
-              </p>
-            </div>
+              </Typography>
+            </Box>
           ) : (
-            <div className="table-responsive">
-              <table className="table table-hover">
-                <thead className="table-light">
-                  <tr>
-                    <th>Team</th>
-                    <th>Team Manager</th>
-                    <th>Team Leader</th>
-                    <th>Members</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: 600, color: '#0A192F' }}>Team</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: '#0A192F' }}>Team Manager</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: '#0A192F' }}>Team Leader</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: '#0A192F' }}>Members</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: '#0A192F' }}>Status</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: '#0A192F' }}>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
                   {teams.map((team) => (
-                    <tr key={team._id}>
-                      <td>
-                        <div>
-                          <div className="fw-semibold">{team.name}</div>
-                          <small className="text-muted">
-                            <code>{team.code}</code>
-                            {team.description && ` • ${team.description}`}
-                          </small>
-                        </div>
-                      </td>
-                      <td>
+                    <TableRow key={team._id} hover>
+                      <TableCell>
+                        <Box>
+                          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                            {team.name}
+                          </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                            <Chip
+                              label={team.code}
+                              variant="outlined"
+                              size="small"
+                              sx={{ fontFamily: 'monospace', fontWeight: 600 }}
+                            />
+                            {team.description && (
+                              <Typography variant="caption" color="text.secondary">
+                                • {team.description}
+                              </Typography>
+                            )}
+                          </Box>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
                         {team.teamManager ? (
-                          <div>
-                            <div className="fw-semibold">
-                              {team.teamManager.firstName} {team.teamManager.lastName}
-                            </div>
-                            <small className="text-muted">{team.teamManager.email}</small>
-                          </div>
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <Avatar
+                              sx={{
+                                bgcolor: '#0A192F',
+                                color: 'white',
+                                width: 32,
+                                height: 32,
+                                mr: 1.5,
+                                fontSize: '0.875rem',
+                                fontWeight: 600,
+                              }}
+                            >
+                              {getInitials(team.teamManager.firstName, team.teamManager.lastName)}
+                            </Avatar>
+                            <Box>
+                              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                {team.teamManager.firstName} {team.teamManager.lastName}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {team.teamManager.email}
+                              </Typography>
+                            </Box>
+                          </Box>
                         ) : (
-                          <span className="text-muted">Not assigned</span>
+                          <Typography variant="body2" color="text.secondary">
+                            Not assigned
+                          </Typography>
                         )}
-                      </td>
-                      <td>
+                      </TableCell>
+                      <TableCell>
                         {team.teamLeader ? (
-                          <div>
-                            <div className="fw-semibold">
-                              {team.teamLeader.firstName} {team.teamLeader.lastName}
-                            </div>
-                            <small className="text-muted">{team.teamLeader.email}</small>
-                          </div>
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <Avatar
+                              sx={{
+                                bgcolor: '#20C997',
+                                color: 'white',
+                                width: 32,
+                                height: 32,
+                                mr: 1.5,
+                                fontSize: '0.875rem',
+                                fontWeight: 600,
+                              }}
+                            >
+                              {getInitials(team.teamLeader.firstName, team.teamLeader.lastName)}
+                            </Avatar>
+                            <Box>
+                              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                {team.teamLeader.firstName} {team.teamLeader.lastName}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {team.teamLeader.email}
+                              </Typography>
+                            </Box>
+                          </Box>
                         ) : (
-                          <span className="text-muted">Not assigned</span>
+                          <Typography variant="body2" color="text.secondary">
+                            Not assigned
+                          </Typography>
                         )}
-                      </td>
-                      <td>
-                        <span className="badge bg-info">
-                          {team.currentSize || 0} / {team.maxSize}
-                        </span>
-                      </td>
-                      <td>
-                        {getStatusBadge(team.isActive)}
-                      </td>
-                      <td>
-                        <div className="d-flex align-items-center gap-2">
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={`${team.currentSize || 0} / ${team.maxSize}`}
+                          color="info"
+                          size="small"
+                          sx={{ fontWeight: 600 }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={team.isActive ? 'Active' : 'Inactive'}
+                          color={team.isActive ? 'success' : 'error'}
+                          size="small"
+                          sx={{ fontWeight: 500 }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           {/* Status Toggle */}
                           {canToggleStatus(team) && (
-                            <div className="form-check form-switch">
-                              <input
-                                className="form-check-input"
-                                type="checkbox"
-                                role="switch"
-                                id={`statusToggle-${team._id}`}
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <Switch
                                 checked={team.isActive}
                                 onChange={() => handleToggleStatus(team._id, team.isActive)}
                                 disabled={toggleLoading[team._id]}
-                                title={team.isActive ? 'Click to deactivate' : 'Click to activate'}
+                                size="small"
+                                sx={{
+                                  '& .MuiSwitch-switchBase.Mui-checked': {
+                                    color: '#20C997',
+                                  },
+                                  '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                    backgroundColor: '#20C997',
+                                  },
+                                }}
                               />
                               {toggleLoading[team._id] && (
-                                <div className="spinner-border spinner-border-sm ms-1" role="status">
-                                  <span className="visually-hidden">Loading...</span>
-                                </div>
+                                <CircularProgress size={16} sx={{ ml: 1 }} />
                               )}
-                            </div>
+                            </Box>
                           )}
                           
                           {/* Action Buttons */}
-                          <div className="btn-group" role="group">
-                            <button
-                              className="btn btn-sm btn-outline-primary"
-                              title="Manage Members"
-                              onClick={() => handleOpenMembersModal(team)}
-                              disabled={!canManageMembers(team)}
-                            >
-                              <i className="bi bi-people"></i>
-                            </button>
-                            <button
-                              className="btn btn-sm btn-outline-secondary"
-                              title="Edit Team"
-                              onClick={() => handleOpenEditModal(team)}
-                              disabled={!canEditTeam(team)}
-                            >
-                              <i className="bi bi-pencil"></i>
-                            </button>
-                            <button
-                              className="btn btn-sm btn-outline-danger"
-                              title="Delete Team"
-                              onClick={() => handleDeleteTeam(team._id, team.name)}
-                              disabled={!canDeleteTeam(team)}
-                            >
-                              <i className="bi bi-trash"></i>
-                            </button>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
+                          <Box sx={{ display: 'flex', gap: 0.5 }}>
+                            <Tooltip title="Manage Members">
+                              <IconButton
+                                size="small"
+                                onClick={() => handleOpenMembersModal(team)}
+                                disabled={!canManageMembers(team)}
+                                sx={{
+                                  color: '#20C997',
+                                  '&:hover': {
+                                    backgroundColor: 'rgba(32, 201, 151, 0.1)',
+                                  },
+                                }}
+                              >
+                                <People fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Edit Team">
+                              <IconButton
+                                size="small"
+                                onClick={() => handleOpenEditModal(team)}
+                                disabled={!canEditTeam(team)}
+                                sx={{
+                                  color: '#666',
+                                  '&:hover': {
+                                    backgroundColor: 'rgba(102, 102, 102, 0.1)',
+                                  },
+                                }}
+                              >
+                                <Edit fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Delete Team">
+                              <IconButton
+                                size="small"
+                                onClick={() => handleDeleteTeam(team._id, team.name)}
+                                disabled={!canDeleteTeam(team)}
+                                sx={{
+                                  color: '#F44336',
+                                  '&:hover': {
+                                    backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                                  },
+                                }}
+                              >
+                                <Delete fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </TableBody>
+              </Table>
+            </TableContainer>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Add Team Modal */}
-      {showAddModal && (
-        <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-lg">
-            <div className="modal-content">
-              <form onSubmit={handleAddTeam} noValidate>
-                <div className="modal-header">
-                  <h5 className="modal-title">Create New Team</h5>
-                  <button 
-                    type="button" 
-                    className="btn-close"
-                    onClick={() => {
-                      setShowAddModal(false);
-                      setValidationErrors({});
-                    }}
-                  ></button>
-                </div>
-                <div className="modal-body">
-                  <div className="row g-3">
-                    <div className="col-md-6">
-                      <label className="form-label">Team Name *</label>
-                      <input
-                        type="text"
-                        className={`form-control ${validationErrors.name ? 'is-invalid' : ''}`}
-                        name="name"
-                        value={addFormData.name}
-                        onChange={handleAddInputChange}
-                        placeholder="e.g., Development Team Alpha"
-                        required
-                      />
-                      {validationErrors.name && (
-                        <div className="invalid-feedback">
-                          {validationErrors.name}
-                        </div>
-                      )}
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Team Code *</label>
-                      <input
-                        type="text"
-                        className={`form-control ${validationErrors.code ? 'is-invalid' : ''}`}
-                        name="code"
-                        value={addFormData.code}
-                        onChange={handleAddInputChange}
-                        placeholder="e.g., DEV001"
-                        style={{ textTransform: 'uppercase' }}
-                        required
-                      />
-                      {validationErrors.code && (
-                        <div className="invalid-feedback">
-                          {validationErrors.code}
-                        </div>
-                      )}
-                    </div>
-                    <div className="col-md-12">
-                      <label className="form-label">Team Description</label>
-                      <textarea
-                        className="form-control"
-                        name="description"
-                        value={addFormData.description}
-                        onChange={handleAddInputChange}
-                        rows="2"
-                        placeholder="Brief description of the team's purpose"
-                      />
-                    </div>
-                    <div className="col-md-12">
-                      <label className="form-label">Max Team Size</label>
-                      <input
-                        type="number"
-                        className={`form-control ${validationErrors.maxSize ? 'is-invalid' : ''}`}
-                        name="maxSize"
-                        value={addFormData.maxSize}
-                        onChange={handleAddInputChange}
-                        min="1"
-                        max="50"
-                      />
-                      {validationErrors.maxSize && (
-                        <div className="invalid-feedback">
-                          {validationErrors.maxSize}
-                        </div>
-                      )}
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Team Manager *</label>
-                      <select
-                        className={`form-select ${validationErrors.teamManager ? 'is-invalid' : ''}`}
-                        name="teamManager"
-                        value={addFormData.teamManager}
-                        onChange={handleAddInputChange}
-                        required
-                      >
-                        <option value="">Select Team Manager</option>
-                        {teamManagers.map(manager => (
-                          <option key={manager._id} value={manager._id}>
-                            {manager.firstName} {manager.lastName} ({manager.email})
-                          </option>
-                        ))}
-                      </select>
-                      {validationErrors.teamManager && (
-                        <div className="invalid-feedback">
-                          {validationErrors.teamManager}
-                        </div>
-                      )}
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Team Leader *</label>
-                      <select
-                        className={`form-select ${validationErrors.teamLeader ? 'is-invalid' : ''}`}
-                        name="teamLeader"
-                        value={addFormData.teamLeader}
-                        onChange={handleAddInputChange}
-                        required
-                      >
-                        <option value="">Select Team Leader</option>
-                        {teamLeaders.map(leader => (
-                          <option key={leader._id} value={leader._id}>
-                            {leader.firstName} {leader.lastName} ({leader.email})
-                          </option>
-                        ))}
-                      </select>
-                      {validationErrors.teamLeader && (
-                        <div className="invalid-feedback">
-                          {validationErrors.teamLeader}
-                        </div>
-                      )}
-                    </div>
-                    <div className="col-md-12">
-                      <label className="form-label">Team Members</label>
-                      <div className="border rounded p-3" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                        {unassignedEmployees.length === 0 ? (
-                          <p className="text-muted mb-0">No unassigned employees available</p>
-                        ) : (
-                          unassignedEmployees.map(employee => (
-                            <div key={employee._id} className="form-check mb-2">
-                              <input
-                                className="form-check-input"
-                                type="checkbox"
-                                value={employee._id}
-                                id={`employee-${employee._id}`}
-                                checked={addFormData.members.includes(employee._id)}
-                                onChange={handleMembersChange}
-                              />
-                              <label className="form-check-label" htmlFor={`employee-${employee._id}`}>
-                                {employee.firstName} {employee.lastName} ({employee.email})
-                              </label>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                      {validationErrors.members && (
-                        <div className="invalid-feedback d-block">
-                          {validationErrors.members}
-                        </div>
-                      )}
-                      <small className="form-text text-muted">
-                        Select employees to add to this team (only unassigned employees are shown)
-                      </small>
-                    </div>
-                  </div>
-                </div>
-                <div className="modal-footer">
-                  <button 
-                    type="button" 
-                    className="btn btn-secondary"
-                    onClick={() => {
-                      setShowAddModal(false);
-                      setValidationErrors({});
-                    }}
-                  >
-                    Cancel
-                  </button>
-                  <button type="submit" className="btn btn-primary">
-                    Create Team
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Team Modal */}
-      {showEditModal && editingTeam && (
-        <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-lg">
-            <div className="modal-content">
-              <form onSubmit={handleEditTeam} noValidate>
-                <div className="modal-header">
-                  <h5 className="modal-title">Edit Team - {editingTeam.name}</h5>
-                  <button 
-                    type="button" 
-                    className="btn-close"
-                    onClick={() => {
-                      setShowEditModal(false);
-                      setEditingTeam(null);
-                      setValidationErrors({});
-                    }}
-                  ></button>
-                </div>
-                <div className="modal-body">
-                  <div className="row g-3">
-                    <div className="col-md-6">
-                      <label className="form-label">Team Name *</label>
-                      <input
-                        type="text"
-                        className={`form-control ${validationErrors.name ? 'is-invalid' : ''}`}
-                        name="name"
-                        value={editFormData.name}
-                        onChange={handleEditInputChange}
-                        placeholder="e.g., Development Team Alpha"
-                        required
-                      />
-                      {validationErrors.name && (
-                        <div className="invalid-feedback">
-                          {validationErrors.name}
-                        </div>
-                      )}
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Team Code</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={editingTeam.code}
-                        disabled
-                        style={{ backgroundColor: '#f8f9fa' }}
-                      />
-                      <small className="form-text text-muted">Team code cannot be changed</small>
-                    </div>
-                    <div className="col-md-12">
-                      <label className="form-label">Team Description</label>
-                      <textarea
-                        className="form-control"
-                        name="description"
-                        value={editFormData.description}
-                        onChange={handleEditInputChange}
-                        rows="2"
-                        placeholder="Brief description of the team's purpose"
-                      />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Max Team Size</label>
-                      <input
-                        type="number"
-                        className={`form-control ${validationErrors.maxSize ? 'is-invalid' : ''}`}
-                        name="maxSize"
-                        value={editFormData.maxSize}
-                        onChange={handleEditInputChange}
-                        min="1"
-                        max="50"
-                      />
-                      {validationErrors.maxSize && (
-                        <div className="invalid-feedback">
-                          {validationErrors.maxSize}
-                        </div>
-                      )}
-                    </div>
-                    <div className="col-md-6">
-                      <div className="form-check mt-4">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          name="isActive"
-                          id="isActive"
-                          checked={editFormData.isActive}
-                          onChange={handleEditInputChange}
-                        />
-                        <label className="form-check-label" htmlFor="isActive">
-                          Team is Active
-                        </label>
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Team Manager *</label>
-                      <select
-                        className={`form-select ${validationErrors.teamManager ? 'is-invalid' : ''}`}
-                        name="teamManager"
-                        value={editFormData.teamManager}
-                        onChange={handleEditInputChange}
-                        required
-                      >
-                        <option value="">Select Team Manager</option>
-                        {teamManagers.map(manager => (
-                          <option key={manager._id} value={manager._id}>
-                            {manager.firstName} {manager.lastName} ({manager.email})
-                          </option>
-                        ))}
-                      </select>
-                      {validationErrors.teamManager && (
-                        <div className="invalid-feedback">
-                          {validationErrors.teamManager}
-                        </div>
-                      )}
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Team Leader *</label>
-                      <select
-                        className={`form-select ${validationErrors.teamLeader ? 'is-invalid' : ''}`}
-                        name="teamLeader"
-                        value={editFormData.teamLeader}
-                        onChange={handleEditInputChange}
-                        required
-                      >
-                        <option value="">Select Team Leader</option>
-                        {teamLeaders.map(leader => (
-                          <option key={leader._id} value={leader._id}>
-                            {leader.firstName} {leader.lastName} ({leader.email})
-                          </option>
-                        ))}
-                      </select>
-                      {validationErrors.teamLeader && (
-                        <div className="invalid-feedback">
-                          {validationErrors.teamLeader}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className="modal-footer">
-                  <button 
-                    type="button" 
-                    className="btn btn-secondary"
-                    onClick={() => {
-                      setShowEditModal(false);
-                      setEditingTeam(null);
-                      setValidationErrors({});
-                    }}
-                  >
-                    Cancel
-                  </button>
-                  <button type="submit" className="btn btn-primary">
-                    Update Team
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Manage Members Modal */}
-      {showMembersModal && selectedTeam && (
-        <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-xl">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Manage Team Members - {selectedTeam.name}</h5>
-                <button 
-                  type="button" 
-                  className="btn-close"
-                  onClick={() => {
-                    setShowMembersModal(false);
-                    setSelectedTeam(null);
-                    setMemberFormData({ userId: '', role: 'Member' });
+      <Dialog
+        open={showAddModal}
+        onClose={() => {
+          setShowAddModal(false);
+          setValidationErrors({});
+        }}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: { borderRadius: 3 }
+        }}
+      >
+        <DialogTitle sx={{ pb: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Create New Team
+            </Typography>
+            <IconButton 
+              onClick={() => {
+                setShowAddModal(false);
+                setValidationErrors({});
+              }}
+              sx={{ color: 'text.secondary' }}
+            >
+              <Close />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <form onSubmit={handleAddTeam}>
+          <DialogContent>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Team Name"
+                  name="name"
+                  value={addFormData.name}
+                  onChange={handleAddInputChange}
+                  placeholder="e.g., Development Team Alpha"
+                  required
+                  error={!!validationErrors.name}
+                  helperText={validationErrors.name}
+                  sx={{ mb: 2 }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Team Code"
+                  name="code"
+                  value={addFormData.code}
+                  onChange={handleAddInputChange}
+                  placeholder="e.g., DEV001"
+                  inputProps={{
+                    maxLength: 10,
+                    style: { textTransform: 'uppercase' }
                   }}
-                ></button>
-              </div>
-              <div className="modal-body">
-                <div className="row">
-                  {/* Team Information */}
-                  <div className="col-md-4">
-                    <div className="card">
-                      <div className="card-header">
-                        <h6 className="mb-0">Team Information</h6>
-                      </div>
-                      <div className="card-body">
-                        <p><strong>Team Code:</strong> <code>{selectedTeam.code}</code></p>
-                        <p><strong>Description:</strong> {selectedTeam.description || 'No description'}</p>
-                        <p><strong>Max Size:</strong> {selectedTeam.maxSize}</p>
-                        <p><strong>Current Size:</strong> {selectedTeam.members?.length || 0}</p>
-                        <p><strong>Status:</strong> {getStatusBadge(selectedTeam.isActive)}</p>
-                        
-                        <hr />
-                        
-                        <div className="mb-3">
-                          <strong>Team Manager:</strong>
-                          {selectedTeam.teamManager ? (
-                            <div className="mt-1">
-                              <div className="fw-semibold">
-                                {selectedTeam.teamManager.firstName} {selectedTeam.teamManager.lastName}
-                              </div>
-                              <small className="text-muted">{selectedTeam.teamManager.email}</small>
-                            </div>
-                          ) : (
-                            <span className="text-muted"> Not assigned</span>
-                          )}
-                        </div>
-                        
-                        <div>
-                          <strong>Team Leader:</strong>
-                          {selectedTeam.teamLeader ? (
-                            <div className="mt-1">
-                              <div className="fw-semibold">
-                                {selectedTeam.teamLeader.firstName} {selectedTeam.teamLeader.lastName}
-                              </div>
-                              <small className="text-muted">{selectedTeam.teamLeader.email}</small>
-                            </div>
-                          ) : (
-                            <span className="text-muted"> Not assigned</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Current Members */}
-                  <div className="col-md-8">
-                    <div className="card">
-                      <div className="card-header d-flex justify-content-between align-items-center">
-                        <h6 className="mb-0">Current Members ({selectedTeam.members?.length || 0})</h6>
-                      </div>
-                      <div className="card-body">
-                        {selectedTeam.members && selectedTeam.members.length > 0 ? (
-                          <div className="table-responsive">
-                            <table className="table table-sm">
-                              <thead>
-                                <tr>
-                                  <th>Employee</th>
-                                  <th>Role</th>
-                                  <th>Joined Date</th>
-                                  <th>Actions</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {selectedTeam.members.map((member, index) => {
-                                  // Handle case where member.user is null (broken reference)
-                                  if (!member.user) {
-                                    return (
-                                      <tr key={`broken-member-${index}`} className="table-warning">
-                                        <td>
-                                          <div>
-                                            <div className="fw-semibold text-warning">
-                                              <i className="bi bi-exclamation-triangle me-1"></i>
-                                              Deleted User
-                                            </div>
-                                            <small className="text-muted">User data not found</small>
-                                          </div>
-                                        </td>
-                                        <td>
-                                          <span className="badge bg-secondary">{member.role}</span>
-                                        </td>
-                                        <td>
-                                          <small>{new Date(member.joinedDate).toLocaleDateString()}</small>
-                                        </td>
-                                        <td>
-                                          <button
-                                            className="btn btn-sm btn-outline-danger"
-                                            onClick={() => handleRemoveBrokenMember(index)}
-                                            title="Remove Broken Reference"
-                                          >
-                                            <i className="bi bi-trash"></i>
-                                          </button>
-                                        </td>
-                                      </tr>
-                                    );
-                                  }
-
-                                  return (
-                                    <tr key={member.user._id}>
-                                      <td>
-                                        <div>
-                                          <div className="fw-semibold">
-                                            {member.user.firstName} {member.user.lastName}
-                                          </div>
-                                          <small className="text-muted">{member.user.email}</small>
-                                        </div>
-                                      </td>
-                                      <td>
-                                        <span className="badge bg-secondary">{member.role}</span>
-                                      </td>
-                                      <td>
-                                        <small>{new Date(member.joinedDate).toLocaleDateString()}</small>
-                                      </td>
-                                      <td>
-                                        <button
-                                          className="btn btn-sm btn-outline-danger"
-                                          onClick={() => handleRemoveMember(
-                                            member.user._id, 
-                                            `${member.user.firstName} ${member.user.lastName}`
-                                          )}
-                                          title="Remove Member"
-                                        >
-                                          <i className="bi bi-trash"></i>
-                                        </button>
-                                      </td>
-                                    </tr>
-                                  );
-                                })}
-                              </tbody>
-                            </table>
-                          </div>
-                        ) : (
-                          <div className="text-center py-4">
-                            <i className="bi bi-people text-muted" style={{ fontSize: '2rem' }}></i>
-                            <p className="text-muted mt-2">No members in this team yet</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* Add New Member */}
-                    <div className="card mt-3">
-                      <div className="card-header">
-                        <h6 className="mb-0">Add New Member</h6>
-                      </div>
-                      <div className="card-body">
-                        <form onSubmit={handleAddMember}>
-                          <div className="row g-3">
-                            <div className="col-md-8">
-                              <label className="form-label">Select Employee</label>
-                              <select
-                                className="form-select"
-                                value={memberFormData.userId}
-                                onChange={(e) => setMemberFormData(prev => ({
-                                  ...prev,
-                                  userId: e.target.value
-                                }))}
-                                required
-                              >
-                                <option value="">Choose an employee...</option>
-                                {unassignedEmployees.map(employee => (
-                                  <option key={employee._id} value={employee._id}>
-                                    {employee.firstName} {employee.lastName} ({employee.email})
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                            <div className="col-md-4">
-                              <label className="form-label">Role</label>
-                              <select
-                                className="form-select"
-                                value={memberFormData.role}
-                                onChange={(e) => setMemberFormData(prev => ({
-                                  ...prev,
-                                  role: e.target.value
-                                }))}
-                              >
-                                <option value="Member">Member</option>
-                                <option value="Senior Member">Senior Member</option>
-                                <option value="Lead">Lead</option>
-                              </select>
-                            </div>
-                            <div className="col-12">
-                              <button 
-                                type="submit" 
-                                className="btn btn-primary"
-                                disabled={!memberFormData.userId}
-                              >
-                                <i className="bi bi-plus-circle me-1"></i>
-                                Add Member
-                              </button>
-                            </div>
-                          </div>
-                        </form>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button 
-                  type="button" 
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setShowMembersModal(false);
-                    setSelectedTeam(null);
-                    setMemberFormData({ userId: '', role: 'Member' });
+                  required
+                  error={!!validationErrors.code}
+                  helperText={validationErrors.code || "Only uppercase letters and numbers allowed"}
+                  sx={{ mb: 2 }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Team Description"
+                  name="description"
+                  value={addFormData.description}
+                  onChange={handleAddInputChange}
+                  multiline
+                  rows={2}
+                  placeholder="Brief description of the team's purpose"
+                  sx={{ mb: 2 }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Max Team Size"
+                  name="maxSize"
+                  type="number"
+                  value={addFormData.maxSize}
+                  onChange={handleAddInputChange}
+                  inputProps={{ min: 1, max: 50 }}
+                  error={!!validationErrors.maxSize}
+                  helperText={validationErrors.maxSize}
+                  sx={{ mb: 2 }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth error={!!validationErrors.teamManager} sx={{ mb: 2 }}>
+                  <InputLabel>Team Manager *</InputLabel>
+                  <Select
+                    name="teamManager"
+                    value={addFormData.teamManager}
+                    onChange={handleAddInputChange}
+                    label="Team Manager *"
+                    required
+                  >
+                    <MenuItem value="">Select Team Manager</MenuItem>
+                    {teamManagers.map(manager => (
+                      <MenuItem key={manager._id} value={manager._id}>
+                        {manager.firstName} {manager.lastName} ({manager.email})
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {validationErrors.teamManager && (
+                    <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                      {validationErrors.teamManager}
+                    </Typography>
+                  )}
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth error={!!validationErrors.teamLeader} sx={{ mb: 2 }}>
+                  <InputLabel>Team Leader *</InputLabel>
+                  <Select
+                    name="teamLeader"
+                    value={addFormData.teamLeader}
+                    onChange={handleAddInputChange}
+                    label="Team Leader *"
+                    required
+                  >
+                    <MenuItem value="">Select Team Leader</MenuItem>
+                    {teamLeaders.map(leader => (
+                      <MenuItem key={leader._id} value={leader._id}>
+                        {leader.firstName} {leader.lastName} ({leader.email})
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {validationErrors.teamLeader && (
+                    <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                      {validationErrors.teamLeader}
+                    </Typography>
+                  )}
+                </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
+                  Team Members
+                </Typography>
+                <Paper 
+                  variant="outlined" 
+                  sx={{ 
+                    p: 2, 
+                    maxHeight: '200px', 
+                    overflowY: 'auto',
+                    backgroundColor: '#fafafa'
                   }}
                 >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+                  {unassignedEmployees.length === 0 ? (
+                    <Typography variant="body2" color="text.secondary">
+                      No unassigned employees available
+                    </Typography>
+                  ) : (
+                    <FormGroup>
+                      {unassignedEmployees.map(employee => (
+                        <FormControlLabel
+                          key={employee._id}
+                          control={
+                            <Checkbox
+                              value={employee._id}
+                              checked={addFormData.members.includes(employee._id)}
+                              onChange={handleMembersChange}
+                              sx={{
+                                '&.Mui-checked': {
+                                  color: '#20C997',
+                                },
+                              }}
+                            />
+                          }
+                          label={`${employee.firstName} ${employee.lastName} (${employee.email})`}
+                          sx={{ mb: 1 }}
+                        />
+                      ))}
+                    </FormGroup>
+                  )}
+                </Paper>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                  Select employees to add to this team (only unassigned employees are shown)
+                </Typography>
+              </Grid>
+            </Grid>
+          </DialogContent>
+          <DialogActions sx={{ px: 3, pb: 3 }}>
+            <Button
+              onClick={() => {
+                setShowAddModal(false);
+                setValidationErrors({});
+              }}
+              sx={{
+                color: '#666',
+                borderColor: '#E0E0E0',
+                '&:hover': {
+                  borderColor: '#20C997',
+                  backgroundColor: 'rgba(32, 201, 151, 0.04)',
+                },
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              sx={{
+                backgroundColor: '#20C997',
+                '&:hover': {
+                  backgroundColor: '#17A085',
+                },
+                px: 3,
+                fontWeight: 600,
+              }}
+            >
+              Create Team
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+
+      {/* Edit Team Modal */}
+      <Dialog
+        open={showEditModal && !!editingTeam}
+        onClose={() => {
+          setShowEditModal(false);
+          setEditingTeam(null);
+          setValidationErrors({});
+        }}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: { borderRadius: 3 }
+        }}
+      >
+        <DialogTitle sx={{ pb: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Edit Team - {editingTeam?.name}
+            </Typography>
+            <IconButton 
+              onClick={() => {
+                setShowEditModal(false);
+                setEditingTeam(null);
+                setValidationErrors({});
+              }}
+              sx={{ color: 'text.secondary' }}
+            >
+              <Close />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <form onSubmit={handleEditTeam}>
+          <DialogContent>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Team Name"
+                  name="name"
+                  value={editFormData.name}
+                  onChange={handleEditInputChange}
+                  placeholder="e.g., Development Team Alpha"
+                  required
+                  error={!!validationErrors.name}
+                  helperText={validationErrors.name}
+                  sx={{ mb: 2 }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Team Code"
+                  value={editingTeam?.code || ''}
+                  disabled
+                  helperText="Team code cannot be changed"
+                  sx={{ 
+                    mb: 2,
+                    '& .MuiInputBase-input.Mui-disabled': {
+                      backgroundColor: '#f8f9fa',
+                    }
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Team Description"
+                  name="description"
+                  value={editFormData.description}
+                  onChange={handleEditInputChange}
+                  multiline
+                  rows={2}
+                  placeholder="Brief description of the team's purpose"
+                  sx={{ mb: 2 }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Max Team Size"
+                  name="maxSize"
+                  type="number"
+                  value={editFormData.maxSize}
+                  onChange={handleEditInputChange}
+                  inputProps={{ min: 1, max: 50 }}
+                  error={!!validationErrors.maxSize}
+                  helperText={validationErrors.maxSize}
+                  sx={{ mb: 2 }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      name="isActive"
+                      checked={editFormData.isActive}
+                      onChange={handleEditInputChange}
+                      sx={{
+                        '& .MuiSwitch-switchBase.Mui-checked': {
+                          color: '#20C997',
+                        },
+                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                          backgroundColor: '#20C997',
+                        },
+                      }}
+                    />
+                  }
+                  label="Team is Active"
+                  sx={{ mt: 2 }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth error={!!validationErrors.teamManager} sx={{ mb: 2 }}>
+                  <InputLabel>Team Manager *</InputLabel>
+                  <Select
+                    name="teamManager"
+                    value={editFormData.teamManager}
+                    onChange={handleEditInputChange}
+                    label="Team Manager *"
+                    required
+                  >
+                    <MenuItem value="">Select Team Manager</MenuItem>
+                    {teamManagers.map(manager => (
+                      <MenuItem key={manager._id} value={manager._id}>
+                        {manager.firstName} {manager.lastName} ({manager.email})
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {validationErrors.teamManager && (
+                    <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                      {validationErrors.teamManager}
+                    </Typography>
+                  )}
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth error={!!validationErrors.teamLeader} sx={{ mb: 2 }}>
+                  <InputLabel>Team Leader *</InputLabel>
+                  <Select
+                    name="teamLeader"
+                    value={editFormData.teamLeader}
+                    onChange={handleEditInputChange}
+                    label="Team Leader *"
+                    required
+                  >
+                    <MenuItem value="">Select Team Leader</MenuItem>
+                    {teamLeaders.map(leader => (
+                      <MenuItem key={leader._id} value={leader._id}>
+                        {leader.firstName} {leader.lastName} ({leader.email})
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {validationErrors.teamLeader && (
+                    <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                      {validationErrors.teamLeader}
+                    </Typography>
+                  )}
+                </FormControl>
+              </Grid>
+            </Grid>
+          </DialogContent>
+          <DialogActions sx={{ px: 3, pb: 3 }}>
+            <Button
+              onClick={() => {
+                setShowEditModal(false);
+                setEditingTeam(null);
+                setValidationErrors({});
+              }}
+              sx={{
+                color: '#666',
+                borderColor: '#E0E0E0',
+                '&:hover': {
+                  borderColor: '#20C997',
+                  backgroundColor: 'rgba(32, 201, 151, 0.04)',
+                },
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              sx={{
+                backgroundColor: '#20C997',
+                '&:hover': {
+                  backgroundColor: '#17A085',
+                },
+                px: 3,
+                fontWeight: 600,
+              }}
+            >
+              Update Team
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+
+      {/* Manage Members Modal */}
+      <Dialog
+        open={showMembersModal && !!selectedTeam}
+        onClose={() => {
+          setShowMembersModal(false);
+          setSelectedTeam(null);
+          setMemberFormData({ userId: '', role: 'Member' });
+        }}
+        maxWidth="lg"
+        fullWidth
+        PaperProps={{
+          sx: { borderRadius: 3 }
+        }}
+      >
+        <DialogTitle sx={{ pb: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Manage Team Members - {selectedTeam?.name}
+            </Typography>
+            <IconButton 
+              onClick={() => {
+                setShowMembersModal(false);
+                setSelectedTeam(null);
+                setMemberFormData({ userId: '', role: 'Member' });
+              }}
+              sx={{ color: 'text.secondary' }}
+            >
+              <Close />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Grid container spacing={3}>
+            {/* Team Information */}
+            <Grid item xs={12} md={4}>
+              <Card variant="outlined" sx={{ borderRadius: 2 }}>
+                <CardHeader 
+                  title="Team Information" 
+                  titleTypographyProps={{ variant: 'h6', fontWeight: 600 }}
+                  sx={{ pb: 1 }}
+                />
+                <CardContent>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                      Team Code:
+                    </Typography>
+                    <Chip 
+                      label={selectedTeam?.code} 
+                      variant="outlined" 
+                      size="small" 
+                      sx={{ fontFamily: 'monospace', fontWeight: 600 }}
+                    />
+                  </Box>
+                  
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                      Description:
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {selectedTeam?.description || 'No description'}
+                    </Typography>
+                  </Box>
+                  
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                      Max Size:
+                    </Typography>
+                    <Typography variant="body2">{selectedTeam?.maxSize}</Typography>
+                  </Box>
+                  
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                      Current Size:
+                    </Typography>
+                    <Typography variant="body2">{selectedTeam?.members?.length || 0}</Typography>
+                  </Box>
+                  
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                      Status:
+                    </Typography>
+                    <Chip
+                      label={selectedTeam?.isActive ? 'Active' : 'Inactive'}
+                      color={selectedTeam?.isActive ? 'success' : 'error'}
+                      size="small"
+                      sx={{ fontWeight: 500 }}
+                    />
+                  </Box>
+                  
+                  <Divider sx={{ my: 2 }} />
+                  
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+                      Team Manager:
+                    </Typography>
+                    {selectedTeam?.teamManager ? (
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Avatar
+                          sx={{
+                            bgcolor: '#0A192F',
+                            color: 'white',
+                            width: 32,
+                            height: 32,
+                            mr: 1.5,
+                            fontSize: '0.875rem',
+                            fontWeight: 600,
+                          }}
+                        >
+                          {getInitials(selectedTeam.teamManager.firstName, selectedTeam.teamManager.lastName)}
+                        </Avatar>
+                        <Box>
+                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                            {selectedTeam.teamManager.firstName} {selectedTeam.teamManager.lastName}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {selectedTeam.teamManager.email}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">
+                        Not assigned
+                      </Typography>
+                    )}
+                  </Box>
+                  
+                  <Box>
+                    <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+                      Team Leader:
+                    </Typography>
+                    {selectedTeam?.teamLeader ? (
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Avatar
+                          sx={{
+                            bgcolor: '#20C997',
+                            color: 'white',
+                            width: 32,
+                            height: 32,
+                            mr: 1.5,
+                            fontSize: '0.875rem',
+                            fontWeight: 600,
+                          }}
+                        >
+                          {getInitials(selectedTeam.teamLeader.firstName, selectedTeam.teamLeader.lastName)}
+                        </Avatar>
+                        <Box>
+                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                            {selectedTeam.teamLeader.firstName} {selectedTeam.teamLeader.lastName}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {selectedTeam.teamLeader.email}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">
+                        Not assigned
+                      </Typography>
+                    )}
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+            
+            {/* Current Members */}
+            <Grid item xs={12} md={8}>
+              <Card variant="outlined" sx={{ borderRadius: 2, mb: 3 }}>
+                <CardHeader 
+                  title={`Current Members (${selectedTeam?.members?.length || 0})`}
+                  titleTypographyProps={{ variant: 'h6', fontWeight: 600 }}
+                  sx={{ pb: 1 }}
+                />
+                <CardContent>
+                  {selectedTeam?.members && selectedTeam.members.length > 0 ? (
+                    <TableContainer>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell sx={{ fontWeight: 600 }}>Employee</TableCell>
+                            <TableCell sx={{ fontWeight: 600 }}>Role</TableCell>
+                            <TableCell sx={{ fontWeight: 600 }}>Joined Date</TableCell>
+                            <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {selectedTeam.members.map((member, index) => {
+                            // Handle case where member.user is null (broken reference)
+                            if (!member.user) {
+                              return (
+                                <TableRow key={`broken-member-${index}`} sx={{ backgroundColor: '#fff3cd' }}>
+                                  <TableCell>
+                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                      <Warning sx={{ color: '#856404', mr: 1, fontSize: '1rem' }} />
+                                      <Box>
+                                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#856404' }}>
+                                          Deleted User
+                                        </Typography>
+                                        <Typography variant="caption" color="text.secondary">
+                                          User data not found
+                                        </Typography>
+                                      </Box>
+                                    </Box>
+                                  </TableCell>
+                                  <TableCell>
+                                    <Chip label={member.role} size="small" color="default" />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Typography variant="caption">
+                                      {new Date(member.joinedDate).toLocaleDateString()}
+                                    </Typography>
+                                  </TableCell>
+                                  <TableCell>
+                                    <Tooltip title="Remove Broken Reference">
+                                      <IconButton
+                                        size="small"
+                                        onClick={() => handleRemoveBrokenMember(index)}
+                                        sx={{ color: '#F44336' }}
+                                      >
+                                        <Delete fontSize="small" />
+                                      </IconButton>
+                                    </Tooltip>
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            }
+
+                            return (
+                              <TableRow key={member.user._id} hover>
+                                <TableCell>
+                                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                    <Avatar
+                                      sx={{
+                                        bgcolor: '#20C997',
+                                        color: 'white',
+                                        width: 32,
+                                        height: 32,
+                                        mr: 1.5,
+                                        fontSize: '0.875rem',
+                                        fontWeight: 600,
+                                      }}
+                                    >
+                                      {getInitials(member.user.firstName, member.user.lastName)}
+                                    </Avatar>
+                                    <Box>
+                                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                        {member.user.firstName} {member.user.lastName}
+                                      </Typography>
+                                      <Typography variant="caption" color="text.secondary">
+                                        {member.user.email}
+                                      </Typography>
+                                    </Box>
+                                  </Box>
+                                </TableCell>
+                                <TableCell>
+                                  <Chip label={member.role} size="small" color="primary" />
+                                </TableCell>
+                                <TableCell>
+                                  <Typography variant="caption">
+                                    {new Date(member.joinedDate).toLocaleDateString()}
+                                  </Typography>
+                                </TableCell>
+                                <TableCell>
+                                  <Tooltip title="Remove Member">
+                                    <IconButton
+                                      size="small"
+                                      onClick={() => handleRemoveMember(
+                                        member.user._id, 
+                                        `${member.user.firstName} ${member.user.lastName}`
+                                      )}
+                                      sx={{ color: '#F44336' }}
+                                    >
+                                      <Delete fontSize="small" />
+                                    </IconButton>
+                                  </Tooltip>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  ) : (
+                    <Box sx={{ textAlign: 'center', py: 4 }}>
+                      <People sx={{ fontSize: '3rem', color: 'text.disabled', mb: 2 }} />
+                      <Typography variant="body1" color="text.secondary">
+                        No members in this team yet
+                      </Typography>
+                    </Box>
+                  )}
+                </CardContent>
+              </Card>
+              
+              {/* Add New Member */}
+              <Card variant="outlined" sx={{ borderRadius: 2 }}>
+                <CardHeader 
+                  title="Add New Member"
+                  titleTypographyProps={{ variant: 'h6', fontWeight: 600 }}
+                  sx={{ pb: 1 }}
+                />
+                <CardContent>
+                  <form onSubmit={handleAddMember}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} md={8}>
+                        <FormControl fullWidth sx={{ mb: 2 }}>
+                          <InputLabel>Select Employee</InputLabel>
+                          <Select
+                            value={memberFormData.userId}
+                            onChange={(e) => setMemberFormData(prev => ({
+                              ...prev,
+                              userId: e.target.value
+                            }))}
+                            label="Select Employee"
+                            required
+                          >
+                            <MenuItem value="">Choose an employee...</MenuItem>
+                            {unassignedEmployees.map(employee => (
+                              <MenuItem key={employee._id} value={employee._id}>
+                                {employee.firstName} {employee.lastName} ({employee.email})
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={12} md={4}>
+                        <FormControl fullWidth sx={{ mb: 2 }}>
+                          <InputLabel>Role</InputLabel>
+                          <Select
+                            value={memberFormData.role}
+                            onChange={(e) => setMemberFormData(prev => ({
+                              ...prev,
+                              role: e.target.value
+                            }))}
+                            label="Role"
+                          >
+                            <MenuItem value="Member">Member</MenuItem>
+                            <MenuItem value="Senior Member">Senior Member</MenuItem>
+                            <MenuItem value="Lead">Lead</MenuItem>
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Button 
+                          type="submit" 
+                          variant="contained"
+                          startIcon={<PersonAdd />}
+                          disabled={!memberFormData.userId}
+                          sx={{
+                            backgroundColor: '#20C997',
+                            '&:hover': {
+                              backgroundColor: '#17A085',
+                            },
+                            fontWeight: 600,
+                          }}
+                        >
+                          Add Member
+                        </Button>
+                      </Grid>
+                    </Grid>
+                  </form>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button
+            onClick={() => {
+              setShowMembersModal(false);
+              setSelectedTeam(null);
+              setMemberFormData({ userId: '', role: 'Member' });
+            }}
+            sx={{
+              color: '#666',
+              borderColor: '#E0E0E0',
+              '&:hover': {
+                borderColor: '#20C997',
+                backgroundColor: 'rgba(32, 201, 151, 0.04)',
+              },
+            }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Container>
   );
 };
 
